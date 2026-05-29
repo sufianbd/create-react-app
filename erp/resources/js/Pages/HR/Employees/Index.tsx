@@ -44,9 +44,14 @@ export default function EmployeesIndex({ employees, departments, filters }: Prop
                         <h1 className="text-2xl font-semibold text-slate-900">Employees</h1>
                         <p className="text-sm text-slate-500 mt-1">{employees.total} employees</p>
                     </div>
-                    {can('hr.create') && (
-                        <Link href="/hr/employees/create"><Button>Add Employee</Button></Link>
-                    )}
+                    <div className="flex gap-2">
+                        {can('hr.view') && (
+                            <Button variant="secondary" onClick={() => { window.location.href = '/export/employees'; }}>Export CSV</Button>
+                        )}
+                        {can('hr.create') && (
+                            <Link href="/hr/employees/create"><Button>Add Employee</Button></Link>
+                        )}
+                    </div>
                 </div>
 
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm">

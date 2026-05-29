@@ -26,6 +26,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::patch('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
     Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])
         ->name('invoices.payments.store');
+    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])
+        ->name('invoices.print');
 
     // Reports
     Route::get('reports/trial-balance', [ReportController::class, 'trialBalance'])

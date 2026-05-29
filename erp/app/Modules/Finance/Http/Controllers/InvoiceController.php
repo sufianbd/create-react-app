@@ -3,6 +3,7 @@
 namespace App\Modules\Finance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Core\Models\TenantSetting;
 use App\Modules\Finance\Http\Requests\StoreInvoiceRequest;
 use App\Modules\Finance\Http\Requests\StorePaymentRequest;
 use App\Modules\Finance\Http\Resources\InvoiceResource;
@@ -159,6 +160,21 @@ class InvoiceController extends Controller
         });
 
         return back()->with('success', 'Payment recorded.');
+    }
+
+    public function print(Invoice $invoice): Response
+    {
+        $this->authorize('view', $invoice);
+
+        $invoice->load(['contact', 'items', 'payments', 'creator']);
+
+        $tenantId = auth()->user()->tenant_id;
+
+        return Inertia::render('Finance/Invoices/Print', [
+            'invoice'  => new InvoiceResource($invoice),
+            'company'  => TenantSetting::getValue($tenantId, 'company_name', 'My Company'),
+            'currency' => TenantSetting::getValue($tenantId, 'currency', 'USD'),
+        ]);
     }
 
     public function destroy(Invoice $invoice): RedirectResponse

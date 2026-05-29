@@ -32,11 +32,16 @@ export default function ProductsIndex({ products, filters }: Props) {
                         <h1 className="text-2xl font-semibold text-slate-900">Products</h1>
                         <p className="text-sm text-slate-500 mt-1">{products.total} products total</p>
                     </div>
-                    {can('inventory.create') && (
-                        <Link href="/inventory/products/create">
-                            <Button>Add Product</Button>
-                        </Link>
-                    )}
+                    <div className="flex gap-2">
+                        {can('inventory.view') && (
+                            <Button variant="secondary" onClick={() => { window.location.href = '/export/products'; }}>Export CSV</Button>
+                        )}
+                        {can('inventory.create') && (
+                            <Link href="/inventory/products/create">
+                                <Button>Add Product</Button>
+                            </Link>
+                        )}
+                    </div>
                 </div>
 
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm">

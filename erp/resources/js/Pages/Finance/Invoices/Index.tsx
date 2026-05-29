@@ -45,9 +45,14 @@ export default function InvoicesIndex({ invoices, contacts, filters }: Props) {
                         <h1 className="text-2xl font-semibold text-slate-900">Invoices</h1>
                         <p className="text-sm text-slate-500 mt-1">{invoices.total} invoices</p>
                     </div>
-                    {can('finance.create') && (
-                        <Link href="/finance/invoices/create"><Button>New Invoice</Button></Link>
-                    )}
+                    <div className="flex gap-2">
+                        {can('finance.view') && (
+                            <Button variant="secondary" onClick={() => { window.location.href = '/export/invoices'; }}>Export CSV</Button>
+                        )}
+                        {can('finance.create') && (
+                            <Link href="/finance/invoices/create"><Button>New Invoice</Button></Link>
+                        )}
+                    </div>
                 </div>
 
                 {/* Status tabs */}

@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
@@ -66,20 +66,25 @@ export default function InvoiceShow({ invoice }: Props) {
                             {invoice.due_date && <span className="text-sm text-slate-500">Due: {invoice.due_date}</span>}
                         </div>
                     </div>
-                    {can('finance.update') && (
-                        <div className="flex gap-2">
-                            {(invoice.transitions ?? []).filter(t => t !== 'paid').map((t) => (
-                                <Button key={t}
-                                    variant={t === 'cancelled' ? 'secondary' : 'primary'}
-                                    onClick={() => transition(t as InvoiceStatus)}>
-                                    {t === 'sent' ? 'Mark as Sent' : t === 'cancelled' ? 'Cancel' : t}
-                                </Button>
-                            ))}
-                            {invoice.status === 'sent' && Number(invoice.amount_due ?? 0) > 0 && (
-                                <Button onClick={() => setShowPaymentForm(!showPaymentForm)}>Record Payment</Button>
-                            )}
-                        </div>
-                    )}
+                    <div className="flex gap-2">
+                        <Link href={`/finance/invoices/${invoice.id}/print`}>
+                            <Button variant="secondary">Print / PDF</Button>
+                        </Link>
+                        {can('finance.update') && (
+                            <>
+                                {(invoice.transitions ?? []).filter(t => t !== 'paid').map((t) => (
+                                    <Button key={t}
+                                        variant={t === 'cancelled' ? 'secondary' : 'primary'}
+                                        onClick={() => transition(t as InvoiceStatus)}>
+                                        {t === 'sent' ? 'Mark as Sent' : t === 'cancelled' ? 'Cancel' : t}
+                                    </Button>
+                                ))}
+                                {invoice.status === 'sent' && Number(invoice.amount_due ?? 0) > 0 && (
+                                    <Button onClick={() => setShowPaymentForm(!showPaymentForm)}>Record Payment</Button>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 {/* Contact */}
