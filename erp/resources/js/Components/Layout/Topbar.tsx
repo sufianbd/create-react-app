@@ -1,4 +1,5 @@
 import { Breadcrumbs } from '@/Components/Layout/Breadcrumbs';
+import { NotificationBell } from '@/Components/Layout/NotificationBell';
 import { UserDropdown } from '@/Components/Layout/UserDropdown';
 
 interface TopbarProps {
@@ -32,7 +33,8 @@ export function Topbar({ onToggleSidebar, sidebarCollapsed }: TopbarProps) {
                 <Breadcrumbs />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+                <NotificationBell />
                 <UserDropdown />
             </div>
         </header>

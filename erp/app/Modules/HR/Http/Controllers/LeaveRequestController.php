@@ -7,6 +7,7 @@ use App\Modules\HR\Http\Requests\StoreLeaveRequestRequest;
 use App\Modules\HR\Models\Employee;
 use App\Modules\HR\Models\LeaveRequest;
 use App\Modules\HR\Models\LeaveType;
+use App\Notifications\LeaveRequestActioned;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -76,6 +77,10 @@ class LeaveRequestController extends Controller
             return back()->withErrors(['status' => $e->getMessage()]);
         }
 
+        if ($leaveRequest->employee->user_id) {
+            $leaveRequest->employee->user?->notify(new LeaveRequestActioned($leaveRequest, 'approved'));
+        }
+
         return back()->with('success', 'Leave request approved.');
     }
 
@@ -87,6 +92,10 @@ class LeaveRequestController extends Controller
             $leaveRequest->reject(auth()->user());
         } catch (\DomainException $e) {
             return back()->withErrors(['status' => $e->getMessage()]);
+        }
+
+        if ($leaveRequest->employee->user_id) {
+            $leaveRequest->employee->user?->notify(new LeaveRequestActioned($leaveRequest, 'rejected'));
         }
 
         return back()->with('success', 'Leave request rejected.');
