@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Modules\Inventory\Models;
+
+use App\Modules\Core\Traits\BelongsToTenant;
+use App\Modules\Core\Traits\HasAuditLog;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Product extends Model
+{
+    use BelongsToTenant;
+    use HasAuditLog;
+    use SoftDeletes;
+
+    protected $fillable = [
+        'tenant_id', 'sku', 'name', 'description',
+        'category_id', 'uom_id', 'cost_price',
+        'sale_price', 'reorder_point', 'is_active',
+    ];
+
+    protected $casts = [
+        'cost_price'    => 'decimal:2',
+        'sale_price'    => 'decimal:2',
+        'reorder_point' => 'integer',
+        'is_active'     => 'boolean',
+    ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function uom(): BelongsTo
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'uom_id');
+    }
+
+    public function stockLevels(): HasMany
+    {
+        return $this->hasMany(StockLevel::class);
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function getTotalQuantityAttribute(): float
+    {
+        return (float) $this->stockLevels()->sum('quantity');
+    }
+
+    public function getTotalAvailableAttribute(): float
+    {
+        return (float) $this->stockLevels()
+            ->selectRaw('SUM(quantity - reserved_quantity) as available')
+            ->value('available') ?? 0.0;
+    }
+
+    public function scopeSearch($query, string $term)
+    {
+        return $query->where(function ($q) use ($term) {
+            $q->where('name', 'like', "%{$term}%")
+              ->orWhere('sku', 'like', "%{$term}%");
+        });
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+}

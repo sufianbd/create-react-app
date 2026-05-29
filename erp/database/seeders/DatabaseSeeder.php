@@ -26,5 +26,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $admin->assignRole('super-admin');
+
+        $this->call(InventorySeeder::class);
     }
 }

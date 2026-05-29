@@ -1,17 +1,25 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
+import { usePermission } from '@/Hooks/usePermission';
 
 interface NavItem {
     label: string;
     href: string;
     icon: ReactNode;
     permission?: string;
+    children?: NavItem[];
 }
 
 interface SidebarProps {
     collapsed: boolean;
     onToggle: () => void;
 }
+
+const inventoryIcon = (
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+    </svg>
+);
 
 const navItems: NavItem[] = [
     {
@@ -25,13 +33,17 @@ const navItems: NavItem[] = [
     },
     {
         label: 'Inventory',
-        href: '/inventory',
-        icon: (
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-            </svg>
-        ),
+        href: '/inventory/products',
+        icon: inventoryIcon,
         permission: 'inventory.view',
+        children: [
+            { label: 'Products',        href: '/inventory/products',        icon: inventoryIcon },
+            { label: 'Categories',      href: '/inventory/categories',      icon: inventoryIcon },
+            { label: 'Warehouses',      href: '/inventory/warehouses',      icon: inventoryIcon },
+            { label: 'Suppliers',       href: '/inventory/suppliers',       icon: inventoryIcon },
+            { label: 'Stock Movements', href: '/inventory/stock-movements', icon: inventoryIcon },
+            { label: 'Purchase Orders', href: '/inventory/purchase-orders', icon: inventoryIcon },
+        ],
     },
     {
         label: 'Finance',
@@ -70,11 +82,55 @@ function NavLink({
     item,
     collapsed,
     isActive,
+    url,
 }: {
     item: NavItem;
     collapsed: boolean;
     isActive: boolean;
+    url: string;
 }) {
+    const [open, setOpen] = useState(isActive);
+    const hasChildren = item.children && item.children.length > 0;
+
+    if (hasChildren && !collapsed) {
+        return (
+            <div>
+                <button
+                    onClick={() => setOpen((o) => !o)}
+                    className={[
+                        'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                        isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                    ].join(' ')}
+                >
+                    <span className={isActive ? 'text-indigo-600' : 'text-slate-400'}>{item.icon}</span>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <svg className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z" clipRule="evenodd" />
+                    </svg>
+                </button>
+                {open && (
+                    <ul className="ml-4 mt-1 space-y-1 border-l border-slate-200 pl-2">
+                        {item.children!.map((child) => (
+                            <li key={child.href}>
+                                <Link
+                                    href={child.href}
+                                    className={[
+                                        'flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors',
+                                        url.startsWith(child.href)
+                                            ? 'bg-indigo-50 font-medium text-indigo-700'
+                                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                                    ].join(' ')}
+                                >
+                                    {child.label}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        );
+    }
+
     return (
         <Link
             href={item.href}
@@ -97,6 +153,11 @@ function NavLink({
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     const { url } = usePage();
+    const { can } = usePermission();
+
+    const visibleItems = navItems.filter((item) =>
+        !item.permission || can(item.permission)
+    );
 
     return (
         <aside
@@ -129,12 +190,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto px-2 py-4">
                 <ul className="space-y-1">
-                    {navItems.map((item) => (
+                    {visibleItems.map((item) => (
                         <li key={item.href}>
                             <NavLink
                                 item={item}
                                 collapsed={collapsed}
                                 isActive={url.startsWith(item.href)}
+                                url={url}
                             />
                         </li>
                     ))}
