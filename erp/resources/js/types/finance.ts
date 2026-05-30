@@ -101,3 +101,41 @@ export interface TrialBalanceRow {
     total_debit: number;
     total_credit: number;
 }
+
+export type BillStatus = 'draft' | 'received' | 'paid' | 'cancelled';
+
+export interface BillItem {
+    id?: number;
+    description: string;
+    quantity: number | string;
+    unit_price: number | string;
+    tax_rate: number | string;
+    line_total?: number;
+}
+
+export interface BillPayment {
+    id: number;
+    amount: number | string;
+    payment_date: string;
+    method: PaymentMethod;
+    reference?: string | null;
+}
+
+export interface Bill {
+    id: number;
+    number?: string | null;
+    status: BillStatus;
+    issue_date: string;
+    due_date?: string | null;
+    notes?: string | null;
+    is_overdue?: boolean;
+    contact?: { id: number; name: string } | null;
+    items?: BillItem[];
+    payments?: BillPayment[];
+    subtotal?: number;
+    tax_total?: number;
+    total?: number;
+    amount_paid?: number;
+    amount_due?: number;
+    transitions?: BillStatus[];
+}

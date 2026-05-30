@@ -66,6 +66,9 @@ const navItems: NavItem[] = [
             { label: 'Journal Entries',   href: '/finance/journal-entries',       icon: <span /> },
             { label: 'Chart of Accounts', href: '/finance/accounts',              icon: <span /> },
             { label: 'Trial Balance',     href: '/finance/reports/trial-balance', icon: <span /> },
+            { label: 'Bills (AP)',         href: '/finance/bills',                 icon: <span /> },
+            { label: 'Profit & Loss',     href: '/finance/reports/profit-loss',   icon: <span /> },
+            { label: 'Balance Sheet',     href: '/finance/reports/balance-sheet', icon: <span /> },
         ],
     },
     {

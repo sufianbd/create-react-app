@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Finance\Http\Controllers\AccountController;
+use App\Modules\Finance\Http\Controllers\BillController;
 use App\Modules\Finance\Http\Controllers\ContactController;
 use App\Modules\Finance\Http\Controllers\InvoiceController;
 use App\Modules\Finance\Http\Controllers\JournalEntryController;
@@ -29,7 +30,18 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])
         ->name('invoices.print');
 
+    // Bills (AP)
+    Route::resource('bills', BillController::class)->except(['edit', 'update']);
+    Route::patch('bills/{bill}/receive', [BillController::class, 'receive'])->name('bills.receive');
+    Route::patch('bills/{bill}/cancel', [BillController::class, 'cancel'])->name('bills.cancel');
+    Route::post('bills/{bill}/payments', [BillController::class, 'recordPayment'])
+        ->name('bills.payments.store');
+
     // Reports
     Route::get('reports/trial-balance', [ReportController::class, 'trialBalance'])
         ->name('reports.trial-balance');
+    Route::get('reports/profit-loss', [ReportController::class, 'profitAndLoss'])
+        ->name('reports.profit-loss');
+    Route::get('reports/balance-sheet', [ReportController::class, 'balanceSheet'])
+        ->name('reports.balance-sheet');
 });
