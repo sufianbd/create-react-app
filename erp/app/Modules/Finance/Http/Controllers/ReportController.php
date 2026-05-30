@@ -4,6 +4,8 @@ namespace App\Modules\Finance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Finance\Models\Account;
+use App\Modules\Finance\Models\Bill;
+use App\Modules\Finance\Models\Invoice;
 use App\Modules\Finance\Models\JournalLine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -168,6 +170,174 @@ class ReportController extends Controller
                 ['label' => 'Finance'],
                 ['label' => 'Reports'],
                 ['label' => 'Balance Sheet'],
+            ],
+        ]);
+    }
+
+    public function agedReceivables(Request $request): Response
+    {
+        $this->authorize('viewAny', Account::class);
+        $asOf = $request->as_of ?? now()->toDateString();
+
+        $invoices = Invoice::with(['contact', 'items', 'payments'])
+            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->get()
+            ->map(function ($inv) use ($asOf) {
+                $daysOverdue = 0;
+                if ($inv->due_date) {
+                    $diff = \Carbon\Carbon::parse($asOf)->diffInDays($inv->due_date, false);
+                    $daysOverdue = (int) max(0, $diff * -1);
+                }
+                $bucket = match(true) {
+                    $daysOverdue === 0   => 'current',
+                    $daysOverdue <= 30   => '1-30',
+                    $daysOverdue <= 60   => '31-60',
+                    $daysOverdue <= 90   => '61-90',
+                    default              => '90+',
+                };
+                return [
+                    'id'          => $inv->id,
+                    'number'      => $inv->number,
+                    'contact'     => $inv->contact?->name ?? '—',
+                    'due_date'    => $inv->due_date?->toDateString(),
+                    'amount_due'  => (float) $inv->amount_due,
+                    'days_overdue'=> $daysOverdue,
+                    'bucket'      => $bucket,
+                ];
+            });
+
+        $bucketKeys = ['current', '1-30', '31-60', '61-90', '90+'];
+        $totals = collect($bucketKeys)->mapWithKeys(fn ($k) =>
+            [$k => (float) $invoices->where('bucket', $k)->sum('amount_due')]
+        )->all();
+
+        return Inertia::render('Finance/Reports/AgedReceivables', [
+            'rows'        => $invoices->values(),
+            'totals'      => $totals,
+            'grand_total' => (float) $invoices->sum('amount_due'),
+            'as_of'       => $asOf,
+            'breadcrumbs' => [
+                ['label' => 'Finance'],
+                ['label' => 'Reports'],
+                ['label' => 'Aged Receivables'],
+            ],
+        ]);
+    }
+
+    public function agedPayables(Request $request): Response
+    {
+        $this->authorize('viewAny', Account::class);
+        $asOf = $request->as_of ?? now()->toDateString();
+
+        $bills = Bill::with(['contact', 'items', 'payments'])
+            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->get()
+            ->map(function ($bill) use ($asOf) {
+                $daysOverdue = 0;
+                if ($bill->due_date) {
+                    $diff = \Carbon\Carbon::parse($asOf)->diffInDays($bill->due_date, false);
+                    $daysOverdue = (int) max(0, $diff * -1);
+                }
+                $bucket = match(true) {
+                    $daysOverdue === 0   => 'current',
+                    $daysOverdue <= 30   => '1-30',
+                    $daysOverdue <= 60   => '31-60',
+                    $daysOverdue <= 90   => '61-90',
+                    default              => '90+',
+                };
+                return [
+                    'id'          => $bill->id,
+                    'number'      => $bill->number,
+                    'contact'     => $bill->contact?->name ?? '—',
+                    'due_date'    => $bill->due_date?->toDateString(),
+                    'amount_due'  => (float) $bill->amount_due,
+                    'days_overdue'=> $daysOverdue,
+                    'bucket'      => $bucket,
+                ];
+            });
+
+        $bucketKeys = ['current', '1-30', '31-60', '61-90', '90+'];
+        $totals = collect($bucketKeys)->mapWithKeys(fn ($k) =>
+            [$k => (float) $bills->where('bucket', $k)->sum('amount_due')]
+        )->all();
+
+        return Inertia::render('Finance/Reports/AgedPayables', [
+            'rows'        => $bills->values(),
+            'totals'      => $totals,
+            'grand_total' => (float) $bills->sum('amount_due'),
+            'as_of'       => $asOf,
+            'breadcrumbs' => [
+                ['label' => 'Finance'],
+                ['label' => 'Reports'],
+                ['label' => 'Aged Payables'],
+            ],
+        ]);
+    }
+
+    public function accountLedgerIndex(Request $request): Response
+    {
+        $this->authorize('viewAny', Account::class);
+        $accounts = Account::orderBy('code')->get(['id', 'code', 'name', 'type']);
+        return Inertia::render('Finance/Reports/AccountLedger', [
+            'accounts'    => $accounts,
+            'account'     => null,
+            'rows'        => [],
+            'from'        => now()->startOfYear()->toDateString(),
+            'to'          => now()->toDateString(),
+            'breadcrumbs' => [['label' => 'Finance'], ['label' => 'Reports'], ['label' => 'Account Ledger']],
+        ]);
+    }
+
+    public function accountLedger(Request $request, Account $account): Response
+    {
+        $this->authorize('viewAny', Account::class);
+        $from = $request->from ?? now()->startOfYear()->toDateString();
+        $to   = $request->to   ?? now()->toDateString();
+
+        // Use JOIN (not whereHas) so ordering by journal_entries.date works correctly
+        $lines = JournalLine::join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
+            ->where('journal_lines.account_id', $account->id)
+            ->where('journal_entries.status', 'posted')
+            ->when($from, fn ($q) => $q->whereDate('journal_entries.date', '>=', $from))
+            ->when($to,   fn ($q) => $q->whereDate('journal_entries.date', '<=', $to))
+            ->orderBy('journal_entries.date')
+            ->orderBy('journal_lines.id')
+            ->select('journal_lines.*', 'journal_entries.date as entry_date',
+                     'journal_entries.reference as entry_reference',
+                     'journal_entries.description as entry_description')
+            ->get();
+
+        $isDebitNormal = in_array($account->type, ['asset', 'expense'], true);
+        $runningBalance = 0.0;
+        $rows = [];
+        foreach ($lines as $line) {
+            $debit  = (float) $line->debit;
+            $credit = (float) $line->credit;
+            $runningBalance += $isDebitNormal ? ($debit - $credit) : ($credit - $debit);
+            $rows[] = [
+                'id'          => $line->id,
+                'date'        => $line->entry_date instanceof \Carbon\Carbon
+                                  ? $line->entry_date->toDateString()
+                                  : (string) $line->entry_date,
+                'reference'   => $line->entry_reference,
+                'description' => $line->description ?? $line->entry_description,
+                'debit'       => $debit,
+                'credit'      => $credit,
+                'balance'     => $runningBalance,
+            ];
+        }
+
+        $accounts = Account::orderBy('code')->get(['id', 'code', 'name', 'type']);
+
+        return Inertia::render('Finance/Reports/AccountLedger', [
+            'accounts'    => $accounts,
+            'account'     => ['id' => $account->id, 'code' => $account->code, 'name' => $account->name, 'type' => $account->type],
+            'rows'        => $rows,
+            'from'        => $from,
+            'to'          => $to,
+            'breadcrumbs' => [
+                ['label' => 'Finance'], ['label' => 'Reports'],
+                ['label' => "Ledger: {$account->name}"],
             ],
         ]);
     }

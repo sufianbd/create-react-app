@@ -44,4 +44,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
         ->name('reports.profit-loss');
     Route::get('reports/balance-sheet', [ReportController::class, 'balanceSheet'])
         ->name('reports.balance-sheet');
+    Route::get('reports/aged-receivables', [ReportController::class, 'agedReceivables'])->name('reports.aged-receivables');
+    Route::get('reports/aged-payables',    [ReportController::class, 'agedPayables'])->name('reports.aged-payables');
+    Route::get('reports/account-ledger',               [ReportController::class, 'accountLedgerIndex'])->name('reports.account-ledger.index');
+    Route::get('reports/account-ledger/{account}',     [ReportController::class, 'accountLedger'])->name('reports.account-ledger');
 });

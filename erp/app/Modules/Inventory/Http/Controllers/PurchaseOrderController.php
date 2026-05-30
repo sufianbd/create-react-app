@@ -92,6 +92,26 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
+    public function receiveForm(PurchaseOrder $purchaseOrder): Response
+    {
+        if (! $purchaseOrder->canTransitionTo('received')) {
+            return redirect()->route('inventory.purchase-orders.show', $purchaseOrder)
+                ->withErrors(['status' => 'This purchase order cannot be received in its current status.']);
+        }
+
+        $purchaseOrder->load(['supplier', 'warehouse', 'items.product']);
+
+        return Inertia::render('Inventory/PurchaseOrders/Receive', [
+            'order'       => new PurchaseOrderResource($purchaseOrder),
+            'breadcrumbs' => [
+                ['label' => 'Inventory'],
+                ['label' => 'Purchase Orders', 'href' => route('inventory.purchase-orders.index')],
+                ['label' => "PO-" . str_pad($purchaseOrder->id, 4, '0', STR_PAD_LEFT), 'href' => route('inventory.purchase-orders.show', $purchaseOrder)],
+                ['label' => 'Receive Items'],
+            ],
+        ]);
+    }
+
     public function transition(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
     {
         $status = $request->validate(['status' => ['required', 'string']])['status'];
@@ -143,7 +163,8 @@ class PurchaseOrderController extends Controller
             return back()->withErrors(['status' => $e->getMessage()]);
         }
 
-        return back()->with('success', 'Items received and stock updated.');
+        return redirect()->route('inventory.purchase-orders.show', $purchaseOrder)
+            ->with('success', 'Items received and stock updated.');
     }
 
     public function cancel(PurchaseOrder $purchaseOrder): RedirectResponse

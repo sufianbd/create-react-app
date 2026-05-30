@@ -3,6 +3,11 @@
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
 use App\Modules\Finance\Models\Account;
+use App\Modules\Finance\Models\Bill;
+use App\Modules\Finance\Models\BillItem;
+use App\Modules\Finance\Models\Contact;
+use App\Modules\Finance\Models\Invoice;
+use App\Modules\Finance\Models\InvoiceItem;
 use App\Modules\Finance\Models\JournalEntry;
 use App\Modules\Finance\Models\JournalLine;
 use Carbon\Carbon;
@@ -110,5 +115,87 @@ test('staff cannot access financial reports', function () {
 
     $this->actingAs($this->staff)
         ->get('/finance/reports/balance-sheet')
+        ->assertStatus(403);
+});
+
+test('aged receivables report is accessible', function () {
+    $this->actingAs($this->admin)
+        ->get('/finance/reports/aged-receivables')
+        ->assertStatus(200)
+        ->assertInertia(fn ($p) => $p
+            ->component('Finance/Reports/AgedReceivables')
+            ->has('rows')->has('totals')->has('grand_total')
+        );
+});
+
+test('aged receivables shows overdue invoice in correct bucket', function () {
+    Carbon::setTestNow('2026-06-01');
+
+    $contact = Contact::create(['tenant_id' => $this->tenant->id, 'name' => 'Test Customer', 'type' => 'customer']);
+    $invoice = Invoice::create([
+        'tenant_id'  => $this->tenant->id,
+        'contact_id' => $contact->id,
+        'issue_date' => '2026-04-01',
+        'due_date'   => '2026-04-16',
+        'status'     => 'sent',
+    ]);
+    InvoiceItem::create(['invoice_id' => $invoice->id, 'description' => 'Service', 'quantity' => 1, 'unit_price' => 500, 'tax_rate' => 0]);
+
+    $this->actingAs($this->admin)
+        ->get('/finance/reports/aged-receivables?as_of=2026-06-01')
+        ->assertInertia(fn ($p) => $p
+            ->has('rows', 1)
+            ->where('rows.0.bucket', '31-60')
+        );
+
+    Carbon::setTestNow();
+});
+
+test('aged payables report is accessible', function () {
+    $this->actingAs($this->admin)
+        ->get('/finance/reports/aged-payables')
+        ->assertStatus(200)
+        ->assertInertia(fn ($p) => $p->component('Finance/Reports/AgedPayables'));
+});
+
+test('account ledger index is accessible', function () {
+    $this->actingAs($this->admin)
+        ->get('/finance/reports/account-ledger')
+        ->assertStatus(200)
+        ->assertInertia(fn ($p) => $p
+            ->component('Finance/Reports/AccountLedger')
+            ->has('accounts')
+            ->where('account', null)
+        );
+});
+
+test('account ledger shows running balance for posted entries', function () {
+    Carbon::setTestNow('2026-06-01');
+
+    $account = Account::create(['tenant_id' => $this->tenant->id, 'code' => '1100', 'name' => 'Bank', 'type' => 'asset', 'is_active' => true]);
+    $equity  = Account::create(['tenant_id' => $this->tenant->id, 'code' => '3100', 'name' => 'Equity', 'type' => 'equity', 'is_active' => true]);
+
+    $e1 = JournalEntry::create(['tenant_id' => $this->tenant->id, 'date' => '2026-01-10', 'description' => 'Initial', 'status' => 'posted']);
+    JournalLine::create(['journal_entry_id' => $e1->id, 'account_id' => $account->id, 'debit' => 500, 'credit' => 0]);
+    JournalLine::create(['journal_entry_id' => $e1->id, 'account_id' => $equity->id,  'debit' => 0, 'credit' => 500]);
+
+    $e2 = JournalEntry::create(['tenant_id' => $this->tenant->id, 'date' => '2026-02-15', 'description' => 'Second', 'status' => 'posted']);
+    JournalLine::create(['journal_entry_id' => $e2->id, 'account_id' => $account->id, 'debit' => 300, 'credit' => 0]);
+    JournalLine::create(['journal_entry_id' => $e2->id, 'account_id' => $equity->id,  'debit' => 0, 'credit' => 300]);
+
+    $this->actingAs($this->admin)
+        ->get("/finance/reports/account-ledger/{$account->id}?from=2026-01-01&to=2026-12-31")
+        ->assertInertia(fn ($p) => $p
+            ->has('rows', 2)
+            ->where('rows.0.balance', 500)
+            ->where('rows.1.balance', 800)
+        );
+
+    Carbon::setTestNow();
+});
+
+test('staff cannot access aged receivables', function () {
+    $this->actingAs($this->staff)
+        ->get('/finance/reports/aged-receivables')
         ->assertStatus(403);
 });

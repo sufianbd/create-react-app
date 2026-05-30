@@ -1,21 +1,48 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
 import { StockLevelBadge } from '@/Components/Inventory/StockLevelBadge';
 import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
-import type { Product } from '@/types/inventory';
+import type { Product, StockMovement, Paginator } from '@/types/inventory';
 
 interface Props extends PageProps {
     product: Product;
+    movements: Paginator<StockMovement>;
 }
 
-export default function ProductShow({ product }: Props) {
+export default function ProductShow({ product, movements }: Props) {
     const { can } = usePermission();
+    const [showAdjust, setShowAdjust] = useState(false);
+    const [adjustForm, setAdjustForm] = useState({
+        warehouse_id: '',
+        type: 'in' as 'in' | 'out',
+        quantity: '',
+        reference: '',
+        notes: '',
+    });
 
     function handleDelete() {
         if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
         router.delete(`/inventory/products/${product.id}`);
+    }
+
+    function submitAdjustment(e: React.FormEvent) {
+        e.preventDefault();
+        router.post('/inventory/stock-movements', {
+            product_id: product.id,
+            warehouse_id: Number(adjustForm.warehouse_id),
+            type: adjustForm.type,
+            quantity: Number(adjustForm.quantity),
+            reference: adjustForm.reference || undefined,
+            notes: adjustForm.notes || undefined,
+        } as any, {
+            onSuccess: () => {
+                setShowAdjust(false);
+                setAdjustForm({ warehouse_id: '', type: 'in', quantity: '', reference: '', notes: '' });
+            },
+        });
     }
 
     return (
@@ -82,7 +109,17 @@ export default function ProductShow({ product }: Props) {
                     </div>
 
                     <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                        <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-2">Stock Levels</h2>
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <h2 className="text-base font-semibold text-slate-900">Stock Levels</h2>
+                            {can('inventory.update') && (
+                                <button
+                                    onClick={() => setShowAdjust((v) => !v)}
+                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                                >
+                                    {showAdjust ? 'Cancel' : '+ Adjust'}
+                                </button>
+                            )}
+                        </div>
                         {product.stock_levels && product.stock_levels.length > 0 ? (
                             <ul className="space-y-3">
                                 {product.stock_levels.map((sl) => (
@@ -99,8 +136,105 @@ export default function ProductShow({ product }: Props) {
                             <span className="text-sm font-medium text-slate-700">Total</span>
                             <StockLevelBadge quantity={product.total_quantity ?? 0} reorderPoint={product.reorder_point} />
                         </div>
+
+                        {/* Stock adjustment form */}
+                        {showAdjust && (
+                            <form onSubmit={submitAdjustment} className="border-t border-slate-100 pt-4 space-y-3">
+                                <h3 className="text-sm font-medium text-slate-700">Record Stock Movement</h3>
+                                <div>
+                                    <label className="block text-xs text-slate-500 mb-1">Warehouse</label>
+                                    <select
+                                        value={adjustForm.warehouse_id}
+                                        onChange={(e) => setAdjustForm({ ...adjustForm, warehouse_id: e.target.value })}
+                                        required
+                                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        <option value="">Select warehouse…</option>
+                                        {(product.stock_levels ?? []).map((sl) => (
+                                            <option key={sl.warehouse_id} value={sl.warehouse_id}>{sl.warehouse_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex gap-3">
+                                    <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                                        <input type="radio" name="type" value="in" checked={adjustForm.type === 'in'}
+                                            onChange={() => setAdjustForm({ ...adjustForm, type: 'in' })} />
+                                        <span className="text-green-700 font-medium">In</span>
+                                    </label>
+                                    <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                                        <input type="radio" name="type" value="out" checked={adjustForm.type === 'out'}
+                                            onChange={() => setAdjustForm({ ...adjustForm, type: 'out' })} />
+                                        <span className="text-red-700 font-medium">Out</span>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-500 mb-1">Quantity</label>
+                                    <input type="number" min="0.01" step="0.01" required
+                                        value={adjustForm.quantity}
+                                        onChange={(e) => setAdjustForm({ ...adjustForm, quantity: e.target.value })}
+                                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-500 mb-1">Reference</label>
+                                    <input type="text" value={adjustForm.reference}
+                                        onChange={(e) => setAdjustForm({ ...adjustForm, reference: e.target.value })}
+                                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-slate-500 mb-1">Notes</label>
+                                    <textarea value={adjustForm.notes} rows={2}
+                                        onChange={(e) => setAdjustForm({ ...adjustForm, notes: e.target.value })}
+                                        className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                </div>
+                                <Button type="submit" size="sm" className="w-full">Record Movement</Button>
+                            </form>
+                        )}
                     </div>
                 </div>
+
+                {/* Stock movement history */}
+                {movements && movements.data && movements.data.length > 0 && (
+                    <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+                        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+                            <h2 className="text-sm font-medium text-slate-700">Recent Stock Movements</h2>
+                            <Link href={`/inventory/stock-movements?product_id=${product.id}`} className="text-xs text-indigo-600 hover:text-indigo-800">View all →</Link>
+                        </div>
+                        <table className="w-full text-sm">
+                            <thead className="text-xs text-slate-500 uppercase">
+                                <tr>
+                                    <th className="px-4 py-2 text-left font-medium">Date</th>
+                                    <th className="px-4 py-2 text-left font-medium">Type</th>
+                                    <th className="px-4 py-2 text-left font-medium">Warehouse</th>
+                                    <th className="px-4 py-2 text-right font-medium">Qty</th>
+                                    <th className="px-4 py-2 text-left font-medium">Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {movements.data.map((m: StockMovement) => (
+                                    <tr key={m.id} className="hover:bg-slate-50">
+                                        <td className="px-4 py-2 text-slate-500">{new Date(m.created_at).toLocaleDateString()}</td>
+                                        <td className="px-4 py-2">
+                                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                                                m.type === 'in' ? 'bg-green-100 text-green-700' :
+                                                m.type === 'out' ? 'bg-red-100 text-red-700' :
+                                                'bg-slate-100 text-slate-600'}`}>
+                                                {m.type}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-2 text-slate-600">{m.warehouse?.name ?? '—'}</td>
+                                        <td className={`px-4 py-2 text-right font-medium ${m.type === 'out' ? 'text-red-600' : 'text-green-600'}`}>
+                                            {m.type === 'out' ? '-' : '+'}{Number(m.quantity).toFixed(2)}
+                                        </td>
+                                        <td className="px-4 py-2 text-slate-400 text-xs">{m.reference ?? '—'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

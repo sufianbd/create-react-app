@@ -39,18 +39,31 @@ export default function PurchaseOrderShow({ order, transitions }: Props) {
                         <h1 className="text-2xl font-semibold text-slate-900">PO-{String(order.id).padStart(4, '0')}</h1>
                         <PurchaseOrderStatusBadge status={order.status} />
                     </div>
-                    {can('inventory.update') && transitions.length > 0 && (
+                    {can('inventory.update') && (transitions.length > 0 || order.status === 'approved') && (
                         <div className="flex gap-2">
-                            {transitions.map((t) => (
-                                <Button
-                                    key={t}
-                                    variant={t === 'cancelled' ? 'danger' : t === 'received' ? 'primary' : 'secondary'}
-                                    size="sm"
-                                    onClick={() => handleTransition(t)}
-                                >
-                                    {transitionLabels[t] ?? t}
-                                </Button>
-                            ))}
+                            {order.status === 'approved' ? (
+                                <>
+                                    <Link href={`/inventory/purchase-orders/${order.id}/receive`}>
+                                        <Button variant="primary" size="sm">Receive Items</Button>
+                                    </Link>
+                                    {transitions.filter((t) => t !== 'received').map((t) => (
+                                        <Button key={t} variant={t === 'cancelled' ? 'danger' : 'secondary'} size="sm" onClick={() => handleTransition(t)}>
+                                            {transitionLabels[t] ?? t}
+                                        </Button>
+                                    ))}
+                                </>
+                            ) : (
+                                transitions.map((t) => (
+                                    <Button
+                                        key={t}
+                                        variant={t === 'cancelled' ? 'danger' : t === 'received' ? 'primary' : 'secondary'}
+                                        size="sm"
+                                        onClick={() => handleTransition(t)}
+                                    >
+                                        {transitionLabels[t] ?? t}
+                                    </Button>
+                                ))
+                            )}
                         </div>
                     )}
                 </div>

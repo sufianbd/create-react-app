@@ -5,6 +5,8 @@ use App\Modules\Core\Models\Tenant;
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\StockLevel;
 use App\Modules\Inventory\Models\StockMovement;
+use App\Modules\Inventory\Models\PurchaseOrder;
+use App\Modules\Inventory\Models\PurchaseOrderItem;
 use App\Modules\Inventory\Models\Warehouse;
 use Database\Seeders\RolePermissionSeeder;
 
@@ -73,4 +75,30 @@ test('http endpoint records stock movement', function () {
 
     $response->assertSessionHasNoErrors();
     expect(StockMovement::where('reference', 'REF-001')->exists())->toBeTrue();
+});
+
+test('po receive form is accessible when approved', function () {
+    $supplier = \App\Modules\Inventory\Models\Supplier::create([
+        'tenant_id' => $this->tenant->id,
+        'name'      => 'Test Supplier',
+    ]);
+
+    $po = PurchaseOrder::create([
+        'tenant_id'    => $this->tenant->id,
+        'supplier_id'  => $supplier->id,
+        'warehouse_id' => $this->warehouse->id,
+        'status'       => 'approved',
+        'created_by'   => $this->admin->id,
+    ]);
+
+    PurchaseOrderItem::create([
+        'purchase_order_id' => $po->id,
+        'product_id'        => $this->product->id,
+        'quantity'          => 10,
+        'unit_cost'         => 5,
+    ]);
+
+    $this->get("/inventory/purchase-orders/{$po->id}/receive")
+        ->assertStatus(200)
+        ->assertInertia(fn ($p) => $p->component('Inventory/PurchaseOrders/Receive'));
 });
