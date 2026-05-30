@@ -163,7 +163,7 @@ export default function BillShow({ bill }: Props) {
                                 {bill.payments!.map((p) => (
                                     <tr key={p.id}>
                                         <td className="px-4 py-3">{p.payment_date}</td>
-                                        <td className="px-4 py-3 capitalize">{p.method.replace('_', ' ')}</td>
+                                        <td className="px-4 py-3 capitalize">{p.method.replaceAll('_', ' ')}</td>
                                         <td className="px-4 py-3 text-slate-500">{p.reference ?? '—'}</td>
                                         <td className="px-4 py-3 text-right font-medium">{Number(p.amount).toFixed(2)}</td>
                                     </tr>

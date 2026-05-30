@@ -138,6 +138,10 @@ class BillController extends Controller
     {
         $this->authorize('update', $bill);
 
+        if ($bill->status !== 'received') {
+            return back()->withErrors(['status' => 'Payments can only be recorded on received bills.']);
+        }
+
         $data = $request->validated();
 
         DB::transaction(function () use ($data, $bill) {

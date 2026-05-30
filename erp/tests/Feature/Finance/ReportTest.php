@@ -13,6 +13,8 @@ beforeEach(function () {
     $this->tenant = Tenant::create(['name' => 'Report Co', 'slug' => 'report-co']);
     $this->admin  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->admin->assignRole('super-admin');
+    $this->staff  = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->staff->assignRole('staff');
 });
 
 test('profit and loss report is accessible', function () {
@@ -29,7 +31,7 @@ test('profit and loss report is accessible', function () {
 
 test('profit and loss net is zero with no posted entries', function () {
     $this->actingAs($this->admin)
-        ->get('/finance/reports/profit-loss')
+        ->get('/finance/reports/profit-loss?from=2026-01-01&to=2026-12-31')
         ->assertInertia(fn ($p) => $p->where('net', 0));
 });
 
@@ -89,6 +91,7 @@ test('balance sheet total assets equals total liabilities plus equity', function
         ->get('/finance/reports/balance-sheet?as_of=2026-06-01')
         ->assertInertia(fn ($p) => $p
             ->where('total_assets', 1000)
+            ->where('total_liabilities', 0)
             ->where('total_equity', 1000)
         );
 
@@ -98,4 +101,14 @@ test('balance sheet total assets equals total liabilities plus equity', function
 test('guest cannot access profit and loss', function () {
     $this->get('/finance/reports/profit-loss')
         ->assertRedirect();
+});
+
+test('staff cannot access financial reports', function () {
+    $this->actingAs($this->staff)
+        ->get('/finance/reports/profit-loss')
+        ->assertStatus(403);
+
+    $this->actingAs($this->staff)
+        ->get('/finance/reports/balance-sheet')
+        ->assertStatus(403);
 });

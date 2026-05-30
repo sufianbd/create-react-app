@@ -57,9 +57,10 @@ test('bill number is generated on creation', function () {
             'items'      => [
                 ['description' => 'Service', 'quantity' => 1, 'unit_price' => 100, 'tax_rate' => 0],
             ],
-        ]);
+        ])
+        ->assertRedirect();
 
-    $bill = Bill::latest()->first();
+    $bill = Bill::where('tenant_id', $this->tenant->id)->latest()->first();
     expect($bill->number)->toStartWith('BILL-');
 });
 
@@ -86,7 +87,7 @@ test('bill total is calculated correctly', function () {
         'tax_rate'    => 10,
     ]);
 
-    $bill->load('items');
+    $bill->load(['items', 'payments']);
 
     expect($bill->subtotal)->toBe(200.0);
     expect($bill->tax_total)->toBe(20.0);
@@ -176,4 +177,31 @@ test('staff cannot delete a bill', function () {
     $this->actingAs($this->staff)
         ->delete("/finance/bills/{$bill->id}")
         ->assertStatus(403);
+});
+
+test('staff cannot create a bill', function () {
+    $this->actingAs($this->staff)
+        ->post('/finance/bills', [
+            'issue_date' => '2026-01-01',
+            'items'      => [['description' => 'X', 'quantity' => 1, 'unit_price' => 10, 'tax_rate' => 0]],
+        ])
+        ->assertStatus(403);
+});
+
+test('payment cannot be recorded on a draft bill', function () {
+    $bill = Bill::create([
+        'tenant_id'  => $this->tenant->id,
+        'issue_date' => now()->toDateString(),
+    ]);
+
+    // status is 'draft' — payment should be rejected
+    $this->actingAs($this->admin)
+        ->post("/finance/bills/{$bill->id}/payments", [
+            'amount'       => '50.00',
+            'payment_date' => now()->toDateString(),
+            'method'       => 'cash',
+        ])
+        ->assertSessionHasErrors('status');
+
+    expect(BillPayment::where('bill_id', $bill->id)->exists())->toBeFalse();
 });
