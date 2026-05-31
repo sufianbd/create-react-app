@@ -7,6 +7,7 @@ use App\Modules\Finance\Http\Controllers\CreditNoteController;
 use App\Modules\Finance\Http\Controllers\InvoiceController;
 use App\Modules\Finance\Http\Controllers\JournalEntryController;
 use App\Modules\Finance\Http\Controllers\QuoteController;
+use App\Modules\Finance\Http\Controllers\RecurringInvoiceController;
 use App\Modules\Finance\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +50,16 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::patch('quotes/{quote}/decline', [QuoteController::class, 'decline'])->name('quotes.decline');
     Route::post('quotes/{quote}/convert', [QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
     Route::delete('quotes/{quote}', [QuoteController::class, 'destroy'])->name('quotes.destroy');
+
+    // Recurring Invoices
+    Route::get('recurring-invoices', [RecurringInvoiceController::class, 'index'])->name('recurring-invoices.index');
+    Route::get('recurring-invoices/create', [RecurringInvoiceController::class, 'create'])->name('recurring-invoices.create');
+    Route::post('recurring-invoices', [RecurringInvoiceController::class, 'store'])->name('recurring-invoices.store');
+    Route::get('recurring-invoices/{recurringInvoice}', [RecurringInvoiceController::class, 'show'])->name('recurring-invoices.show');
+    Route::patch('recurring-invoices/{recurringInvoice}/pause', [RecurringInvoiceController::class, 'pause'])->name('recurring-invoices.pause');
+    Route::patch('recurring-invoices/{recurringInvoice}/resume', [RecurringInvoiceController::class, 'resume'])->name('recurring-invoices.resume');
+    Route::post('recurring-invoices/{recurringInvoice}/generate', [RecurringInvoiceController::class, 'generateNow'])->name('recurring-invoices.generate');
+    Route::delete('recurring-invoices/{recurringInvoice}', [RecurringInvoiceController::class, 'destroy'])->name('recurring-invoices.destroy');
 
     // Credit Notes
     Route::get('credit-notes', [CreditNoteController::class, 'index'])->name('credit-notes.index');

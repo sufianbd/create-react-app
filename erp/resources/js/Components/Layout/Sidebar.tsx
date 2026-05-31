@@ -62,6 +62,7 @@ const navItems: NavItem[] = [
         permission: 'finance.view',
         children: [
             { label: 'Invoices',          href: '/finance/invoices',                      icon: <span /> },
+            { label: 'Recurring Invoices', href: '/finance/recurring-invoices',           icon: <span /> },
             { label: 'Quotes',            href: '/finance/quotes',                        icon: <span /> },
             { label: 'Credit Notes',      href: '/finance/credit-notes',                  icon: <span /> },
             { label: 'Contacts',          href: '/finance/contacts',                      icon: <span /> },

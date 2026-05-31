@@ -181,3 +181,19 @@ export interface CreditNote {
     items?: CreditNoteItem[]; subtotal?: number; tax_total?: number; total?: number;
     transitions?: string[]; created_by?: string; created_at?: string;
 }
+
+export type RecurringFrequency = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+export type RecurringStatus = 'active' | 'paused' | 'ended';
+export interface RecurringInvoiceItem {
+    id?: number; description: string; quantity: number;
+    unit_price: number; tax_rate: number; line_total?: number;
+}
+export interface RecurringInvoice {
+    id: number; status: RecurringStatus; frequency: RecurringFrequency;
+    start_date: string; next_run_date: string; end_date?: string;
+    due_days: number; auto_send: boolean; notes?: string;
+    last_generated_at?: string; generated_count: number;
+    contact?: { id: number; name: string } | null;
+    items?: RecurringInvoiceItem[]; subtotal?: number; tax_total?: number; total?: number;
+    created_by?: string; created_at?: string;
+}
