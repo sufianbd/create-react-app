@@ -3,6 +3,7 @@
 namespace App\Modules\Finance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Finance\Http\Controllers\Concerns\SendsDocuments;
 use App\Modules\Finance\Http\Requests\StoreBillRequest;
 use App\Modules\Finance\Http\Requests\StorePaymentRequest;
 use App\Modules\Finance\Http\Resources\BillResource;
@@ -18,6 +19,7 @@ use Inertia\Response;
 
 class BillController extends Controller
 {
+    use SendsDocuments;
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Bill::class);
@@ -173,5 +175,37 @@ class BillController extends Controller
 
         return redirect()->route('finance.bills.index')
             ->with('success', 'Bill deleted.');
+    }
+
+    public function pdf(Bill $bill): \Illuminate\Http\Response
+    {
+        $this->authorize('view', $bill);
+        $bill->load(['items', 'contact', 'payments']);
+        $pdf = $this->renderDocumentPdf('pdf.bill', [
+            'bill'    => $bill,
+            'company' => $this->resolveCompanyName(),
+        ]);
+        $filename = 'bill-' . $bill->number . '.pdf';
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function email(Request $request, Bill $bill): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorize('update', $bill);
+        $request->validate(['email' => 'required|email', 'message' => 'nullable|string|max:1000']);
+
+        $bill->load(['items', 'contact', 'payments']);
+        $pdf      = $this->renderDocumentPdf('pdf.bill', [
+            'bill'    => $bill,
+            'company' => $this->resolveCompanyName(),
+        ]);
+        $filename = 'bill-' . $bill->number . '.pdf';
+
+        $this->sendDocumentEmail($request, $request->input('email'), 'Bill ' . $bill->number, $pdf, $filename);
+
+        return back()->with('success', 'Bill emailed successfully.');
     }
 }

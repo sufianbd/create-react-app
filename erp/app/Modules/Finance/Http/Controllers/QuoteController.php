@@ -3,6 +3,7 @@
 namespace App\Modules\Finance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Finance\Http\Controllers\Concerns\SendsDocuments;
 use App\Modules\Finance\Http\Requests\StoreQuoteRequest;
 use App\Modules\Finance\Http\Resources\QuoteResource;
 use App\Modules\Finance\Models\Contact;
@@ -18,6 +19,7 @@ use Inertia\Response;
 
 class QuoteController extends Controller
 {
+    use SendsDocuments;
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Quote::class);
@@ -195,5 +197,41 @@ class QuoteController extends Controller
 
         return redirect()->route('finance.quotes.index')
             ->with('success', 'Quote deleted.');
+    }
+
+    public function pdf(Quote $quote): \Illuminate\Http\Response
+    {
+        $this->authorize('view', $quote);
+        $quote->load(['items', 'contact']);
+        $pdf = $this->renderDocumentPdf('pdf.quote', [
+            'quote'   => $quote,
+            'company' => $this->resolveCompanyName(),
+        ]);
+        $filename = 'quote-' . $quote->number . '.pdf';
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function email(Request $request, Quote $quote): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorize('update', $quote);
+        $request->validate(['email' => 'required|email', 'message' => 'nullable|string|max:1000']);
+
+        $quote->load(['items', 'contact']);
+        $pdf      = $this->renderDocumentPdf('pdf.quote', [
+            'quote'   => $quote,
+            'company' => $this->resolveCompanyName(),
+        ]);
+        $filename = 'quote-' . $quote->number . '.pdf';
+
+        $this->sendDocumentEmail($request, $request->input('email'), 'Quote ' . $quote->number, $pdf, $filename);
+
+        if ($quote->status === 'draft') {
+            $quote->transitionTo('sent');
+        }
+
+        return back()->with('success', 'Quote emailed successfully.');
     }
 }

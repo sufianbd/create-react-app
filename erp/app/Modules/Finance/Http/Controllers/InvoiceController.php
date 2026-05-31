@@ -4,6 +4,7 @@ namespace App\Modules\Finance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Core\Models\TenantSetting;
+use App\Modules\Finance\Http\Controllers\Concerns\SendsDocuments;
 use App\Modules\Finance\Http\Requests\StoreInvoiceRequest;
 use App\Modules\Finance\Http\Requests\StorePaymentRequest;
 use App\Modules\Finance\Http\Resources\InvoiceResource;
@@ -19,6 +20,7 @@ use Inertia\Response;
 
 class InvoiceController extends Controller
 {
+    use SendsDocuments;
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Invoice::class);
@@ -185,5 +187,41 @@ class InvoiceController extends Controller
 
         return redirect()->route('finance.invoices.index')
             ->with('success', 'Invoice deleted.');
+    }
+
+    public function pdf(Invoice $invoice): \Illuminate\Http\Response
+    {
+        $this->authorize('view', $invoice);
+        $invoice->load(['items', 'contact', 'payments']);
+        $pdf = $this->renderDocumentPdf('pdf.invoice', [
+            'invoice' => $invoice,
+            'company' => $this->resolveCompanyName(),
+        ]);
+        $filename = 'invoice-' . $invoice->number . '.pdf';
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function email(Request $request, Invoice $invoice): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorize('update', $invoice);
+        $request->validate(['email' => 'required|email', 'message' => 'nullable|string|max:1000']);
+
+        $invoice->load(['items', 'contact', 'payments']);
+        $pdf      = $this->renderDocumentPdf('pdf.invoice', [
+            'invoice' => $invoice,
+            'company' => $this->resolveCompanyName(),
+        ]);
+        $filename = 'invoice-' . $invoice->number . '.pdf';
+
+        $this->sendDocumentEmail($request, $request->input('email'), 'Invoice ' . $invoice->number, $pdf, $filename);
+
+        if ($invoice->status === 'draft') {
+            $invoice->transitionTo('sent');
+        }
+
+        return back()->with('success', 'Invoice emailed successfully.');
     }
 }

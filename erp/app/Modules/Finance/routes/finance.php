@@ -34,6 +34,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])
         ->name('invoices.print');
 
+    // PDF + Email routes
+    Route::get('/invoices/{invoice}/pdf',   [InvoiceController::class, 'pdf'])->name('finance.invoices.pdf');
+    Route::post('/invoices/{invoice}/email', [InvoiceController::class, 'email'])->name('finance.invoices.email');
+    Route::get('/quotes/{quote}/pdf',       [QuoteController::class, 'pdf'])->name('finance.quotes.pdf');
+    Route::post('/quotes/{quote}/email',     [QuoteController::class, 'email'])->name('finance.quotes.email');
+    Route::get('/bills/{bill}/pdf',         [BillController::class, 'pdf'])->name('finance.bills.pdf');
+    Route::post('/bills/{bill}/email',       [BillController::class, 'email'])->name('finance.bills.email');
+
     // Bills (AP)
     Route::resource('bills', BillController::class)->except(['edit', 'update']);
     Route::patch('bills/{bill}/receive', [BillController::class, 'receive'])->name('bills.receive');
