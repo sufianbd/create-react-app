@@ -62,6 +62,7 @@ const navItems: NavItem[] = [
         permission: 'finance.view',
         children: [
             { label: 'Invoices',          href: '/finance/invoices',                      icon: <span /> },
+            { label: 'Quotes',            href: '/finance/quotes',                        icon: <span /> },
             { label: 'Contacts',          href: '/finance/contacts',                      icon: <span /> },
             { label: 'Journal Entries',   href: '/finance/journal-entries',               icon: <span /> },
             { label: 'Chart of Accounts', href: '/finance/accounts',                      icon: <span /> },

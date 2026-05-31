@@ -139,3 +139,31 @@ export interface Bill {
     amount_due?: number;
     transitions?: BillStatus[];
 }
+
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'cancelled';
+
+export interface QuoteItem {
+    id?: number;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    tax_rate: number;
+    line_total?: number;
+}
+
+export interface Quote {
+    id: number;
+    number?: string;
+    status: QuoteStatus;
+    issue_date: string;
+    expiry_date?: string;
+    notes?: string;
+    contact?: { id: number; name: string } | null;
+    items?: QuoteItem[];
+    subtotal?: number;
+    tax_total?: number;
+    total?: number;
+    transitions?: string[];
+    created_by?: string;
+    created_at?: string;
+}

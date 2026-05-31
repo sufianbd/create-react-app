@@ -5,6 +5,7 @@ use App\Modules\Finance\Http\Controllers\BillController;
 use App\Modules\Finance\Http\Controllers\ContactController;
 use App\Modules\Finance\Http\Controllers\InvoiceController;
 use App\Modules\Finance\Http\Controllers\JournalEntryController;
+use App\Modules\Finance\Http\Controllers\QuoteController;
 use App\Modules\Finance\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,17 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::patch('bills/{bill}/cancel', [BillController::class, 'cancel'])->name('bills.cancel');
     Route::post('bills/{bill}/payments', [BillController::class, 'recordPayment'])
         ->name('bills.payments.store');
+
+    // Quotes
+    Route::get('quotes', [QuoteController::class, 'index'])->name('quotes.index');
+    Route::get('quotes/create', [QuoteController::class, 'create'])->name('quotes.create');
+    Route::post('quotes', [QuoteController::class, 'store'])->name('quotes.store');
+    Route::get('quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
+    Route::patch('quotes/{quote}/send', [QuoteController::class, 'send'])->name('quotes.send');
+    Route::patch('quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
+    Route::patch('quotes/{quote}/decline', [QuoteController::class, 'decline'])->name('quotes.decline');
+    Route::post('quotes/{quote}/convert', [QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
+    Route::delete('quotes/{quote}', [QuoteController::class, 'destroy'])->name('quotes.destroy');
 
     // Reports
     Route::get('reports/trial-balance', [ReportController::class, 'trialBalance'])
