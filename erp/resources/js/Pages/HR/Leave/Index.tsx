@@ -15,9 +15,10 @@ interface Props extends PageProps {
 }
 
 const STATUS_COLORS: Record<LeaveStatus, string> = {
-    pending:  'bg-amber-100 text-amber-700',
-    approved: 'bg-green-100 text-green-700',
-    rejected: 'bg-red-100 text-red-600',
+    pending:   'bg-amber-100 text-amber-700',
+    approved:  'bg-green-100 text-green-700',
+    rejected:  'bg-red-100 text-red-600',
+    cancelled: 'bg-slate-100 text-slate-600',
 };
 
 const STATUS_TABS: Array<{ value: LeaveStatus | ''; label: string }> = [
@@ -126,12 +127,12 @@ export default function LeaveIndex({ requests, employees, filters }: Props) {
                         <tbody className="divide-y divide-slate-100">
                             {requests.data.map((req) => (
                                 <tr key={req.id}>
-                                    <td className="px-4 py-3 font-medium text-slate-900">{req.employee.full_name}</td>
+                                    <td className="px-4 py-3 font-medium text-slate-900">{req.employee?.full_name ?? '—'}</td>
                                     <td className="px-4 py-3 text-slate-600">{req.leave_type ?? '—'}</td>
                                     <td className="px-4 py-3 text-slate-500">{req.start_date} → {req.end_date}</td>
                                     <td className="px-4 py-3 text-right">{req.days}</td>
                                     <td className="px-4 py-3">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[req.status]}`}>
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[req.status] ?? 'bg-slate-100 text-slate-500'}`}>
                                             {req.status}
                                         </span>
                                     </td>

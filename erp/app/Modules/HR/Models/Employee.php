@@ -4,7 +4,6 @@ namespace App\Modules\HR\Models;
 
 use App\Models\User;
 use App\Modules\Core\Traits\BelongsToTenant;
-use App\Modules\Core\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +12,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Employee extends Model
 {
     use BelongsToTenant;
-    use HasAuditLog;
     use SoftDeletes;
 
     protected $fillable = [
@@ -52,6 +50,33 @@ class Employee extends Model
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    /** @return string The employee code (e.g. EMP-00001) */
+    public function getCodeAttribute(): string
+    {
+        if ($this->employee_number) {
+            return $this->employee_number;
+        }
+        return 'EMP-' . str_pad((string) $this->id, 5, '0', STR_PAD_LEFT);
+    }
+
+    /** hire_date alias for start_date */
+    public function getHireDateAttribute()
+    {
+        return $this->start_date;
+    }
+
+    /** salary alias for salary_amount */
+    public function getSalaryAttribute()
+    {
+        return $this->salary_amount;
+    }
+
+    /** termination_date alias for end_date */
+    public function getTerminationDateAttribute()
+    {
+        return $this->end_date;
     }
 
     public function scopeActive($query)

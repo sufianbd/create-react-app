@@ -3,9 +3,10 @@
 namespace App\Modules\HR\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\HR\Http\Requests\StoreDepartmentRequest;
+use App\Modules\HR\Http\Resources\DepartmentResource;
 use App\Modules\HR\Models\Department;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,20 +14,14 @@ class DepartmentController extends Controller
 {
     public function index(): Response
     {
-        $this->authorize('viewAny', \App\Modules\HR\Models\Employee::class);
+        $this->authorize('viewAny', Department::class);
 
         $departments = Department::withCount('employees')
             ->orderBy('name')
             ->get();
 
         return Inertia::render('HR/Departments/Index', [
-            'departments' => $departments->map(fn ($d) => [
-                'id'              => $d->id,
-                'name'            => $d->name,
-                'description'     => $d->description,
-                'is_active'       => $d->is_active,
-                'employees_count' => $d->employees_count,
-            ]),
+            'departments' => DepartmentResource::collection($departments),
             'breadcrumbs' => [
                 ['label' => 'HR'],
                 ['label' => 'Departments', 'href' => route('hr.departments.index')],
@@ -34,42 +29,80 @@ class DepartmentController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function create(): Response
     {
-        $this->authorize('create', \App\Modules\HR\Models\Employee::class);
+        $this->authorize('create', Department::class);
 
-        $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'is_active'   => ['boolean'],
+        return Inertia::render('HR/Departments/Create', [
+            'breadcrumbs' => [
+                ['label' => 'HR'],
+                ['label' => 'Departments', 'href' => route('hr.departments.index')],
+                ['label' => 'New Department'],
+            ],
         ]);
-
-        Department::create([...$data, 'tenant_id' => auth()->user()->tenant_id]);
-
-        return back()->with('success', 'Department created.');
     }
 
-    public function update(Request $request, Department $department): RedirectResponse
+    public function store(StoreDepartmentRequest $request): RedirectResponse
     {
-        $this->authorize('update', \App\Modules\HR\Models\Employee::class);
+        $this->authorize('create', Department::class);
 
-        $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'is_active'   => ['boolean'],
+        $department = Department::create([
+            ...$request->validated(),
+            'tenant_id' => auth()->user()->tenant_id,
         ]);
 
-        $department->update($data);
+        return redirect()->route('hr.departments.show', $department)
+            ->with('success', 'Department created.');
+    }
 
-        return back()->with('success', 'Department updated.');
+    public function show(Department $department): Response
+    {
+        $this->authorize('view', $department);
+
+        $department->loadCount('employees');
+
+        return Inertia::render('HR/Departments/Show', [
+            'department'  => new DepartmentResource($department),
+            'breadcrumbs' => [
+                ['label' => 'HR'],
+                ['label' => 'Departments', 'href' => route('hr.departments.index')],
+                ['label' => $department->name],
+            ],
+        ]);
+    }
+
+    public function edit(Department $department): Response
+    {
+        $this->authorize('update', $department);
+
+        return Inertia::render('HR/Departments/Edit', [
+            'department'  => new DepartmentResource($department),
+            'breadcrumbs' => [
+                ['label' => 'HR'],
+                ['label' => 'Departments', 'href' => route('hr.departments.index')],
+                ['label' => $department->name, 'href' => route('hr.departments.show', $department)],
+                ['label' => 'Edit'],
+            ],
+        ]);
+    }
+
+    public function update(StoreDepartmentRequest $request, Department $department): RedirectResponse
+    {
+        $this->authorize('update', $department);
+
+        $department->update($request->validated());
+
+        return redirect()->route('hr.departments.show', $department)
+            ->with('success', 'Department updated.');
     }
 
     public function destroy(Department $department): RedirectResponse
     {
-        $this->authorize('delete', \App\Modules\HR\Models\Employee::class);
+        $this->authorize('delete', $department);
 
         $department->delete();
 
-        return back()->with('success', 'Department deleted.');
+        return redirect()->route('hr.departments.index')
+            ->with('success', 'Department deleted.');
     }
 }

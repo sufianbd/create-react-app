@@ -57,7 +57,16 @@ class EmployeeController extends Controller
     {
         $this->authorize('create', Employee::class);
 
-        $employee = Employee::create([...$request->validated(), 'tenant_id' => auth()->user()->tenant_id]);
+        $employee = Employee::create([
+            ...$request->validated(),
+            'tenant_id' => auth()->user()->tenant_id,
+        ]);
+
+        // Generate employee code
+        if (!$employee->employee_number) {
+            $employee->employee_number = 'EMP-' . str_pad((string) $employee->id, 5, '0', STR_PAD_LEFT);
+            $employee->save();
+        }
 
         return redirect()->route('hr.employees.show', $employee)
             ->with('success', 'Employee created.');
@@ -71,14 +80,6 @@ class EmployeeController extends Controller
 
         return Inertia::render('HR/Employees/Show', [
             'employee'    => new EmployeeResource($employee),
-            'leaveRequests' => $employee->leaveRequests->map(fn ($lr) => [
-                'id'         => $lr->id,
-                'leave_type' => $lr->leaveType?->name,
-                'start_date' => $lr->start_date?->toDateString(),
-                'end_date'   => $lr->end_date?->toDateString(),
-                'days'       => $lr->days,
-                'status'     => $lr->status,
-            ]),
             'breadcrumbs' => [
                 ['label' => 'HR'],
                 ['label' => 'Employees', 'href' => route('hr.employees.index')],
@@ -122,5 +123,22 @@ class EmployeeController extends Controller
 
         return redirect()->route('hr.employees.index')
             ->with('success', 'Employee deleted.');
+    }
+
+    public function terminate(Employee $employee): RedirectResponse
+    {
+        $this->authorize('update', $employee);
+
+        if ($employee->status !== 'active') {
+            return back()->withErrors(['status' => 'Only active employees can be terminated.']);
+        }
+
+        $employee->update([
+            'status'   => 'terminated',
+            'end_date' => now()->toDateString(),
+        ]);
+
+        return redirect()->route('hr.employees.show', $employee)
+            ->with('success', 'Employee terminated.');
     }
 }

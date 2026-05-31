@@ -3,7 +3,6 @@
 namespace App\Modules\HR\Models;
 
 use App\Modules\Core\Traits\BelongsToTenant;
-use App\Modules\Core\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +10,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Department extends Model
 {
     use BelongsToTenant;
-    use HasAuditLog;
     use SoftDeletes;
 
     protected $fillable = ['tenant_id', 'name', 'description', 'is_active'];

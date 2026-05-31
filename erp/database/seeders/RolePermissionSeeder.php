@@ -31,10 +31,10 @@ class RolePermissionSeeder extends Seeder
         'finance.delete' => ['super-admin'],
 
         // HR
-        'hr.view'   => ['super-admin', 'admin', 'manager'],
-        'hr.create' => ['super-admin', 'admin'],
-        'hr.update' => ['super-admin', 'admin'],
-        'hr.delete' => ['super-admin'],
+        'hr.view'   => ['super-admin', 'admin', 'manager', 'staff'],
+        'hr.create' => ['super-admin', 'admin', 'manager'],
+        'hr.update' => ['super-admin', 'admin', 'manager'],
+        'hr.delete' => ['super-admin', 'admin'],
     ];
 
     public function run(): void

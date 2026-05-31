@@ -64,7 +64,8 @@ class ExportController extends Controller
 
     public function employees(): StreamedResponse
     {
-        Gate::authorize('viewAny', Employee::class);
+        // Export requires create permission (manager+) to protect sensitive salary data
+        Gate::authorize('create', Employee::class);
 
         return response()->streamDownload(function () {
             $out = fopen('php://output', 'w');

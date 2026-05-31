@@ -4,14 +4,12 @@ namespace App\Modules\HR\Models;
 
 use App\Models\User;
 use App\Modules\Core\Traits\BelongsToTenant;
-use App\Modules\Core\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveRequest extends Model
 {
     use BelongsToTenant;
-    use HasAuditLog;
 
     protected $fillable = [
         'tenant_id', 'employee_id', 'leave_type_id',
@@ -40,6 +38,36 @@ class LeaveRequest extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /** Alias for reviewer (spec: approver()) */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /** approved_by accessor -> reviewed_by */
+    public function getApprovedByAttribute()
+    {
+        return $this->reviewed_by;
+    }
+
+    /** approved_at accessor -> reviewed_at */
+    public function getApprovedAtAttribute()
+    {
+        return $this->reviewed_at;
+    }
+
+    /** days accessor */
+    public function getDaysAttribute(): int
+    {
+        if (isset($this->attributes['days']) && $this->attributes['days'] !== null) {
+            return (int) $this->attributes['days'];
+        }
+        if ($this->start_date && $this->end_date) {
+            return $this->start_date->diffInDays($this->end_date) + 1;
+        }
+        return 0;
     }
 
     public function approve(User $reviewer): void
