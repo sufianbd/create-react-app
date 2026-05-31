@@ -9,6 +9,7 @@ use App\Modules\Finance\Http\Controllers\JournalEntryController;
 use App\Modules\Finance\Http\Controllers\QuoteController;
 use App\Modules\Finance\Http\Controllers\RecurringInvoiceController;
 use App\Modules\Finance\Http\Controllers\ReportController;
+use App\Modules\Finance\Http\Controllers\SalesOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
@@ -50,6 +51,17 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::patch('quotes/{quote}/decline', [QuoteController::class, 'decline'])->name('quotes.decline');
     Route::post('quotes/{quote}/convert', [QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
     Route::delete('quotes/{quote}', [QuoteController::class, 'destroy'])->name('quotes.destroy');
+
+    // Sales Orders
+    Route::get('sales-orders', [SalesOrderController::class, 'index'])->name('sales-orders.index');
+    Route::get('sales-orders/create', [SalesOrderController::class, 'create'])->name('sales-orders.create');
+    Route::post('sales-orders', [SalesOrderController::class, 'store'])->name('sales-orders.store');
+    Route::get('sales-orders/{salesOrder}', [SalesOrderController::class, 'show'])->name('sales-orders.show');
+    Route::patch('sales-orders/{salesOrder}/confirm', [SalesOrderController::class, 'confirm'])->name('sales-orders.confirm');
+    Route::post('sales-orders/{salesOrder}/fulfill', [SalesOrderController::class, 'fulfill'])->name('sales-orders.fulfill');
+    Route::patch('sales-orders/{salesOrder}/cancel', [SalesOrderController::class, 'cancel'])->name('sales-orders.cancel');
+    Route::post('sales-orders/{salesOrder}/convert', [SalesOrderController::class, 'convertToInvoice'])->name('sales-orders.convert');
+    Route::delete('sales-orders/{salesOrder}', [SalesOrderController::class, 'destroy'])->name('sales-orders.destroy');
 
     // Recurring Invoices
     Route::get('recurring-invoices', [RecurringInvoiceController::class, 'index'])->name('recurring-invoices.index');

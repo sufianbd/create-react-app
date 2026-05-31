@@ -182,6 +182,22 @@ export interface CreditNote {
     transitions?: string[]; created_by?: string; created_at?: string;
 }
 
+export type SalesOrderStatus = 'draft' | 'confirmed' | 'fulfilled' | 'cancelled';
+export interface SalesOrderItem {
+    id?: number; product_id?: number | null; product_name?: string; product_sku?: string;
+    description: string; quantity: number; unit_price: number; tax_rate: number;
+    quantity_fulfilled?: number; line_total?: number;
+}
+export interface SalesOrder {
+    id: number; number?: string; status: SalesOrderStatus;
+    order_date: string; expected_date?: string; notes?: string;
+    contact?: { id: number; name: string } | null;
+    warehouse?: { id: number; name: string } | null;
+    invoice?: { id: number; number?: string } | null;
+    items?: SalesOrderItem[]; subtotal?: number; tax_total?: number; total?: number;
+    transitions?: string[]; created_by?: string; created_at?: string;
+}
+
 export type RecurringFrequency = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 export type RecurringStatus = 'active' | 'paused' | 'ended';
 export interface RecurringInvoiceItem {
