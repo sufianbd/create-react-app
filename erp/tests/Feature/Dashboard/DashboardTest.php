@@ -14,7 +14,7 @@ test('authenticated user can access dashboard', function () {
     $response = $this->actingAs($user)->get('/dashboard');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => $page->component('Dashboard/Index'));
+    $response->assertInertia(fn ($page) => $page->component('Dashboard'));
 });
 
 test('dashboard shares auth user data via inertia', function () {
@@ -23,7 +23,7 @@ test('dashboard shares auth user data via inertia', function () {
     $response = $this->actingAs($user)->get('/dashboard');
 
     $response->assertInertia(fn ($page) => $page
-        ->component('Dashboard/Index')
+        ->component('Dashboard')
         ->has('auth.user')
         ->where('auth.user.name', 'Jane Doe')
         ->where('auth.user.email', $user->email)
@@ -36,7 +36,7 @@ test('dashboard shares breadcrumbs via inertia', function () {
     $response = $this->actingAs($user)->get('/dashboard');
 
     $response->assertInertia(fn ($page) => $page
-        ->component('Dashboard/Index')
+        ->component('Dashboard')
         ->has('breadcrumbs')
     );
 });

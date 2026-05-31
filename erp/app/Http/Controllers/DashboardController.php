@@ -2,86 +2,132 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Modules\Finance\Models\Bill;
 use App\Modules\Finance\Models\Invoice;
-use App\Modules\HR\Models\Employee;
-use App\Modules\HR\Models\LeaveRequest;
 use App\Modules\Inventory\Models\Product;
-use App\Modules\Inventory\Models\PurchaseOrder;
 use App\Modules\Inventory\Models\StockLevel;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request)
     {
-        $user = auth()->user();
+        $tenantId = $request->user()->tenant_id;
 
-        $stats = [
-            'products_count'        => $user->can('inventory.view')  ? Product::count() : null,
-            'low_stock_count'       => $user->can('inventory.view')  ? $this->lowStockCount() : null,
-            'pending_pos_count'     => $user->can('inventory.view')  ? PurchaseOrder::whereIn('status', ['submitted', 'approved'])->count() : null,
-            'open_invoices_count'   => $user->can('finance.view')    ? Invoice::whereIn('status', ['draft', 'sent'])->count() : null,
-            'open_invoices_total'   => $user->can('finance.view')    ? $this->openInvoicesTotal() : null,
-            'revenue_mtd'           => $user->can('finance.view')    ? $this->revenueMtd() : null,
-            'employees_count'       => $user->can('hr.view')         ? Employee::active()->count() : null,
-            'pending_leaves_count'  => $user->can('hr.view')         ? LeaveRequest::where('status', 'pending')->count() : null,
-            'users_count'           => $user->can('users.view')      ? User::where('tenant_id', $user->tenant_id)->count() : null,
-        ];
+        // KPI: revenue this month (invoices issued this month, not cancelled)
+        $revenueThisMonth = Invoice::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['cancelled'])
+            ->whereYear('issue_date', now()->year)
+            ->whereMonth('issue_date', now()->month)
+            ->get()
+            ->sum(fn ($inv) => $inv->load('items')->total);
 
-        $recentInvoices = $user->can('finance.view')
-            ? Invoice::with('contact')->latest()->limit(5)->get()->map(fn ($inv) => [
-                'id'         => $inv->id,
-                'number'     => $inv->number ?? "#{$inv->id}",
-                'contact'    => $inv->contact?->name ?? 'No contact',
-                'status'     => $inv->status,
-                'issue_date' => $inv->issue_date?->toDateString(),
+        // KPI: expenses this month (bills issued this month, not cancelled)
+        $expensesThisMonth = Bill::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['cancelled'])
+            ->whereYear('issue_date', now()->year)
+            ->whereMonth('issue_date', now()->month)
+            ->get()
+            ->sum(fn ($b) => $b->load('items')->total);
+
+        // KPI: outstanding AR (amount due on unpaid invoices)
+        $outstandingAr = Invoice::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->with(['items', 'payments'])
+            ->get()
+            ->sum(fn ($inv) => $inv->amount_due);
+
+        // KPI: outstanding AP (amount due on unpaid bills)
+        $outstandingAp = Bill::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->with(['items', 'payments'])
+            ->get()
+            ->sum(fn ($b) => $b->amount_due);
+
+        // Monthly revenue vs expenses — last 12 months
+        $months = collect();
+        for ($i = 11; $i >= 0; $i--) {
+            $date  = now()->subMonths($i);
+            $label = $date->format('M y');
+            $year  = (int) $date->format('Y');
+            $month = (int) $date->format('n');
+
+            $rev = Invoice::where('tenant_id', $tenantId)
+                ->whereNotIn('status', ['cancelled'])
+                ->whereYear('issue_date', $year)
+                ->whereMonth('issue_date', $month)
+                ->with('items')
+                ->get()
+                ->sum(fn ($inv) => $inv->total);
+
+            $exp = Bill::where('tenant_id', $tenantId)
+                ->whereNotIn('status', ['cancelled'])
+                ->whereYear('issue_date', $year)
+                ->whereMonth('issue_date', $month)
+                ->with('items')
+                ->get()
+                ->sum(fn ($b) => $b->total);
+
+            $months->push(['month' => $label, 'revenue' => round($rev, 2), 'expenses' => round($exp, 2)]);
+        }
+
+        // Recent invoices (last 5)
+        $recentInvoices = Invoice::where('tenant_id', $tenantId)
+            ->with(['contact', 'items', 'payments'])
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn ($inv) => [
+                'id'        => $inv->id,
+                'number'    => $inv->number,
+                'contact'   => $inv->contact?->name,
+                'total'     => round($inv->total, 2),
+                'amount_due'=> round($inv->amount_due, 2),
+                'status'    => $inv->status,
+                'issue_date'=> $inv->issue_date,
+            ]);
+
+        // Low stock: products where total stock across all warehouses < 10
+        $lowStock = Product::where('tenant_id', $tenantId)
+            ->with(['stockLevels'])
+            ->get()
+            ->filter(function ($product) {
+                $total = $product->stockLevels->sum('quantity');
+                return $total < 10;
+            })
+            ->take(10)
+            ->map(fn ($p) => [
+                'id'       => $p->id,
+                'sku'      => $p->sku,
+                'name'     => $p->name,
+                'quantity' => round($p->stockLevels->sum('quantity'), 2),
             ])
-            : collect();
+            ->values();
 
-        $recentPos = $user->can('inventory.view')
-            ? PurchaseOrder::with('supplier')->latest()->limit(5)->get()->map(fn ($po) => [
-                'id'       => $po->id,
-                'supplier' => $po->supplier?->name ?? 'Unknown',
-                'status'   => $po->status,
-                'date'     => $po->created_at?->toDateString(),
-            ])
-            : collect();
+        // Overdue invoices count
+        $overdueCount = Invoice::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', now()->startOfDay())
+            ->count();
 
-        return Inertia::render('Dashboard/Index', [
-            'stats'          => $stats,
-            'recentInvoices' => $recentInvoices,
-            'recentPos'      => $recentPos,
-            'breadcrumbs'    => [
+        return Inertia::render('Dashboard', [
+            'breadcrumbs' => [
                 ['label' => 'Dashboard', 'href' => route('dashboard')],
             ],
+            'kpis' => [
+                'revenue_this_month'  => round($revenueThisMonth, 2),
+                'expenses_this_month' => round($expensesThisMonth, 2),
+                'outstanding_ar'      => round($outstandingAr, 2),
+                'outstanding_ap'      => round($outstandingAp, 2),
+                'overdue_count'       => $overdueCount,
+            ],
+            'monthly_chart'  => $months->values(),
+            'recent_invoices'=> $recentInvoices->values(),
+            'low_stock'      => $lowStock,
         ]);
-    }
-
-    private function lowStockCount(): int
-    {
-        return StockLevel::join('products', 'products.id', '=', 'stock_levels.product_id')
-            ->whereColumn('stock_levels.quantity', '<=', 'products.reorder_point')
-            ->distinct('products.id')
-            ->count('products.id');
-    }
-
-    private function openInvoicesTotal(): float
-    {
-        return Invoice::whereIn('status', ['draft', 'sent'])
-            ->with('items')
-            ->get()
-            ->sum(fn ($inv) => $inv->total);
-    }
-
-    private function revenueMtd(): float
-    {
-        return Invoice::where('status', 'paid')
-            ->whereMonth('updated_at', now()->month)
-            ->whereYear('updated_at', now()->year)
-            ->with('items')
-            ->get()
-            ->sum(fn ($inv) => $inv->total);
     }
 }
