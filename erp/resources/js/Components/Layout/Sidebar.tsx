@@ -63,6 +63,7 @@ const navItems: NavItem[] = [
         children: [
             { label: 'Invoices',          href: '/finance/invoices',                      icon: <span /> },
             { label: 'Quotes',            href: '/finance/quotes',                        icon: <span /> },
+            { label: 'Credit Notes',      href: '/finance/credit-notes',                  icon: <span /> },
             { label: 'Contacts',          href: '/finance/contacts',                      icon: <span /> },
             { label: 'Journal Entries',   href: '/finance/journal-entries',               icon: <span /> },
             { label: 'Chart of Accounts', href: '/finance/accounts',                      icon: <span /> },
@@ -73,6 +74,7 @@ const navItems: NavItem[] = [
             { label: 'Aged Receivables',  href: '/finance/reports/aged-receivables',      icon: <span /> },
             { label: 'Aged Payables',     href: '/finance/reports/aged-payables',         icon: <span /> },
             { label: 'Account Ledger',    href: '/finance/reports/account-ledger',        icon: <span /> },
+            { label: 'Customer Statement', href: '/finance/reports/customer-statement',    icon: <span /> },
         ],
     },
     {

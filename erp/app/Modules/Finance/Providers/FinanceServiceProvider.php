@@ -5,12 +5,14 @@ namespace App\Modules\Finance\Providers;
 use App\Modules\Finance\Models\Account;
 use App\Modules\Finance\Models\Bill;
 use App\Modules\Finance\Models\Contact;
+use App\Modules\Finance\Models\CreditNote;
 use App\Modules\Finance\Models\Invoice;
 use App\Modules\Finance\Models\JournalEntry;
 use App\Modules\Finance\Models\Quote;
 use App\Modules\Finance\Policies\AccountPolicy;
 use App\Modules\Finance\Policies\BillPolicy;
 use App\Modules\Finance\Policies\ContactPolicy;
+use App\Modules\Finance\Policies\CreditNotePolicy;
 use App\Modules\Finance\Policies\InvoicePolicy;
 use App\Modules\Finance\Policies\JournalEntryPolicy;
 use App\Modules\Finance\Policies\QuotePolicy;
@@ -31,5 +33,6 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(Invoice::class, InvoicePolicy::class);
         Gate::policy(Bill::class, BillPolicy::class);
         Gate::policy(Quote::class, QuotePolicy::class);
+        Gate::policy(CreditNote::class, CreditNotePolicy::class);
     }
 }

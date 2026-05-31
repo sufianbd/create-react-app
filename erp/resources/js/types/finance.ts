@@ -167,3 +167,17 @@ export interface Quote {
     created_by?: string;
     created_at?: string;
 }
+
+export type CreditNoteStatus = 'draft' | 'issued' | 'applied' | 'cancelled';
+export interface CreditNoteItem {
+    id?: number; description: string; quantity: number;
+    unit_price: number; tax_rate: number; line_total?: number;
+}
+export interface CreditNote {
+    id: number; number?: string; status: CreditNoteStatus;
+    issue_date: string; reason?: string; notes?: string;
+    contact?: { id: number; name: string } | null;
+    invoice?: { id: number; number?: string } | null;
+    items?: CreditNoteItem[]; subtotal?: number; tax_total?: number; total?: number;
+    transitions?: string[]; created_by?: string; created_at?: string;
+}

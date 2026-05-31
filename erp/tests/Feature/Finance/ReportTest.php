@@ -10,6 +10,7 @@ use App\Modules\Finance\Models\Invoice;
 use App\Modules\Finance\Models\InvoiceItem;
 use App\Modules\Finance\Models\JournalEntry;
 use App\Modules\Finance\Models\JournalLine;
+use App\Modules\Finance\Models\Payment;
 use Carbon\Carbon;
 use Database\Seeders\RolePermissionSeeder;
 
@@ -197,5 +198,52 @@ test('account ledger shows running balance for posted entries', function () {
 test('staff cannot access aged receivables', function () {
     $this->actingAs($this->staff)
         ->get('/finance/reports/aged-receivables')
+        ->assertStatus(403);
+});
+
+test('customer statement index is accessible', function () {
+    $this->actingAs($this->admin)
+        ->get('/finance/reports/customer-statement')
+        ->assertStatus(200)
+        ->assertInertia(fn ($p) => $p
+            ->component('Finance/Reports/CustomerStatement')
+            ->has('contacts')
+            ->where('contact', null)
+        );
+});
+
+test('customer statement shows invoice and payment with running balance', function () {
+    Carbon::setTestNow('2026-06-01');
+
+    $contact = Contact::create(['tenant_id' => $this->tenant->id, 'name' => 'Statement Customer', 'type' => 'customer']);
+    $invoice = Invoice::create([
+        'tenant_id'  => $this->tenant->id,
+        'contact_id' => $contact->id,
+        'issue_date' => '2026-02-01',
+        'status'     => 'sent',
+    ]);
+    InvoiceItem::create(['invoice_id' => $invoice->id, 'description' => 'Service', 'quantity' => 1, 'unit_price' => 1000, 'tax_rate' => 0]);
+
+    Payment::create([
+        'tenant_id'    => $this->tenant->id,
+        'invoice_id'   => $invoice->id,
+        'amount'       => 400,
+        'payment_date' => '2026-03-01',
+        'method'       => 'cash',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get("/finance/reports/customer-statement/{$contact->id}?from=2026-01-01&to=2026-12-31")
+        ->assertInertia(fn ($p) => $p
+            ->has('rows', 2)
+            ->where('closing_balance', 600)
+        );
+
+    Carbon::setTestNow();
+});
+
+test('staff cannot access customer statement', function () {
+    $this->actingAs($this->staff)
+        ->get('/finance/reports/customer-statement')
         ->assertStatus(403);
 });

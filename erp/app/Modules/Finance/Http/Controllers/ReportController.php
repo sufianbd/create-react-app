@@ -5,6 +5,8 @@ namespace App\Modules\Finance\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Finance\Models\Account;
 use App\Modules\Finance\Models\Bill;
+use App\Modules\Finance\Models\Contact;
+use App\Modules\Finance\Models\CreditNote;
 use App\Modules\Finance\Models\Invoice;
 use App\Modules\Finance\Models\JournalLine;
 use Illuminate\Http\Request;
@@ -338,6 +340,117 @@ class ReportController extends Controller
             'breadcrumbs' => [
                 ['label' => 'Finance'], ['label' => 'Reports'],
                 ['label' => "Ledger: {$account->name}"],
+            ],
+        ]);
+    }
+
+    public function customerStatementIndex(Request $request): Response
+    {
+        $this->authorize('viewAny', Account::class);
+
+        return Inertia::render('Finance/Reports/CustomerStatement', [
+            'contacts'    => Contact::customers()->orderBy('name')->get(['id', 'name']),
+            'contact'     => null,
+            'rows'        => [],
+            'from'        => now()->startOfYear()->toDateString(),
+            'to'          => now()->toDateString(),
+            'breadcrumbs' => [['label' => 'Finance'], ['label' => 'Reports'], ['label' => 'Customer Statement']],
+        ]);
+    }
+
+    public function customerStatement(Request $request, Contact $contact): Response
+    {
+        $this->authorize('viewAny', Account::class);
+
+        $from = $request->from ?? now()->startOfYear()->toDateString();
+        $to   = $request->to   ?? now()->toDateString();
+
+        $transactions = [];
+
+        $invoices = Invoice::with(['items', 'payments'])
+            ->where('contact_id', $contact->id)
+            ->where('status', '!=', 'cancelled')
+            ->whereDate('issue_date', '>=', $from)
+            ->whereDate('issue_date', '<=', $to)
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            $transactions[] = [
+                'date'      => $invoice->issue_date?->toDateString(),
+                'type'      => 'Invoice',
+                'reference' => $invoice->number,
+                'debit'     => (float) $invoice->total,
+                'credit'    => 0.0,
+            ];
+        }
+
+        $paymentInvoices = Invoice::with('payments')
+            ->where('contact_id', $contact->id)
+            ->where('status', '!=', 'cancelled')
+            ->get();
+
+        foreach ($paymentInvoices as $invoice) {
+            foreach ($invoice->payments as $payment) {
+                $paymentDate = $payment->payment_date instanceof \Carbon\Carbon
+                    ? $payment->payment_date->toDateString()
+                    : (string) $payment->payment_date;
+
+                if ($paymentDate < $from || $paymentDate > $to) {
+                    continue;
+                }
+
+                $transactions[] = [
+                    'date'      => $paymentDate,
+                    'type'      => 'Payment',
+                    'reference' => $invoice->number,
+                    'debit'     => 0.0,
+                    'credit'    => (float) $payment->amount,
+                ];
+            }
+        }
+
+        $creditNotes = CreditNote::with('items')
+            ->where('contact_id', $contact->id)
+            ->whereIn('status', ['issued', 'applied'])
+            ->whereDate('issue_date', '>=', $from)
+            ->whereDate('issue_date', '<=', $to)
+            ->get();
+
+        foreach ($creditNotes as $creditNote) {
+            $transactions[] = [
+                'date'      => $creditNote->issue_date?->toDateString(),
+                'type'      => 'Credit Note',
+                'reference' => $creditNote->number,
+                'debit'     => 0.0,
+                'credit'    => (float) $creditNote->total,
+            ];
+        }
+
+        usort($transactions, fn ($a, $b) => strcmp((string) $a['date'], (string) $b['date']));
+
+        $balance = 0.0;
+        $totalDebit = 0.0;
+        $totalCredit = 0.0;
+        $rows = [];
+        foreach ($transactions as $txn) {
+            $balance += $txn['debit'] - $txn['credit'];
+            $totalDebit += $txn['debit'];
+            $totalCredit += $txn['credit'];
+            $rows[] = array_merge($txn, ['balance' => $balance]);
+        }
+
+        return Inertia::render('Finance/Reports/CustomerStatement', [
+            'contacts'        => Contact::customers()->orderBy('name')->get(['id', 'name']),
+            'contact'         => ['id' => $contact->id, 'name' => $contact->name],
+            'rows'            => $rows,
+            'from'            => $from,
+            'to'              => $to,
+            'total_debit'     => $totalDebit,
+            'total_credit'    => $totalCredit,
+            'closing_balance' => $balance,
+            'breadcrumbs'     => [
+                ['label' => 'Finance'], ['label' => 'Reports'],
+                ['label' => "Statement: {$contact->name}"],
             ],
         ]);
     }

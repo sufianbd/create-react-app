@@ -3,6 +3,7 @@
 use App\Modules\Finance\Http\Controllers\AccountController;
 use App\Modules\Finance\Http\Controllers\BillController;
 use App\Modules\Finance\Http\Controllers\ContactController;
+use App\Modules\Finance\Http\Controllers\CreditNoteController;
 use App\Modules\Finance\Http\Controllers\InvoiceController;
 use App\Modules\Finance\Http\Controllers\JournalEntryController;
 use App\Modules\Finance\Http\Controllers\QuoteController;
@@ -49,6 +50,16 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('quotes/{quote}/convert', [QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
     Route::delete('quotes/{quote}', [QuoteController::class, 'destroy'])->name('quotes.destroy');
 
+    // Credit Notes
+    Route::get('credit-notes', [CreditNoteController::class, 'index'])->name('credit-notes.index');
+    Route::get('credit-notes/create', [CreditNoteController::class, 'create'])->name('credit-notes.create');
+    Route::post('credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
+    Route::get('credit-notes/{creditNote}', [CreditNoteController::class, 'show'])->name('credit-notes.show');
+    Route::patch('credit-notes/{creditNote}/issue', [CreditNoteController::class, 'issue'])->name('credit-notes.issue');
+    Route::patch('credit-notes/{creditNote}/apply', [CreditNoteController::class, 'apply'])->name('credit-notes.apply');
+    Route::patch('credit-notes/{creditNote}/cancel', [CreditNoteController::class, 'cancel'])->name('credit-notes.cancel');
+    Route::delete('credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
+
     // Reports
     Route::get('reports/trial-balance', [ReportController::class, 'trialBalance'])
         ->name('reports.trial-balance');
@@ -60,4 +71,6 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/aged-payables',    [ReportController::class, 'agedPayables'])->name('reports.aged-payables');
     Route::get('reports/account-ledger',               [ReportController::class, 'accountLedgerIndex'])->name('reports.account-ledger.index');
     Route::get('reports/account-ledger/{account}',     [ReportController::class, 'accountLedger'])->name('reports.account-ledger');
+    Route::get('reports/customer-statement', [ReportController::class, 'customerStatementIndex'])->name('reports.customer-statement.index');
+    Route::get('reports/customer-statement/{contact}', [ReportController::class, 'customerStatement'])->name('reports.customer-statement');
 });
