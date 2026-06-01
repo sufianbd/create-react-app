@@ -44,3 +44,17 @@ export interface Paginator<T> {
     per_page: number; total: number; from: number; to: number;
     next_page_url: string | null; prev_page_url: string | null;
 }
+export interface WarehouseTransfer {
+    id: number;
+    product_id: number;
+    product?: { id: number; name: string; sku: string };
+    from_warehouse_id: number;
+    from_warehouse?: { id: number; name: string };
+    to_warehouse_id: number;
+    to_warehouse?: { id: number; name: string };
+    quantity: number;
+    reference: string | null;
+    notes: string | null;
+    status: 'pending' | 'completed' | 'cancelled';
+    created_at: string;
+}

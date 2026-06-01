@@ -6,6 +6,7 @@ use App\Modules\Inventory\Http\Controllers\PurchaseOrderController;
 use App\Modules\Inventory\Http\Controllers\StockMovementController;
 use App\Modules\Inventory\Http\Controllers\SupplierController;
 use App\Modules\Inventory\Http\Controllers\WarehouseController;
+use App\Modules\Inventory\Http\Controllers\WarehouseTransferController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
@@ -46,4 +47,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
     Route::post('purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
     Route::post('purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+
+    // Warehouse Transfers
+    Route::resource('warehouse-transfers', WarehouseTransferController::class)->only(['index', 'create', 'store']);
 });
