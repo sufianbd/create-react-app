@@ -129,6 +129,9 @@ const navItems: NavItem[] = [
             </svg>
         ),
         permission: 'roles.manage',
+        children: [
+            { label: 'Users', href: '/settings/users', icon: <span /> },
+        ],
     },
 ];
 

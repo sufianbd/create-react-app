@@ -27,6 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'tenant_id',
         'avatar',
         'last_login_at',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -40,6 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'last_login_at'     => 'datetime',
             'password'          => 'hashed',
+            'is_active'         => 'boolean',
         ];
     }
 
