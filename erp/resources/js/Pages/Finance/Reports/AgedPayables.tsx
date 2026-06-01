@@ -44,6 +44,12 @@ export default function AgedPayables({ rows, totals, grand_total, as_of }: Props
                             className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700">
                             Apply
                         </button>
+                        <a
+                          href={`/finance/reports/aged-payables/export?as_of=${asOf}`}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50"
+                        >
+                          Export CSV
+                        </a>
                     </div>
                 </div>
 

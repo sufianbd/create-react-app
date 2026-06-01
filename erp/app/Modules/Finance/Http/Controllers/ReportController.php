@@ -520,6 +520,300 @@ class ReportController extends Controller
         ]);
     }
 
+    // ─── CSV Export Methods ───────────────────────────────────────────────────
+
+    public function exportProfitLoss(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Account::class);
+
+        $from = $request->from ?? now()->startOfYear()->toDateString();
+        $to   = $request->to   ?? now()->toDateString();
+
+        $totals   = $this->aggregateJournalLines($from, $to);
+        $accounts = Account::whereIn('type', ['income', 'expense'])->orderBy('code')->get();
+
+        $revenue  = [];
+        $expenses = [];
+
+        foreach ($accounts as $account) {
+            $row    = $totals->get($account->id);
+            $debit  = (float) ($row?->total_debit  ?? 0);
+            $credit = (float) ($row?->total_credit ?? 0);
+            $net    = $account->type === 'income' ? $credit - $debit : $debit - $credit;
+
+            $entry = ['type' => $account->type === 'income' ? 'Revenue' : 'Expense', 'name' => $account->name, 'net' => $net];
+
+            if ($account->type === 'income') {
+                $revenue[] = $entry;
+            } else {
+                $expenses[] = $entry;
+            }
+        }
+
+        $totalRevenue  = array_sum(array_column($revenue,  'net'));
+        $totalExpenses = array_sum(array_column($expenses, 'net'));
+
+        $rows = [];
+        foreach ($revenue  as $r) { $rows[] = [$r['type'], $r['name'], number_format($r['net'], 2, '.', '')]; }
+        foreach ($expenses as $r) { $rows[] = [$r['type'], $r['name'], number_format($r['net'], 2, '.', '')]; }
+        $rows[] = ['Net', 'Net Profit / Loss', number_format($totalRevenue - $totalExpenses, 2, '.', '')];
+
+        return $this->streamCsv(
+            "profit-loss-{$from}-{$to}.csv",
+            ['Type', 'Account', 'Amount'],
+            $rows
+        );
+    }
+
+    public function exportBalanceSheet(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Account::class);
+
+        $asOf   = $request->as_of ?? now()->toDateString();
+        $totals = $this->aggregateJournalLines(null, $asOf);
+
+        $accounts = Account::whereIn('type', ['asset', 'liability', 'equity'])->orderBy('code')->get();
+
+        $rows = [];
+        foreach ($accounts as $account) {
+            $row    = $totals->get($account->id);
+            $debit  = (float) ($row?->total_debit  ?? 0);
+            $credit = (float) ($row?->total_credit ?? 0);
+            $net    = $account->type === 'asset' ? $debit - $credit : $credit - $debit;
+
+            $section = ucfirst($account->type);
+            $rows[]  = [$section, $account->name, number_format($net, 2, '.', '')];
+        }
+
+        return $this->streamCsv(
+            "balance-sheet-{$asOf}.csv",
+            ['Section', 'Account', 'Balance'],
+            $rows
+        );
+    }
+
+    public function exportAgedReceivables(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Account::class);
+
+        $asOf = $request->as_of ?? now()->toDateString();
+
+        $invoices = Invoice::with(['contact', 'items', 'payments'])
+            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->get();
+
+        $rows = [];
+        foreach ($invoices as $inv) {
+            $daysOverdue = 0;
+            if ($inv->due_date) {
+                $diff        = \Carbon\Carbon::parse($asOf)->diffInDays($inv->due_date, false);
+                $daysOverdue = (int) max(0, $diff * -1);
+            }
+            $bucket  = match (true) {
+                $daysOverdue === 0  => 'current',
+                $daysOverdue <= 30  => '1-30',
+                $daysOverdue <= 60  => '31-60',
+                $daysOverdue <= 90  => '61-90',
+                default             => '90+',
+            };
+            $amountDue = (float) $inv->amount_due;
+            $rows[] = [
+                $inv->contact?->name ?? '—',
+                $inv->number ?? '',
+                $inv->issue_date?->toDateString() ?? '',
+                $inv->due_date?->toDateString()   ?? '',
+                $bucket === 'current' ? number_format($amountDue, 2, '.', '') : '0.00',
+                $bucket === '1-30'    ? number_format($amountDue, 2, '.', '') : '0.00',
+                $bucket === '31-60'   ? number_format($amountDue, 2, '.', '') : '0.00',
+                $bucket === '61-90'   ? number_format($amountDue, 2, '.', '') : '0.00',
+                $bucket === '90+'     ? number_format($amountDue, 2, '.', '') : '0.00',
+                number_format($amountDue, 2, '.', ''),
+            ];
+        }
+
+        return $this->streamCsv(
+            "aged-receivables-{$asOf}.csv",
+            ['Customer', 'Invoice #', 'Issue Date', 'Due Date', 'Current', '1-30', '31-60', '61-90', '90+', 'Total'],
+            $rows
+        );
+    }
+
+    public function exportAgedPayables(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Account::class);
+
+        $asOf = $request->as_of ?? now()->toDateString();
+
+        $bills = Bill::with(['contact', 'items', 'payments'])
+            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->get();
+
+        $rows = [];
+        foreach ($bills as $bill) {
+            $daysOverdue = 0;
+            if ($bill->due_date) {
+                $diff        = \Carbon\Carbon::parse($asOf)->diffInDays($bill->due_date, false);
+                $daysOverdue = (int) max(0, $diff * -1);
+            }
+            $bucket  = match (true) {
+                $daysOverdue === 0  => 'current',
+                $daysOverdue <= 30  => '1-30',
+                $daysOverdue <= 60  => '31-60',
+                $daysOverdue <= 90  => '61-90',
+                default             => '90+',
+            };
+            $amountDue = (float) $bill->amount_due;
+            $rows[] = [
+                $bill->contact?->name ?? '—',
+                $bill->number ?? '',
+                $bill->issue_date?->toDateString() ?? '',
+                $bill->due_date?->toDateString()   ?? '',
+                $bucket === 'current' ? number_format($amountDue, 2, '.', '') : '0.00',
+                $bucket === '1-30'    ? number_format($amountDue, 2, '.', '') : '0.00',
+                $bucket === '31-60'   ? number_format($amountDue, 2, '.', '') : '0.00',
+                $bucket === '61-90'   ? number_format($amountDue, 2, '.', '') : '0.00',
+                $bucket === '90+'     ? number_format($amountDue, 2, '.', '') : '0.00',
+                number_format($amountDue, 2, '.', ''),
+            ];
+        }
+
+        return $this->streamCsv(
+            "aged-payables-{$asOf}.csv",
+            ['Vendor', 'Bill #', 'Issue Date', 'Due Date', 'Current', '1-30', '31-60', '61-90', '90+', 'Total'],
+            $rows
+        );
+    }
+
+    public function exportAccountLedger(Request $request, Account $account): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Account::class);
+
+        $from = $request->from ?? now()->startOfYear()->toDateString();
+        $to   = $request->to   ?? now()->toDateString();
+
+        $lines = JournalLine::join('journal_entries', 'journal_entries.id', '=', 'journal_lines.journal_entry_id')
+            ->where('journal_lines.account_id', $account->id)
+            ->where('journal_entries.status', 'posted')
+            ->when($from, fn ($q) => $q->whereDate('journal_entries.date', '>=', $from))
+            ->when($to,   fn ($q) => $q->whereDate('journal_entries.date', '<=', $to))
+            ->orderBy('journal_entries.date')
+            ->orderBy('journal_lines.id')
+            ->select('journal_lines.*', 'journal_entries.date as entry_date',
+                     'journal_entries.reference as entry_reference',
+                     'journal_entries.description as entry_description')
+            ->get();
+
+        $isDebitNormal  = in_array($account->type, ['asset', 'expense'], true);
+        $runningBalance = 0.0;
+        $rows           = [];
+
+        foreach ($lines as $line) {
+            $debit  = (float) $line->debit;
+            $credit = (float) $line->credit;
+            $runningBalance += $isDebitNormal ? ($debit - $credit) : ($credit - $debit);
+            $description = $line->description ?? $line->entry_description;
+            $rows[] = [
+                $line->entry_date instanceof \Carbon\Carbon
+                    ? $line->entry_date->toDateString()
+                    : (string) $line->entry_date,
+                $description ?? '',
+                number_format($debit,          2, '.', ''),
+                number_format($credit,         2, '.', ''),
+                number_format($runningBalance, 2, '.', ''),
+            ];
+        }
+
+        return $this->streamCsv(
+            "ledger-{$account->code}-{$from}-{$to}.csv",
+            ['Date', 'Description', 'Debit', 'Credit', 'Balance'],
+            $rows
+        );
+    }
+
+    public function exportVatReport(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Invoice::class);
+
+        $tenantId = $request->user()->tenant_id;
+        $from     = $request->query('from', now()->startOfQuarter()->toDateString());
+        $to       = $request->query('to',   now()->endOfQuarter()->toDateString());
+
+        $invoices = Invoice::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['cancelled'])
+            ->whereBetween('issue_date', [$from, $to])
+            ->with('items')
+            ->get();
+
+        $outputLines = $invoices->map(function ($invoice) {
+            return [
+                'number'  => $invoice->number,
+                'date'    => $invoice->issue_date,
+                'contact' => $invoice->contact?->name,
+                'net'     => round((float) $invoice->subtotal, 2),
+                'tax'     => round((float) $invoice->tax_total, 2),
+                'type'    => 'Output',
+            ];
+        })->filter(fn ($l) => $l['tax'] != 0)->values();
+
+        $bills = Bill::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['cancelled'])
+            ->whereBetween('issue_date', [$from, $to])
+            ->with('items')
+            ->get();
+
+        $inputLines = $bills->map(function ($bill) {
+            return [
+                'number'  => $bill->number,
+                'date'    => $bill->issue_date,
+                'contact' => $bill->contact?->name,
+                'net'     => round((float) $bill->subtotal, 2),
+                'tax'     => round((float) $bill->tax_total, 2),
+                'type'    => 'Input',
+            ];
+        })->filter(fn ($l) => $l['tax'] != 0)->values();
+
+        $totalOutputVat = round($outputLines->sum('tax'), 2);
+        $totalInputVat  = round($inputLines->sum('tax'),  2);
+        $netVat         = round($totalOutputVat - $totalInputVat, 2);
+
+        $rows = [];
+        foreach ($outputLines as $line) {
+            $date   = $line['date'] instanceof \Carbon\Carbon ? $line['date']->toDateString() : (string) $line['date'];
+            $rows[] = [$line['type'], $line['number'] ?? '', $date, $line['contact'] ?? '', number_format($line['net'], 2, '.', ''), number_format($line['tax'], 2, '.', '')];
+        }
+        $rows[] = ['', '', '', '', '', ''];
+        foreach ($inputLines as $line) {
+            $date   = $line['date'] instanceof \Carbon\Carbon ? $line['date']->toDateString() : (string) $line['date'];
+            $rows[] = [$line['type'], $line['number'] ?? '', $date, $line['contact'] ?? '', number_format($line['net'], 2, '.', ''), number_format($line['tax'], 2, '.', '')];
+        }
+        $rows[] = ['', '', '', '', '', ''];
+        $rows[] = ['Total Output VAT', '', '', '', '', number_format($totalOutputVat, 2, '.', '')];
+        $rows[] = ['Total Input VAT',  '', '', '', '', number_format($totalInputVat,  2, '.', '')];
+        $rows[] = ['Net VAT',          '', '', '', '', number_format($netVat,          2, '.', '')];
+
+        return $this->streamCsv(
+            "vat-report-{$from}-{$to}.csv",
+            ['Type', 'Document #', 'Date', 'Contact', 'Net', 'Tax'],
+            $rows
+        );
+    }
+
+    // ─── Private Helpers ─────────────────────────────────────────────────────
+
+    private function streamCsv(string $filename, array $headers, iterable $rows): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        return response()->streamDownload(function () use ($headers, $rows) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $headers);
+            foreach ($rows as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     private function aggregateJournalLines(?string $from = null, ?string $to = null): \Illuminate\Support\Collection
     {
         return JournalLine::select('account_id',

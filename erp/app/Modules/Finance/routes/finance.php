@@ -110,6 +110,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/customer-statement/{contact}', [ReportController::class, 'customerStatement'])->name('reports.customer-statement');
     Route::get('reports/vat-report', [ReportController::class, 'vatReport'])->name('reports.vat-report');
 
+    // CSV exports
+    Route::get('reports/profit-loss/export',              [ReportController::class, 'exportProfitLoss'])->name('reports.profit-loss.export');
+    Route::get('reports/balance-sheet/export',            [ReportController::class, 'exportBalanceSheet'])->name('reports.balance-sheet.export');
+    Route::get('reports/aged-receivables/export',         [ReportController::class, 'exportAgedReceivables'])->name('reports.aged-receivables.export');
+    Route::get('reports/aged-payables/export',            [ReportController::class, 'exportAgedPayables'])->name('reports.aged-payables.export');
+    Route::get('reports/account-ledger/{account}/export', [ReportController::class, 'exportAccountLedger'])->name('reports.account-ledger.export');
+    Route::get('reports/vat-report/export',               [ReportController::class, 'exportVatReport'])->name('reports.vat-report.export');
+
     // Exchange Rates
     Route::get('/exchange-rates',              [ExchangeRateController::class, 'index'])->name('exchange-rates.index');
     Route::post('/exchange-rates',             [ExchangeRateController::class, 'store'])->name('exchange-rates.store');

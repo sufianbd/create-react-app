@@ -61,6 +61,12 @@ export default function AccountLedger({ accounts, account, rows, from, to }: Pro
                                 className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700">
                                 Apply
                             </button>
+                            <a
+                              href={`/finance/reports/account-ledger/${account.id}/export?from=${fromDate}&to=${toDate}`}
+                              className="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50"
+                            >
+                              Export CSV
+                            </a>
                         </>
                     )}
                 </div>

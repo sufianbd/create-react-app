@@ -53,6 +53,12 @@ export default function ProfitLoss({ revenue, expenses, total_revenue, total_exp
                             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none" />
                     </div>
                     <button type="submit" className="rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700">Apply</button>
+                    <a
+                      href={`/finance/reports/profit-loss/export?from=${dateFrom}&to=${dateTo}`}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50"
+                    >
+                      Export CSV
+                    </a>
                 </form>
 
                 {/* Revenue section */}

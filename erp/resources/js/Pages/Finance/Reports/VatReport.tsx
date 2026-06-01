@@ -105,6 +105,12 @@ export default function VatReport({ output_lines, input_lines, total_output_vat,
                         className="rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
                         Apply
                     </button>
+                    <a
+                      href={`/finance/reports/vat-report/export?from=${data.from}&to=${data.to}`}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50"
+                    >
+                      Export CSV
+                    </a>
                 </form>
 
                 {/* Summary cards */}
