@@ -83,6 +83,7 @@ const navItems: NavItem[] = [
             { label: 'Bank Accounts',       href: '/finance/bank-accounts',                    icon: <span /> },
             { label: 'Budgets',             href: '/finance/budgets',                          icon: <span /> },
             { label: 'Reconciliation',      href: '/finance/reconciliation',                   icon: <span /> },
+            { label: 'Fixed Assets',        href: '/finance/fixed-assets',                     icon: <span /> },
         ],
     },
     {

@@ -15,6 +15,7 @@ use App\Modules\Finance\Http\Controllers\ReconciliationController;
 use App\Modules\Finance\Http\Controllers\RecurringInvoiceController;
 use App\Modules\Finance\Http\Controllers\ReportController;
 use App\Modules\Finance\Http\Controllers\SalesOrderController;
+use App\Modules\Finance\Http\Controllers\FixedAssetController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
@@ -135,4 +136,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reconciliation',                                 [ReconciliationController::class, 'index'])->name('reconciliation.index');
     Route::post('reconciliation/{bankTransaction}/match',        [ReconciliationController::class, 'match'])->name('reconciliation.match');
     Route::post('reconciliation/{bankTransaction}/unmatch',      [ReconciliationController::class, 'unmatch'])->name('reconciliation.unmatch');
+
+    // Fixed Assets
+    Route::post('fixed-assets/{fixedAsset}/depreciate', [FixedAssetController::class, 'depreciate'])->name('fixed-assets.depreciate');
+    Route::post('fixed-assets/{fixedAsset}/dispose',    [FixedAssetController::class, 'dispose'])->name('fixed-assets.dispose');
+    Route::resource('fixed-assets', FixedAssetController::class)->except(['edit', 'update']);
 });
