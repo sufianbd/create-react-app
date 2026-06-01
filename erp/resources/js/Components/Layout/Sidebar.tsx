@@ -98,6 +98,7 @@ const navItems: NavItem[] = [
             { label: 'Departments', href: '/hr/departments', icon: <span /> },
             { label: 'Leave Requests', href: '/hr/leave-requests', icon: <span /> },
             { label: 'Payroll Runs',   href: '/hr/payroll-runs',   icon: <span /> },
+            { label: 'Expense Claims', href: '/hr/expense-claims', icon: <span /> },
         ],
     },
     {

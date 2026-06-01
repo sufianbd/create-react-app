@@ -2,6 +2,7 @@
 
 use App\Modules\HR\Http\Controllers\DepartmentController;
 use App\Modules\HR\Http\Controllers\EmployeeController;
+use App\Modules\HR\Http\Controllers\ExpenseClaimController;
 use App\Modules\HR\Http\Controllers\LeaveRequestController;
 use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
@@ -51,4 +52,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('payroll', [PayrollController::class, 'store'])->name('payroll.store');
     Route::get('payroll/{payrollRun}', [PayrollController::class, 'show'])->name('payroll.show');
     Route::patch('payroll/{payrollRun}/process', [PayrollController::class, 'process'])->name('payroll.process');
+
+    // Expense Claims
+    Route::post('expense-claims/{expenseClaim}/submit',    [ExpenseClaimController::class, 'submit'])->name('expense-claims.submit');
+    Route::post('expense-claims/{expenseClaim}/approve',   [ExpenseClaimController::class, 'approve'])->name('expense-claims.approve');
+    Route::post('expense-claims/{expenseClaim}/reject',    [ExpenseClaimController::class, 'reject'])->name('expense-claims.reject');
+    Route::post('expense-claims/{expenseClaim}/reimburse', [ExpenseClaimController::class, 'reimburse'])->name('expense-claims.reimburse');
+    Route::resource('expense-claims', ExpenseClaimController::class)->except(['edit', 'update']);
 });
