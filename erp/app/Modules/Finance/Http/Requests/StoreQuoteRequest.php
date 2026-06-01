@@ -16,6 +16,8 @@ class StoreQuoteRequest extends FormRequest
             'issue_date'          => ['required', 'date'],
             'expiry_date'         => ['nullable', 'date', 'after_or_equal:issue_date'],
             'notes'               => ['nullable', 'string'],
+            'currency_code'       => ['nullable', 'string', 'size:3'],
+            'exchange_rate'       => ['nullable', 'numeric', 'min:0.000001'],
             'items'               => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string'],
             'items.*.quantity'    => ['required', 'numeric', 'min:0.01'],

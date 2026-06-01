@@ -79,12 +79,15 @@ export interface Invoice {
     due_date?: string | null;
     notes?: string;
     is_overdue?: boolean;
+    currency_code?: string;
+    exchange_rate?: number;
     contact?: { id: number; name: string } | null;
     items?: InvoiceItem[];
     payments?: Payment[];
     subtotal?: number;
     tax_total?: number;
     total?: number;
+    base_total?: number;
     amount_paid?: number;
     amount_due?: number;
     transitions?: InvoiceStatus[];
@@ -129,12 +132,15 @@ export interface Bill {
     due_date?: string | null;
     notes?: string | null;
     is_overdue?: boolean;
+    currency_code?: string;
+    exchange_rate?: number;
     contact?: { id: number; name: string } | null;
     items?: BillItem[];
     payments?: BillPayment[];
     subtotal?: number;
     tax_total?: number;
     total?: number;
+    base_total?: number;
     amount_paid?: number;
     amount_due?: number;
     transitions?: BillStatus[];
@@ -158,11 +164,14 @@ export interface Quote {
     issue_date: string;
     expiry_date?: string;
     notes?: string;
+    currency_code?: string;
+    exchange_rate?: number;
     contact?: { id: number; name: string } | null;
     items?: QuoteItem[];
     subtotal?: number;
     tax_total?: number;
     total?: number;
+    base_total?: number;
     transitions?: string[];
     created_by?: string;
     created_at?: string;
@@ -212,4 +221,14 @@ export interface RecurringInvoice {
     contact?: { id: number; name: string } | null;
     items?: RecurringInvoiceItem[]; subtotal?: number; tax_total?: number; total?: number;
     created_by?: string; created_at?: string;
+}
+
+export interface ExchangeRate {
+    id: number;
+    tenant_id?: number;
+    currency_code: string;
+    rate: number | string;
+    date: string;
+    created_at?: string;
+    updated_at?: string;
 }

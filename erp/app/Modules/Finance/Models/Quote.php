@@ -23,11 +23,13 @@ class Quote extends Model
     protected $fillable = [
         'tenant_id', 'contact_id', 'number',
         'issue_date', 'expiry_date', 'status', 'notes', 'created_by',
+        'currency_code', 'exchange_rate',
     ];
 
     protected $casts = [
-        'issue_date'  => 'date',
-        'expiry_date' => 'date',
+        'issue_date'    => 'date',
+        'expiry_date'   => 'date',
+        'exchange_rate' => 'float',
     ];
 
     protected $attributes = ['status' => 'draft'];
@@ -41,6 +43,11 @@ class Quote extends Model
             'declined'  => [],
             'cancelled' => [],
         ];
+    }
+
+    public function getBaseTotalAttribute(): float
+    {
+        return round($this->total * (float) $this->exchange_rate, 2);
     }
 
     public function contact(): BelongsTo

@@ -21,6 +21,9 @@ use Inertia\Response;
 class InvoiceController extends Controller
 {
     use SendsDocuments;
+
+    private array $currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'SGD'];
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Invoice::class);
@@ -37,6 +40,7 @@ class InvoiceController extends Controller
             'invoices'    => InvoiceResource::collection($invoices),
             'contacts'    => Contact::customers()->active()->orderBy('name')->get(['id', 'name']),
             'filters'     => $request->only(['status', 'contact_id', 'search']),
+            'currencies'  => $this->currencies,
             'breadcrumbs' => [
                 ['label' => 'Finance'],
                 ['label' => 'Invoices', 'href' => route('finance.invoices.index')],
@@ -50,6 +54,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('Finance/Invoices/Create', [
             'contacts'    => Contact::customers()->active()->orderBy('name')->get(['id', 'name']),
+            'currencies'  => $this->currencies,
             'breadcrumbs' => [
                 ['label' => 'Finance'],
                 ['label' => 'Invoices', 'href' => route('finance.invoices.index')],
@@ -66,12 +71,14 @@ class InvoiceController extends Controller
 
         $invoice = DB::transaction(function () use ($data) {
             $invoice = Invoice::create([
-                'tenant_id'  => auth()->user()->tenant_id,
-                'contact_id' => $data['contact_id'] ?? null,
-                'issue_date' => $data['issue_date'],
-                'due_date'   => $data['due_date'] ?? null,
-                'notes'      => $data['notes'] ?? null,
-                'created_by' => auth()->id(),
+                'tenant_id'     => auth()->user()->tenant_id,
+                'contact_id'    => $data['contact_id'] ?? null,
+                'issue_date'    => $data['issue_date'],
+                'due_date'      => $data['due_date'] ?? null,
+                'notes'         => $data['notes'] ?? null,
+                'created_by'    => auth()->id(),
+                'currency_code' => $data['currency_code'] ?? 'USD',
+                'exchange_rate' => $data['exchange_rate'] ?? 1.0,
             ]);
 
             $invoice->update([

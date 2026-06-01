@@ -6,6 +6,7 @@ use App\Modules\Finance\Models\Account;
 use App\Modules\Finance\Models\Bill;
 use App\Modules\Finance\Models\Contact;
 use App\Modules\Finance\Models\CreditNote;
+use App\Modules\Finance\Models\ExchangeRate;
 use App\Modules\Finance\Models\Invoice;
 use App\Modules\Finance\Models\JournalEntry;
 use App\Modules\Finance\Models\Quote;
@@ -15,6 +16,7 @@ use App\Modules\Finance\Policies\AccountPolicy;
 use App\Modules\Finance\Policies\BillPolicy;
 use App\Modules\Finance\Policies\ContactPolicy;
 use App\Modules\Finance\Policies\CreditNotePolicy;
+use App\Modules\Finance\Policies\ExchangeRatePolicy;
 use App\Modules\Finance\Policies\InvoicePolicy;
 use App\Modules\Finance\Policies\JournalEntryPolicy;
 use App\Modules\Finance\Policies\QuotePolicy;
@@ -40,6 +42,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(CreditNote::class, CreditNotePolicy::class);
         Gate::policy(RecurringInvoice::class, RecurringInvoicePolicy::class);
         Gate::policy(SalesOrder::class, SalesOrderPolicy::class);
+        Gate::policy(ExchangeRate::class, ExchangeRatePolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);

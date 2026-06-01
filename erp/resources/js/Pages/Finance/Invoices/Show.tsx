@@ -55,6 +55,9 @@ export default function InvoiceShow({ invoice }: Props) {
         emailPost(`/finance/invoices/${invoice.id}/email`, { onSuccess: () => { setShowEmail(false); emailReset(); } });
     }
 
+    const currencyCode = invoice.currency_code ?? 'USD';
+    const showCurrencyInfo = currencyCode !== 'USD';
+
     return (
         <AppLayout>
             <Head title={invoice.number ?? `Invoice #${invoice.id}`} />
@@ -72,6 +75,11 @@ export default function InvoiceShow({ invoice }: Props) {
                             )}
                             <span className="text-sm text-slate-500">Issued: {invoice.issue_date}</span>
                             {invoice.due_date && <span className="text-sm text-slate-500">Due: {invoice.due_date}</span>}
+                            {showCurrencyInfo && (
+                                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                    {currencyCode}
+                                </span>
+                            )}
                         </div>
                     </div>
                     <div className="flex gap-2">
@@ -112,6 +120,30 @@ export default function InvoiceShow({ invoice }: Props) {
                     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                         <p className="text-xs text-slate-500 mb-1">Billed To</p>
                         <p className="font-medium text-slate-900">{invoice.contact.name}</p>
+                    </div>
+                )}
+
+                {/* Currency info */}
+                {showCurrencyInfo && (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm">
+                        <div className="flex gap-6 text-sm">
+                            <div>
+                                <span className="text-blue-600 font-medium">Currency: </span>
+                                <span className="text-blue-900">{currencyCode}</span>
+                            </div>
+                            <div>
+                                <span className="text-blue-600 font-medium">Exchange Rate: </span>
+                                <span className="text-blue-900">{Number(invoice.exchange_rate ?? 1).toFixed(6)}</span>
+                            </div>
+                            {invoice.base_total !== undefined && (
+                                <div>
+                                    <span className="text-blue-600 font-medium">Base Total (USD): </span>
+                                    <span className="text-blue-900 font-semibold">
+                                        ${Number(invoice.base_total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 

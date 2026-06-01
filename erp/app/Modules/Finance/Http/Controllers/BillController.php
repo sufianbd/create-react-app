@@ -20,6 +20,9 @@ use Inertia\Response;
 class BillController extends Controller
 {
     use SendsDocuments;
+
+    private array $currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'SGD'];
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Bill::class);
@@ -36,6 +39,7 @@ class BillController extends Controller
             'bills'       => BillResource::collection($bills),
             'contacts'    => Contact::vendors()->active()->orderBy('name')->get(['id', 'name']),
             'filters'     => $request->only(['status', 'contact_id', 'search']),
+            'currencies'  => $this->currencies,
             'breadcrumbs' => [
                 ['label' => 'Finance'],
                 ['label' => 'Bills', 'href' => route('finance.bills.index')],
@@ -49,6 +53,7 @@ class BillController extends Controller
 
         return Inertia::render('Finance/Bills/Create', [
             'contacts'    => Contact::vendors()->active()->orderBy('name')->get(['id', 'name']),
+            'currencies'  => $this->currencies,
             'breadcrumbs' => [
                 ['label' => 'Finance'],
                 ['label' => 'Bills', 'href' => route('finance.bills.index')],
@@ -65,12 +70,14 @@ class BillController extends Controller
 
         $bill = DB::transaction(function () use ($data) {
             $bill = Bill::create([
-                'tenant_id'  => auth()->user()->tenant_id,
-                'contact_id' => $data['contact_id'] ?? null,
-                'issue_date' => $data['issue_date'],
-                'due_date'   => $data['due_date'] ?? null,
-                'notes'      => $data['notes'] ?? null,
-                'created_by' => auth()->id(),
+                'tenant_id'     => auth()->user()->tenant_id,
+                'contact_id'    => $data['contact_id'] ?? null,
+                'issue_date'    => $data['issue_date'],
+                'due_date'      => $data['due_date'] ?? null,
+                'notes'         => $data['notes'] ?? null,
+                'created_by'    => auth()->id(),
+                'currency_code' => $data['currency_code'] ?? 'USD',
+                'exchange_rate' => $data['exchange_rate'] ?? 1.0,
             ]);
 
             $bill->update([

@@ -35,6 +35,9 @@ export default function QuoteShow({ quote }: Props) {
         emailPost(`/finance/quotes/${quote.id}/email`, { onSuccess: () => { setShowEmail(false); emailReset(); } });
     }
 
+    const currencyCode = quote.currency_code ?? 'USD';
+    const showCurrencyInfo = currencyCode !== 'USD';
+
     return (
         <AppLayout>
             <Head title={quote.number ?? `Quote #${quote.id}`} />
@@ -49,6 +52,11 @@ export default function QuoteShow({ quote }: Props) {
                             <QuoteStatusBadge status={quote.status} />
                             <span className="text-sm text-slate-500">Issued: {quote.issue_date}</span>
                             {quote.expiry_date && <span className="text-sm text-slate-500">Expires: {quote.expiry_date}</span>}
+                            {showCurrencyInfo && (
+                                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                    {currencyCode}
+                                </span>
+                            )}
                         </div>
                     </div>
                     <div className="flex gap-2 flex-wrap justify-end">
@@ -99,6 +107,30 @@ export default function QuoteShow({ quote }: Props) {
                     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                         <p className="text-xs text-slate-500 mb-1">Customer</p>
                         <p className="font-medium text-slate-900">{quote.contact.name}</p>
+                    </div>
+                )}
+
+                {/* Currency info */}
+                {showCurrencyInfo && (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm">
+                        <div className="flex gap-6 text-sm">
+                            <div>
+                                <span className="text-blue-600 font-medium">Currency: </span>
+                                <span className="text-blue-900">{currencyCode}</span>
+                            </div>
+                            <div>
+                                <span className="text-blue-600 font-medium">Exchange Rate: </span>
+                                <span className="text-blue-900">{Number(quote.exchange_rate ?? 1).toFixed(6)}</span>
+                            </div>
+                            {quote.base_total !== undefined && (
+                                <div>
+                                    <span className="text-blue-600 font-medium">Base Total (USD): </span>
+                                    <span className="text-blue-900 font-semibold">
+                                        ${Number(quote.base_total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 

@@ -77,6 +77,7 @@ const navItems: NavItem[] = [
             { label: 'Aged Payables',     href: '/finance/reports/aged-payables',         icon: <span /> },
             { label: 'Account Ledger',    href: '/finance/reports/account-ledger',        icon: <span /> },
             { label: 'Customer Statement', href: '/finance/reports/customer-statement',    icon: <span /> },
+            { label: 'Exchange Rates',      href: '/finance/exchange-rates',                    icon: <span /> },
         ],
     },
     {

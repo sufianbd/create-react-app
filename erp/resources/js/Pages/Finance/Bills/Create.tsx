@@ -7,6 +7,7 @@ import type { Contact } from '@/types/finance';
 
 interface Props extends PageProps {
     contacts: Pick<Contact, 'id' | 'name'>[];
+    currencies?: string[];
 }
 
 interface LineItem {
@@ -16,12 +17,14 @@ interface LineItem {
     tax_rate: string;
 }
 
-export default function BillCreate({ contacts }: Props) {
+export default function BillCreate({ contacts, currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'SGD'] }: Props) {
     const [form, setForm] = useState({
         contact_id: '' as number | '',
         issue_date: new Date().toISOString().slice(0, 10),
         due_date: '',
         notes: '',
+        currency_code: 'USD',
+        exchange_rate: '1',
     });
     const [items, setItems] = useState<LineItem[]>([
         { description: '', quantity: '1', unit_price: '', tax_rate: '0' },
@@ -51,12 +54,17 @@ export default function BillCreate({ contacts }: Props) {
 
     const grandTotal = items.reduce((s, i) => s + lineTotal(i), 0);
 
+    function handleCurrencyChange(code: string) {
+        setForm({ ...form, currency_code: code, exchange_rate: code === 'USD' ? '1' : form.exchange_rate });
+    }
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
         setProcessing(true);
         router.post('/finance/bills', {
             ...form,
-            contact_id: form.contact_id || null,
+            contact_id:    form.contact_id || null,
+            exchange_rate: parseFloat(form.exchange_rate) || 1,
             items: items.map((i) => ({
                 description: i.description,
                 quantity:    parseFloat(i.quantity) || 0,
@@ -96,6 +104,22 @@ export default function BillCreate({ contacts }: Props) {
                                     onChange={(e) => setForm({ ...form, due_date: e.target.value })}
                                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
+                                <select value={form.currency_code}
+                                    onChange={(e) => handleCurrencyChange(e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+                                    {currencies.map((c) => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                            </div>
+                            {form.currency_code !== 'USD' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Exchange Rate (USD per 1 {form.currency_code})</label>
+                                    <input type="number" min="0.000001" step="0.000001" value={form.exchange_rate}
+                                        onChange={(e) => setForm({ ...form, exchange_rate: e.target.value })}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none" />
+                                </div>
+                            )}
                             <div className="sm:col-span-4">
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
                                 <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2}
@@ -159,10 +183,19 @@ export default function BillCreate({ contacts }: Props) {
                                             className="text-sm text-indigo-600 hover:text-indigo-800">+ Add item</button>
                                     </td>
                                     <td className="px-4 py-2 text-right font-semibold text-slate-900">
-                                        Total: {grandTotal.toFixed(2)}
+                                        Total: {grandTotal.toFixed(2)} {form.currency_code}
                                     </td>
                                     <td></td>
                                 </tr>
+                                {form.currency_code !== 'USD' && (
+                                    <tr>
+                                        <td colSpan={4}></td>
+                                        <td className="px-4 py-1 text-right text-xs text-slate-500">
+                                            ≈ {(grandTotal * (parseFloat(form.exchange_rate) || 1)).toFixed(2)} USD
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                )}
                             </tfoot>
                         </table>
                     </div>

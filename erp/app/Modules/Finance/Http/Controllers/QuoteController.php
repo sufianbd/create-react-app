@@ -20,6 +20,9 @@ use Inertia\Response;
 class QuoteController extends Controller
 {
     use SendsDocuments;
+
+    private array $currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'SGD'];
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Quote::class);
@@ -36,6 +39,7 @@ class QuoteController extends Controller
             'quotes'      => QuoteResource::collection($quotes),
             'contacts'    => Contact::customers()->active()->orderBy('name')->get(['id', 'name']),
             'filters'     => $request->only(['status', 'contact_id', 'search']),
+            'currencies'  => $this->currencies,
             'breadcrumbs' => [
                 ['label' => 'Finance'],
                 ['label' => 'Quotes', 'href' => route('finance.quotes.index')],
@@ -49,6 +53,7 @@ class QuoteController extends Controller
 
         return Inertia::render('Finance/Quotes/Create', [
             'contacts'    => Contact::customers()->active()->orderBy('name')->get(['id', 'name']),
+            'currencies'  => $this->currencies,
             'breadcrumbs' => [
                 ['label' => 'Finance'],
                 ['label' => 'Quotes', 'href' => route('finance.quotes.index')],
@@ -65,12 +70,14 @@ class QuoteController extends Controller
 
         $quote = DB::transaction(function () use ($data) {
             $quote = Quote::create([
-                'tenant_id'   => auth()->user()->tenant_id,
-                'contact_id'  => $data['contact_id'] ?? null,
-                'issue_date'  => $data['issue_date'],
-                'expiry_date' => $data['expiry_date'] ?? null,
-                'notes'       => $data['notes'] ?? null,
-                'created_by'  => auth()->id(),
+                'tenant_id'     => auth()->user()->tenant_id,
+                'contact_id'    => $data['contact_id'] ?? null,
+                'issue_date'    => $data['issue_date'],
+                'expiry_date'   => $data['expiry_date'] ?? null,
+                'notes'         => $data['notes'] ?? null,
+                'created_by'    => auth()->id(),
+                'currency_code' => $data['currency_code'] ?? 'USD',
+                'exchange_rate' => $data['exchange_rate'] ?? 1.0,
             ]);
 
             $quote->update([
