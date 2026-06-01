@@ -133,6 +133,7 @@ const navItems: NavItem[] = [
         children: [
             { label: 'Users', href: '/settings/users', icon: <span /> },
             { label: 'Company', href: '/settings/company', icon: <span /> },
+            { label: 'Audit Log', href: '/settings/audit-log', icon: <span /> },
         ],
     },
 ];

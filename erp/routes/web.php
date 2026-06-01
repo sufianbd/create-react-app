@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
@@ -37,6 +38,8 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->group(function () {
     Route::get('company',        [CompanySettingsController::class, 'show'])->name('settings.company.show');
     Route::patch('company',      [CompanySettingsController::class, 'update'])->name('settings.company.update');
     Route::post('company/logo',  [CompanySettingsController::class, 'uploadLogo'])->name('settings.company.logo');
+
+    Route::get('audit-log', [AuditLogController::class, 'index'])->name('settings.audit-log');
 });
 
 require __DIR__ . '/auth.php';
