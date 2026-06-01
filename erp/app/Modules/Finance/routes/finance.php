@@ -17,6 +17,7 @@ use App\Modules\Finance\Http\Controllers\ReportController;
 use App\Modules\Finance\Http\Controllers\SalesOrderController;
 use App\Modules\Finance\Http\Controllers\FixedAssetController;
 use App\Modules\Finance\Http\Controllers\PriceListController;
+use App\Modules\Finance\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
@@ -146,4 +147,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     // Price Lists
     Route::get('price-lists/price-for-contact', [PriceListController::class, 'priceForContact'])->name('price-lists.price-for-contact');
     Route::resource('price-lists', PriceListController::class)->except(['edit']);
+
+    // Projects
+    Route::resource('projects', ProjectController::class)->except(['edit']);
+    Route::post('projects/{project}/time-entries', [ProjectController::class, 'storeTimeEntry'])->name('projects.time-entries.store');
+    Route::post('projects/{project}/mark-billed', [ProjectController::class, 'markBilled'])->name('projects.mark-billed');
 });

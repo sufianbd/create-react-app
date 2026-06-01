@@ -279,3 +279,33 @@ export interface BankTransaction {
     journal_entry_id: number | null;
     imported_at: string | null;
 }
+
+export interface Project {
+    id: number;
+    name: string;
+    description: string | null;
+    status: 'draft' | 'active' | 'completed' | 'cancelled';
+    budget: number | null;
+    contact_id: number | null;
+    invoice_id: number | null;
+    starts_on: string | null;
+    ends_on: string | null;
+    contact?: Contact;
+    invoice?: { id: number; reference: string };
+    time_entries?: ProjectTimeEntry[];
+    time_entries_count?: number;
+    total_hours?: number;
+    billable_hours?: number;
+}
+
+export interface ProjectTimeEntry {
+    id: number;
+    project_id: number;
+    user_id: number;
+    description: string;
+    hours: number;
+    billable: boolean;
+    billed: boolean;
+    entry_date: string;
+    user?: { id: number; name: string };
+}
