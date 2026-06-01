@@ -8,6 +8,7 @@ use App\Modules\Inventory\Http\Requests\UpdateProductRequest;
 use App\Modules\Inventory\Http\Resources\ProductResource;
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\ProductCategory;
+use App\Modules\Inventory\Models\Supplier;
 use App\Modules\Inventory\Models\UnitOfMeasure;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -72,16 +73,19 @@ class ProductController extends Controller
     {
         $this->authorize('view', $product);
 
-        $product->load(['category', 'uom', 'stockLevels.warehouse']);
+        $product->load(['category', 'uom', 'stockLevels.warehouse', 'preferredSupplier']);
 
         $movements = $product->stockMovements()
             ->with('warehouse', 'creator')
             ->latest('created_at')
             ->paginate(20);
 
+        $tenantId = auth()->user()->tenant_id;
+
         return Inertia::render('Inventory/Products/Show', [
             'product'     => new ProductResource($product),
             'movements'   => $movements,
+            'suppliers'   => Supplier::where('tenant_id', $tenantId)->orderBy('name')->get(['id', 'name']),
             'breadcrumbs' => [
                 ['label' => 'Inventory'],
                 ['label' => 'Products', 'href' => route('inventory.products.index')],

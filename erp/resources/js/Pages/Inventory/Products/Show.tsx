@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
@@ -10,9 +10,10 @@ import type { Product, StockMovement, Paginator } from '@/types/inventory';
 interface Props extends PageProps {
     product: Product;
     movements: Paginator<StockMovement>;
+    suppliers: { id: number; name: string }[];
 }
 
-export default function ProductShow({ product, movements }: Props) {
+export default function ProductShow({ product, movements, suppliers }: Props) {
     const { can } = usePermission();
     const [showAdjust, setShowAdjust] = useState(false);
     const [adjustForm, setAdjustForm] = useState({
@@ -22,6 +23,19 @@ export default function ProductShow({ product, movements }: Props) {
         reference: '',
         notes: '',
     });
+
+    const reorderForm = useForm({
+        reorder_point: String(product.reorder_point ?? 0),
+        reorder_quantity: String(product.reorder_quantity ?? 0),
+        preferred_supplier_id: String(product.preferred_supplier_id ?? ''),
+    });
+
+    function submitReorderSettings(e: React.FormEvent) {
+        e.preventDefault();
+        reorderForm.patch(`/inventory/products/${product.id}`, {
+            preserveScroll: true,
+        });
+    }
 
     function handleDelete() {
         if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
@@ -193,6 +207,73 @@ export default function ProductShow({ product, movements }: Props) {
                             </form>
                         )}
                     </div>
+                </div>
+
+                {/* Reorder Settings */}
+                <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h2 className="text-base font-semibold text-slate-900">Reorder Settings</h2>
+                        {product.needs_reorder && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                                &#9888; Below reorder point
+                            </span>
+                        )}
+                    </div>
+                    {can('inventory.update') ? (
+                        <form onSubmit={submitReorderSettings} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div>
+                                <label className="block text-xs text-slate-500 mb-1">Reorder Point</label>
+                                <input
+                                    type="number" min="0" step="0.01"
+                                    value={reorderForm.data.reorder_point}
+                                    onChange={(e) => reorderForm.setData('reorder_point', e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-slate-500 mb-1">Reorder Quantity</label>
+                                <input
+                                    type="number" min="0" step="0.01"
+                                    value={reorderForm.data.reorder_quantity}
+                                    onChange={(e) => reorderForm.setData('reorder_quantity', e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-slate-500 mb-1">Preferred Supplier</label>
+                                <select
+                                    value={reorderForm.data.preferred_supplier_id}
+                                    onChange={(e) => reorderForm.setData('preferred_supplier_id', e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="">None</option>
+                                    {suppliers.map((s) => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="sm:col-span-3 flex justify-end">
+                                <Button type="submit" size="sm" disabled={reorderForm.processing}>
+                                    {reorderForm.processing ? 'Saving…' : 'Save Reorder Settings'}
+                                </Button>
+                            </div>
+                        </form>
+                    ) : (
+                        <dl className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <dt className="text-slate-500">Reorder Point</dt>
+                                <dd className="font-medium text-slate-900">{product.reorder_point}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-slate-500">Reorder Quantity</dt>
+                                <dd className="font-medium text-slate-900">{product.reorder_quantity ?? 0}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-slate-500">Preferred Supplier</dt>
+                                <dd className="font-medium text-slate-900">{product.preferred_supplier?.name ?? '—'}</dd>
+                            </div>
+                        </dl>
+                    )}
                 </div>
 
                 {/* Stock movement history */}

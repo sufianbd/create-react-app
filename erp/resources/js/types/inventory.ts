@@ -27,7 +27,11 @@ export interface Product {
     category?: ProductCategory | null;
     uom_id?: number | null; uom?: { id: number; name: string; abbreviation: string } | null;
     cost_price: string; sale_price: string; reorder_point: number;
-    is_active: boolean; stock_levels?: StockLevelInfo[]; total_quantity?: number; created_at?: string;
+    reorder_quantity?: number;
+    preferred_supplier_id?: number | null;
+    preferred_supplier?: { id: number; name: string } | null;
+    is_active: boolean; stock_levels?: StockLevelInfo[]; total_quantity?: number;
+    total_stock?: number; needs_reorder?: boolean; created_at?: string;
 }
 export interface StockMovement {
     id: number; product_id: number; warehouse_id: number;

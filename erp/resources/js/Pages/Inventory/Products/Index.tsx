@@ -93,7 +93,14 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                             ) : <span className="text-slate-400 text-xs">—</span> },
                             { key: 'sale_price', header: 'Sale Price', render: (p) => `$${Number(p.sale_price).toFixed(2)}` },
                             { key: 'stock', header: 'Stock', render: (p) => (
-                                <StockLevelBadge quantity={p.total_quantity ?? 0} reorderPoint={p.reorder_point} />
+                                <div className="flex items-center gap-1.5">
+                                    <StockLevelBadge quantity={p.total_quantity ?? 0} reorderPoint={p.reorder_point} />
+                                    {p.needs_reorder && (
+                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                                            &#9888; Reorder
+                                        </span>
+                                    )}
+                                </div>
                             )},
                             { key: 'status', header: 'Status', render: (p) => (
                                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${p.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>

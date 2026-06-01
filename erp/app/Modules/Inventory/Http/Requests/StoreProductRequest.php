@@ -23,8 +23,10 @@ class StoreProductRequest extends FormRequest
             'uom_id'        => ['nullable', 'integer', 'exists:units_of_measure,id'],
             'cost_price'    => ['required', 'numeric', 'min:0'],
             'sale_price'    => ['required', 'numeric', 'min:0'],
-            'reorder_point' => ['integer', 'min:0'],
-            'is_active'     => ['boolean'],
+            'reorder_point'         => ['nullable', 'numeric', 'min:0'],
+            'reorder_quantity'      => ['nullable', 'numeric', 'min:0'],
+            'preferred_supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
+            'is_active'             => ['boolean'],
         ];
     }
 }

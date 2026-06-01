@@ -18,14 +18,16 @@ class Product extends Model
     protected $fillable = [
         'tenant_id', 'sku', 'name', 'description',
         'category_id', 'uom_id', 'cost_price',
-        'sale_price', 'reorder_point', 'is_active',
+        'sale_price', 'reorder_point', 'reorder_quantity',
+        'preferred_supplier_id', 'is_active',
     ];
 
     protected $casts = [
-        'cost_price'    => 'decimal:2',
-        'sale_price'    => 'decimal:2',
-        'reorder_point' => 'integer',
-        'is_active'     => 'boolean',
+        'cost_price'           => 'decimal:2',
+        'sale_price'           => 'decimal:2',
+        'reorder_point'        => 'float',
+        'reorder_quantity'     => 'float',
+        'is_active'            => 'boolean',
     ];
 
     public function category(): BelongsTo
@@ -48,6 +50,11 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    public function preferredSupplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'preferred_supplier_id');
+    }
+
     public function getTotalQuantityAttribute(): float
     {
         return (float) $this->stockLevels()->sum('quantity');
@@ -58,6 +65,16 @@ class Product extends Model
         return (float) $this->stockLevels()
             ->selectRaw('SUM(quantity - reserved_quantity) as available')
             ->value('available') ?? 0.0;
+    }
+
+    public function getTotalStockAttribute(): float
+    {
+        return (float) $this->stockLevels->sum('quantity');
+    }
+
+    public function needsReorder(): bool
+    {
+        return $this->reorder_point > 0 && $this->total_stock <= $this->reorder_point;
     }
 
     public function scopeSearch($query, string $term)
@@ -72,5 +89,4 @@ class Product extends Model
     {
         return $query->where('is_active', true);
     }
-
 }
