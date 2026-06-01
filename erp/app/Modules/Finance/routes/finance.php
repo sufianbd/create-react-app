@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\Finance\Http\Controllers\AccountController;
+use App\Modules\Finance\Http\Controllers\BankAccountController;
+use App\Modules\Finance\Http\Controllers\BankStatementController;
 use App\Modules\Finance\Http\Controllers\BillController;
 use App\Modules\Finance\Http\Controllers\ContactController;
 use App\Modules\Finance\Http\Controllers\CreditNoteController;
@@ -8,6 +10,7 @@ use App\Modules\Finance\Http\Controllers\ExchangeRateController;
 use App\Modules\Finance\Http\Controllers\InvoiceController;
 use App\Modules\Finance\Http\Controllers\JournalEntryController;
 use App\Modules\Finance\Http\Controllers\QuoteController;
+use App\Modules\Finance\Http\Controllers\ReconciliationController;
 use App\Modules\Finance\Http\Controllers\RecurringInvoiceController;
 use App\Modules\Finance\Http\Controllers\ReportController;
 use App\Modules\Finance\Http\Controllers\SalesOrderController;
@@ -110,4 +113,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('/exchange-rates',              [ExchangeRateController::class, 'index'])->name('exchange-rates.index');
     Route::post('/exchange-rates',             [ExchangeRateController::class, 'store'])->name('exchange-rates.store');
     Route::delete('/exchange-rates/{exchangeRate}', [ExchangeRateController::class, 'destroy'])->name('exchange-rates.destroy');
+
+    // Bank Accounts
+    Route::resource('bank-accounts', BankAccountController::class);
+    Route::post('bank-accounts/{bankAccount}/import', [BankStatementController::class, 'import'])->name('bank-accounts.import');
+
+    // Reconciliation
+    Route::get('reconciliation',                                 [ReconciliationController::class, 'index'])->name('reconciliation.index');
+    Route::post('reconciliation/{bankTransaction}/match',        [ReconciliationController::class, 'match'])->name('reconciliation.match');
+    Route::post('reconciliation/{bankTransaction}/unmatch',      [ReconciliationController::class, 'unmatch'])->name('reconciliation.unmatch');
 });

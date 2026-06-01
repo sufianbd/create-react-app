@@ -232,3 +232,28 @@ export interface ExchangeRate {
     created_at?: string;
     updated_at?: string;
 }
+
+export interface BankAccount {
+    id: number;
+    name: string;
+    account_number: string | null;
+    bank_name: string | null;
+    currency_code: string;
+    opening_balance: number;
+    balance?: number;
+    unreconciled_count?: number;
+}
+
+export interface BankTransaction {
+    id: number;
+    bank_account_id: number;
+    bank_account?: BankAccount;
+    transaction_date: string;
+    description: string | null;
+    amount: number;
+    reference: string | null;
+    reconciled: boolean;
+    payment_id: number | null;
+    journal_entry_id: number | null;
+    imported_at: string | null;
+}

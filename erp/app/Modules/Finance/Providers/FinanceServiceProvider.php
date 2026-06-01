@@ -3,6 +3,8 @@
 namespace App\Modules\Finance\Providers;
 
 use App\Modules\Finance\Models\Account;
+use App\Modules\Finance\Models\BankAccount;
+use App\Modules\Finance\Models\BankTransaction;
 use App\Modules\Finance\Models\Bill;
 use App\Modules\Finance\Models\Contact;
 use App\Modules\Finance\Models\CreditNote;
@@ -13,6 +15,8 @@ use App\Modules\Finance\Models\Quote;
 use App\Modules\Finance\Models\RecurringInvoice;
 use App\Modules\Finance\Models\SalesOrder;
 use App\Modules\Finance\Policies\AccountPolicy;
+use App\Modules\Finance\Policies\BankAccountPolicy;
+use App\Modules\Finance\Policies\BankTransactionPolicy;
 use App\Modules\Finance\Policies\BillPolicy;
 use App\Modules\Finance\Policies\ContactPolicy;
 use App\Modules\Finance\Policies\CreditNotePolicy;
@@ -43,6 +47,8 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(RecurringInvoice::class, RecurringInvoicePolicy::class);
         Gate::policy(SalesOrder::class, SalesOrderPolicy::class);
         Gate::policy(ExchangeRate::class, ExchangeRatePolicy::class);
+        Gate::policy(BankAccount::class, BankAccountPolicy::class);
+        Gate::policy(BankTransaction::class, BankTransactionPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
