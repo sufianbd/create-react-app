@@ -43,3 +43,8 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+Route::post('/notifications/refresh', function (\Illuminate\Http\Request $request) {
+    \App\Services\NotificationService::clearCache($request->user()->tenant_id);
+    return back();
+})->name('notifications.refresh')->middleware(['auth', 'verified']);

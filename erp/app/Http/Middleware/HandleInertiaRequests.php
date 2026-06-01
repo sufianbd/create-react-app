@@ -52,6 +52,16 @@ class HandleInertiaRequests extends Middleware
             'notifications_count' => fn () => $user
                 ? $user->unreadNotifications()->count()
                 : 0,
+            'notifications' => function () use ($user) {
+                if (! $user) {
+                    return [];
+                }
+                try {
+                    return \App\Services\NotificationService::forUser($user);
+                } catch (\Throwable) {
+                    return [];
+                }
+            },
         ];
     }
 }
