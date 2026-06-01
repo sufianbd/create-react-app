@@ -108,6 +108,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/account-ledger/{account}',     [ReportController::class, 'accountLedger'])->name('reports.account-ledger');
     Route::get('reports/customer-statement', [ReportController::class, 'customerStatementIndex'])->name('reports.customer-statement.index');
     Route::get('reports/customer-statement/{contact}', [ReportController::class, 'customerStatement'])->name('reports.customer-statement');
+    Route::get('reports/vat-report', [ReportController::class, 'vatReport'])->name('reports.vat-report');
 
     // Exchange Rates
     Route::get('/exchange-rates',              [ExchangeRateController::class, 'index'])->name('exchange-rates.index');

@@ -455,6 +455,71 @@ class ReportController extends Controller
         ]);
     }
 
+    public function vatReport(Request $request): Response
+    {
+        $this->authorize('viewAny', Invoice::class);
+
+        $tenantId = $request->user()->tenant_id;
+        $from     = $request->query('from', now()->startOfQuarter()->toDateString());
+        $to       = $request->query('to',   now()->endOfQuarter()->toDateString());
+
+        // Output VAT: tax collected on invoices (not cancelled) within the period
+        $invoices = Invoice::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['cancelled'])
+            ->whereBetween('issue_date', [$from, $to])
+            ->with('items')
+            ->get();
+
+        $outputLines = $invoices->map(function ($invoice) {
+            $net = $invoice->subtotal;
+            $tax = $invoice->tax_total;
+            return [
+                'id'      => $invoice->id,
+                'number'  => $invoice->number,
+                'date'    => $invoice->issue_date,
+                'contact' => $invoice->contact?->name,
+                'net'     => round($net, 2),
+                'tax'     => round($tax, 2),
+                'type'    => 'invoice',
+            ];
+        })->filter(fn ($line) => $line['tax'] != 0)->values();
+
+        // Input VAT: tax paid on bills (not cancelled) within the period
+        $bills = Bill::where('tenant_id', $tenantId)
+            ->whereNotIn('status', ['cancelled'])
+            ->whereBetween('issue_date', [$from, $to])
+            ->with('items')
+            ->get();
+
+        $inputLines = $bills->map(function ($bill) {
+            $net = $bill->subtotal;
+            $tax = $bill->tax_total;
+            return [
+                'id'      => $bill->id,
+                'number'  => $bill->number,
+                'date'    => $bill->issue_date,
+                'contact' => $bill->contact?->name,
+                'net'     => round($net, 2),
+                'tax'     => round($tax, 2),
+                'type'    => 'bill',
+            ];
+        })->filter(fn ($line) => $line['tax'] != 0)->values();
+
+        $totalOutputVat = round($outputLines->sum('tax'), 2);
+        $totalInputVat  = round($inputLines->sum('tax'), 2);
+        $netVat         = round($totalOutputVat - $totalInputVat, 2);
+
+        return Inertia::render('Finance/Reports/VatReport', [
+            'output_lines'     => $outputLines,
+            'input_lines'      => $inputLines,
+            'total_output_vat' => $totalOutputVat,
+            'total_input_vat'  => $totalInputVat,
+            'net_vat'          => $netVat,
+            'from'             => $from,
+            'to'               => $to,
+        ]);
+    }
+
     private function aggregateJournalLines(?string $from = null, ?string $to = null): \Illuminate\Support\Collection
     {
         return JournalLine::select('account_id',
