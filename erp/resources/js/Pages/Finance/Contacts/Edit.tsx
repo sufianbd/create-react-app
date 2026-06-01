@@ -3,19 +3,20 @@ import { useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
 import type { PageProps } from '@/types';
-import type { Contact, ContactType } from '@/types/finance';
+import type { Contact, ContactType, PriceList } from '@/types/finance';
 
-interface Props extends PageProps { contact: Contact; }
+interface Props extends PageProps { contact: Contact; priceLists: PriceList[]; }
 
-export default function ContactEdit({ contact }: Props) {
+export default function ContactEdit({ contact, priceLists }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        name:      contact.name,
-        email:     contact.email ?? '',
-        phone:     contact.phone ?? '',
-        address:   contact.address ?? '',
-        type:      contact.type,
-        notes:     contact.notes ?? '',
-        is_active: contact.is_active,
+        name:          contact.name,
+        email:         contact.email ?? '',
+        phone:         contact.phone ?? '',
+        address:       contact.address ?? '',
+        type:          contact.type,
+        notes:         contact.notes ?? '',
+        is_active:     contact.is_active,
+        price_list_id: contact.price_list_id ?? ('' as string | number),
     });
 
     function submit(e: React.FormEvent) {
@@ -60,6 +61,16 @@ export default function ContactEdit({ contact }: Props) {
                         <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
                         <textarea value={data.address} onChange={(e) => setData('address', e.target.value)} rows={2}
                             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Price List</label>
+                        <select value={data.price_list_id} onChange={(e) => setData('price_list_id', e.target.value ? Number(e.target.value) : '')}
+                            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+                            <option value="">— None —</option>
+                            {priceLists.map((pl) => (
+                                <option key={pl.id} value={pl.id}>{pl.name}</option>
+                            ))}
+                        </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>

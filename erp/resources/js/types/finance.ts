@@ -45,7 +45,29 @@ export interface Contact {
     type: ContactType;
     notes?: string;
     is_active: boolean;
+    price_list_id?: number | null;
     created_at?: string;
+}
+
+export interface PriceList {
+    id: number;
+    name: string;
+    description: string | null;
+    currency_code: string;
+    discount_percent: number;
+    is_active: boolean;
+    items_count?: number;
+    contacts_count?: number;
+    items?: PriceListItem[];
+    contacts?: Contact[];
+}
+
+export interface PriceListItem {
+    id: number;
+    price_list_id: number;
+    product_id: number;
+    product?: { id: number; name: string; sku: string; sale_price: number };
+    unit_price: number;
 }
 
 export interface InvoiceItem {

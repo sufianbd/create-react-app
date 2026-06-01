@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Finance\Http\Requests\StoreContactRequest;
 use App\Modules\Finance\Http\Resources\ContactResource;
 use App\Modules\Finance\Models\Contact;
+use App\Modules\Finance\Models\PriceList;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -38,6 +39,7 @@ class ContactController extends Controller
         $this->authorize('create', Contact::class);
 
         return Inertia::render('Finance/Contacts/Create', [
+            'priceLists'  => PriceList::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'breadcrumbs' => [
                 ['label' => 'Finance'],
                 ['label' => 'Contacts', 'href' => route('finance.contacts.index')],
@@ -62,6 +64,7 @@ class ContactController extends Controller
 
         return Inertia::render('Finance/Contacts/Edit', [
             'contact'     => new ContactResource($contact),
+            'priceLists'  => PriceList::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'breadcrumbs' => [
                 ['label' => 'Finance'],
                 ['label' => 'Contacts', 'href' => route('finance.contacts.index')],

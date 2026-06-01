@@ -5,6 +5,7 @@ namespace App\Modules\Finance\Models;
 use App\Modules\Core\Traits\BelongsToTenant;
 use App\Modules\Core\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -16,7 +17,7 @@ class Contact extends Model
 
     protected $fillable = [
         'tenant_id', 'name', 'email', 'phone',
-        'address', 'type', 'notes', 'is_active',
+        'address', 'type', 'price_list_id', 'notes', 'is_active',
     ];
 
     protected $casts = ['is_active' => 'boolean'];
@@ -24,6 +25,11 @@ class Contact extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function priceList(): BelongsTo
+    {
+        return $this->belongsTo(PriceList::class);
     }
 
     public function scopeCustomers($query)

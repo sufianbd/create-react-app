@@ -86,6 +86,7 @@ const navItems: NavItem[] = [
             { label: 'Budgets',             href: '/finance/budgets',                          icon: <span /> },
             { label: 'Reconciliation',      href: '/finance/reconciliation',                   icon: <span /> },
             { label: 'Fixed Assets',        href: '/finance/fixed-assets',                     icon: <span /> },
+            { label: 'Price Lists',          href: '/finance/price-lists',                      icon: <span /> },
         ],
     },
     {

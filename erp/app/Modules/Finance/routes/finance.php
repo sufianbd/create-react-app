@@ -16,6 +16,7 @@ use App\Modules\Finance\Http\Controllers\RecurringInvoiceController;
 use App\Modules\Finance\Http\Controllers\ReportController;
 use App\Modules\Finance\Http\Controllers\SalesOrderController;
 use App\Modules\Finance\Http\Controllers\FixedAssetController;
+use App\Modules\Finance\Http\Controllers\PriceListController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
@@ -141,4 +142,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('fixed-assets/{fixedAsset}/depreciate', [FixedAssetController::class, 'depreciate'])->name('fixed-assets.depreciate');
     Route::post('fixed-assets/{fixedAsset}/dispose',    [FixedAssetController::class, 'dispose'])->name('fixed-assets.dispose');
     Route::resource('fixed-assets', FixedAssetController::class)->except(['edit', 'update']);
+
+    // Price Lists
+    Route::get('price-lists/price-for-contact', [PriceListController::class, 'priceForContact'])->name('price-lists.price-for-contact');
+    Route::resource('price-lists', PriceListController::class)->except(['edit']);
 });

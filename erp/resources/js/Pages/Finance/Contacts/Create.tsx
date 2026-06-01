@@ -3,12 +3,15 @@ import { useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
 import type { PageProps } from '@/types';
-import type { ContactType } from '@/types/finance';
+import type { ContactType, PriceList } from '@/types/finance';
 
-export default function ContactCreate(_: PageProps) {
+interface Props extends PageProps { priceLists: PriceList[]; }
+
+export default function ContactCreate({ priceLists }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '', email: '', phone: '', address: '',
         type: 'customer' as ContactType, notes: '', is_active: true,
+        price_list_id: '' as string | number,
     });
 
     function submit(e: React.FormEvent) {
@@ -54,6 +57,16 @@ export default function ContactCreate(_: PageProps) {
                         <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
                         <textarea value={data.address} onChange={(e) => setData('address', e.target.value)} rows={2}
                             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Price List</label>
+                        <select value={data.price_list_id} onChange={(e) => setData('price_list_id', e.target.value ? Number(e.target.value) : '')}
+                            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+                            <option value="">— None —</option>
+                            {priceLists.map((pl) => (
+                                <option key={pl.id} value={pl.id}>{pl.name}</option>
+                            ))}
+                        </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>

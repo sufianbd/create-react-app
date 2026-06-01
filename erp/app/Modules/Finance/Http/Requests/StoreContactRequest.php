@@ -18,7 +18,8 @@ class StoreContactRequest extends FormRequest
             'address'   => ['nullable', 'string'],
             'type'      => ['required', Rule::in(['customer', 'vendor', 'both'])],
             'notes'     => ['nullable', 'string'],
-            'is_active' => ['boolean'],
+            'is_active'     => ['boolean'],
+            'price_list_id' => ['nullable', 'exists:price_lists,id'],
         ];
     }
 }
