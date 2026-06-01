@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Inventory\Http\Controllers\CategoryController;
+use App\Modules\Inventory\Http\Controllers\ProductCategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductController;
 use App\Modules\Inventory\Http\Controllers\PurchaseOrderController;
 use App\Modules\Inventory\Http\Controllers\StockMovementController;
@@ -15,7 +16,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::resource('products', ProductController::class)
         ->names('products');
 
-    // Categories (index + inline CRUD via back())
+    // Product Categories (flat, colour-coded)
+    Route::resource('product-categories', ProductCategoryController::class)
+        ->except(['create', 'edit', 'show'])
+        ->names('product-categories');
+
+    // Legacy Categories (hierarchical - index + inline CRUD via back())
     Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');

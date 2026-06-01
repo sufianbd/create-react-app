@@ -6,8 +6,8 @@ use App\Modules\Finance\Models\Contact;
 use App\Modules\Finance\Models\Invoice;
 use App\Modules\HR\Models\Department;
 use App\Modules\HR\Models\Employee;
-use App\Modules\Inventory\Models\Category;
 use App\Modules\Inventory\Models\Product;
+use App\Modules\Inventory\Models\ProductCategory;
 use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
@@ -18,7 +18,7 @@ beforeEach(function () {
 });
 
 test('products export returns csv', function () {
-    $category = Category::create(['tenant_id' => $this->tenant->id, 'name' => 'Tools', 'slug' => 'tools']);
+    $category = ProductCategory::create(['tenant_id' => $this->tenant->id, 'name' => 'Tools', 'slug' => 'tools', 'colour' => '#6366f1']);
     Product::create([
         'tenant_id'   => $this->tenant->id,
         'category_id' => $category->id,

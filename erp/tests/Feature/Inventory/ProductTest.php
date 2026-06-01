@@ -2,7 +2,7 @@
 
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
-use App\Modules\Inventory\Models\Category;
+use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\UnitOfMeasure;
 use Database\Seeders\RolePermissionSeeder;
@@ -21,7 +21,7 @@ test('product index is accessible to user with permission', function () {
 });
 
 test('product can be created', function () {
-    $category = Category::create(['tenant_id' => $this->tenant->id, 'name' => 'Cat A', 'slug' => 'cat-a']);
+    $category = ProductCategory::create(['tenant_id' => $this->tenant->id, 'name' => 'Cat A', 'slug' => 'cat-a', 'colour' => '#6366f1']);
     $uom      = UnitOfMeasure::create(['tenant_id' => $this->tenant->id, 'name' => 'Pieces', 'abbreviation' => 'pcs']);
 
     $this->actingAs($this->admin)->post('/inventory/products', [

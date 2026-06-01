@@ -1,3 +1,11 @@
+export interface ProductCategory {
+    id: number;
+    name: string;
+    slug: string | null;
+    description: string | null;
+    colour: string;
+    products_count?: number;
+}
 export interface Category {
     id: number; name: string; slug: string; description?: string;
     parent_id?: number | null; parent?: { id: number; name: string } | null;
@@ -15,7 +23,8 @@ export interface StockLevelInfo {
 }
 export interface Product {
     id: number; sku: string; name: string; description?: string;
-    category_id?: number | null; category?: { id: number; name: string } | null;
+    category_id?: number | null;
+    category?: ProductCategory | null;
     uom_id?: number | null; uom?: { id: number; name: string; abbreviation: string } | null;
     cost_price: string; sale_price: string; reorder_point: number;
     is_active: boolean; stock_levels?: StockLevelInfo[]; total_quantity?: number; created_at?: string;

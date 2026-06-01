@@ -2,7 +2,7 @@
 
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
-use App\Modules\Inventory\Models\Category;
+use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\PurchaseOrder;
 use App\Modules\Inventory\Models\PurchaseOrderItem;
@@ -20,7 +20,7 @@ beforeEach(function () {
     $this->actingAs($this->admin);
     app()->instance('tenant', $this->tenant);
     $this->warehouse = Warehouse::create(['tenant_id' => $this->tenant->id, 'name' => 'Main', 'is_active' => true]);
-    $this->category  = Category::create(['tenant_id' => $this->tenant->id, 'name' => 'General', 'slug' => 'general-stock']);
+    $this->category  = ProductCategory::create(['tenant_id' => $this->tenant->id, 'name' => 'General', 'slug' => 'general-stock', 'colour' => '#6366f1']);
     $this->product   = Product::create([
         'tenant_id'   => $this->tenant->id,
         'category_id' => $this->category->id,

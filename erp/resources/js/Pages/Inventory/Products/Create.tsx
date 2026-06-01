@@ -2,10 +2,10 @@ import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { ProductForm } from '@/Components/Inventory/ProductForm';
 import type { PageProps } from '@/types';
-import type { Category, UnitOfMeasure } from '@/types/inventory';
+import type { ProductCategory, UnitOfMeasure } from '@/types/inventory';
 
 interface Props extends PageProps {
-    categories: Category[];
+    categories: Pick<ProductCategory, 'id' | 'name'>[];
     uoms: UnitOfMeasure[];
 }
 

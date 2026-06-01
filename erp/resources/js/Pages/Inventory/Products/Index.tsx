@@ -7,20 +7,26 @@ import { StockLevelBadge } from '@/Components/Inventory/StockLevelBadge';
 import { Pagination } from '@/Components/Inventory/Pagination';
 import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
-import type { Product, Paginator } from '@/types/inventory';
+import type { Product, ProductCategory, Paginator } from '@/types/inventory';
 
 interface Props extends PageProps {
     products: Paginator<Product>;
-    filters: { search?: string };
+    categories: Pick<ProductCategory, 'id' | 'name' | 'colour'>[];
+    filters: { search?: string; category_id?: string };
 }
 
-export default function ProductsIndex({ products, filters }: Props) {
+export default function ProductsIndex({ products, categories, filters }: Props) {
     const { can } = usePermission();
     const [search, setSearch] = useState(filters.search ?? '');
 
     function handleSearch(e: React.FormEvent) {
         e.preventDefault();
-        router.get('/inventory/products', { search }, { preserveState: true, replace: true });
+        router.get('/inventory/products', { search, category_id: filters.category_id }, { preserveState: true, replace: true });
+    }
+
+    function handleCategoryFilter(e: React.ChangeEvent<HTMLSelectElement>) {
+        const value = e.target.value;
+        router.get('/inventory/products', { category_id: value || undefined, search: filters.search }, { preserveState: true, replace: true });
     }
 
     return (
@@ -46,16 +52,28 @@ export default function ProductsIndex({ products, filters }: Props) {
 
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                     <div className="border-b border-slate-200 px-4 py-3">
-                        <form onSubmit={handleSearch} className="flex gap-2">
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search by name or SKU..."
-                                className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            <Button type="submit" variant="secondary" size="sm">Search</Button>
-                        </form>
+                        <div className="flex flex-wrap gap-2">
+                            <form onSubmit={handleSearch} className="flex flex-1 gap-2">
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search by name or SKU..."
+                                    className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                />
+                                <Button type="submit" variant="secondary" size="sm">Search</Button>
+                            </form>
+                            <select
+                                value={filters.category_id ?? ''}
+                                onChange={handleCategoryFilter}
+                                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map((cat) => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                     <Table
                         columns={[
@@ -65,7 +83,14 @@ export default function ProductsIndex({ products, filters }: Props) {
                                     {p.name}
                                 </Link>
                             )},
-                            { key: 'category', header: 'Category', render: (p) => p.category?.name ?? '—' },
+                            { key: 'category', header: 'Category', render: (p) => p.category ? (
+                                <span
+                                    className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                                    style={{ backgroundColor: p.category.colour }}
+                                >
+                                    {p.category.name}
+                                </span>
+                            ) : <span className="text-slate-400 text-xs">—</span> },
                             { key: 'sale_price', header: 'Sale Price', render: (p) => `$${Number(p.sale_price).toFixed(2)}` },
                             { key: 'stock', header: 'Stock', render: (p) => (
                                 <StockLevelBadge quantity={p.total_quantity ?? 0} reorderPoint={p.reorder_point} />

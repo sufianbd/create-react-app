@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { Button } from '@/Components/Common/Button';
 import { Input } from '@/Components/Common/Input';
-import type { Category, UnitOfMeasure } from '@/types/inventory';
+import type { ProductCategory, UnitOfMeasure } from '@/types/inventory';
 
 interface ProductFormData {
     sku: string;
@@ -17,7 +17,7 @@ interface ProductFormData {
 }
 
 interface Props {
-    categories: Category[];
+    categories: Pick<ProductCategory, 'id' | 'name'>[];
     uoms: UnitOfMeasure[];
     defaults?: Partial<ProductFormData>;
     action: string;
@@ -85,7 +85,7 @@ export function ProductForm({ categories, uoms, defaults = {}, action, method = 
                         onChange={(e) => setData('category_id', e.target.value)}
                         className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     >
-                        <option value="">— None —</option>
+                        <option value="">— No category —</option>
                         {categories.map((c) => (
                             <option key={c.id} value={c.id}>{c.name}</option>
                         ))}

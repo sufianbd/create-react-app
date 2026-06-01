@@ -44,7 +44,8 @@ const navItems: NavItem[] = [
         permission: 'inventory.view',
         children: [
             { label: 'Products',        href: '/inventory/products',        icon: inventoryIcon },
-            { label: 'Categories',      href: '/inventory/categories',      icon: inventoryIcon },
+            { label: 'Categories',          href: '/inventory/categories',          icon: inventoryIcon },
+            { label: 'Product Categories', href: '/inventory/product-categories', icon: inventoryIcon },
             { label: 'Warehouses',      href: '/inventory/warehouses',      icon: inventoryIcon },
             { label: 'Suppliers',       href: '/inventory/suppliers',       icon: inventoryIcon },
             { label: 'Stock Movements', href: '/inventory/stock-movements', icon: inventoryIcon },

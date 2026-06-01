@@ -19,7 +19,7 @@ class StoreProductRequest extends FormRequest
             ],
             'name'          => ['required', 'string', 'max:255'],
             'description'   => ['nullable', 'string'],
-            'category_id'   => ['nullable', 'integer', 'exists:categories,id'],
+            'category_id'   => ['nullable', 'integer', 'exists:product_categories,id'],
             'uom_id'        => ['nullable', 'integer', 'exists:units_of_measure,id'],
             'cost_price'    => ['required', 'numeric', 'min:0'],
             'sale_price'    => ['required', 'numeric', 'min:0'],

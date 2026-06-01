@@ -46,7 +46,7 @@ test('search returns results for contacts', function () {
 });
 
 test('search returns results for products', function () {
-    $category = \App\Modules\Inventory\Models\Category::create(['tenant_id' => $this->tenant->id, 'name' => 'Electronics', 'slug' => 'electronics']);
+    $category = \App\Modules\Inventory\Models\ProductCategory::create(['tenant_id' => $this->tenant->id, 'name' => 'Electronics', 'slug' => 'electronics', 'colour' => '#6366f1']);
     Product::create([
         'tenant_id'   => $this->tenant->id,
         'category_id' => $category->id,

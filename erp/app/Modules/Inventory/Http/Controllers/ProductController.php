@@ -6,10 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Modules\Inventory\Http\Requests\StoreProductRequest;
 use App\Modules\Inventory\Http\Requests\UpdateProductRequest;
 use App\Modules\Inventory\Http\Resources\ProductResource;
-use App\Modules\Inventory\Models\Category;
 use App\Modules\Inventory\Models\Product;
+use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\UnitOfMeasure;
-use App\Modules\Inventory\Models\Warehouse;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -35,7 +34,7 @@ class ProductController extends Controller
 
         return Inertia::render('Inventory/Products/Index', [
             'products'     => ProductResource::collection($products),
-            'categories'   => Category::orderBy('name')->get(['id', 'name']),
+            'categories'   => ProductCategory::orderBy('name')->get(['id', 'name', 'colour']),
             'filters'      => $request->only(['search', 'category_id', 'status', 'sort', 'direction']),
             'breadcrumbs'  => [
                 ['label' => 'Inventory'],
@@ -49,7 +48,7 @@ class ProductController extends Controller
         $this->authorize('create', Product::class);
 
         return Inertia::render('Inventory/Products/Create', [
-            'categories'  => Category::orderBy('name')->get(['id', 'name']),
+            'categories'  => ProductCategory::orderBy('name')->get(['id', 'name', 'colour']),
             'uoms'        => UnitOfMeasure::orderBy('name')->get(['id', 'name', 'abbreviation']),
             'breadcrumbs' => [
                 ['label' => 'Inventory'],
@@ -97,7 +96,7 @@ class ProductController extends Controller
 
         return Inertia::render('Inventory/Products/Edit', [
             'product'     => new ProductResource($product),
-            'categories'  => Category::orderBy('name')->get(['id', 'name']),
+            'categories'  => ProductCategory::orderBy('name')->get(['id', 'name', 'colour']),
             'uoms'        => UnitOfMeasure::orderBy('name')->get(['id', 'name', 'abbreviation']),
             'breadcrumbs' => [
                 ['label' => 'Inventory'],
