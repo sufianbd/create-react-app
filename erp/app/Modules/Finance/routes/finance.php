@@ -17,6 +17,7 @@ use App\Modules\Finance\Http\Controllers\ReportController;
 use App\Modules\Finance\Http\Controllers\SalesOrderController;
 use App\Modules\Finance\Http\Controllers\FixedAssetController;
 use App\Modules\Finance\Http\Controllers\PriceListController;
+use App\Modules\Finance\Http\Controllers\AttachmentController;
 use App\Modules\Finance\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 
@@ -152,4 +153,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::resource('projects', ProjectController::class)->except(['edit']);
     Route::post('projects/{project}/time-entries', [ProjectController::class, 'storeTimeEntry'])->name('projects.time-entries.store');
     Route::post('projects/{project}/mark-billed', [ProjectController::class, 'markBilled'])->name('projects.mark-billed');
+
+    // File Attachments
+    Route::post('attachments/{modelType}/{modelId}', [AttachmentController::class, 'store'])->name('attachments.store');
+    Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
+    Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 });

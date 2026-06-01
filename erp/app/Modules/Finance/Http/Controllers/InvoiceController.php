@@ -106,7 +106,7 @@ class InvoiceController extends Controller
     {
         $this->authorize('view', $invoice);
 
-        $invoice->load(['contact', 'items', 'payments', 'creator']);
+        $invoice->load(['contact', 'items', 'payments', 'creator', 'attachments']);
 
         return Inertia::render('Finance/Invoices/Show', [
             'invoice'     => new InvoiceResource($invoice),
@@ -175,7 +175,7 @@ class InvoiceController extends Controller
     {
         $this->authorize('view', $invoice);
 
-        $invoice->load(['contact', 'items', 'payments', 'creator']);
+        $invoice->load(['contact', 'items', 'payments', 'creator', 'attachments']);
 
         $tenantId = auth()->user()->tenant_id;
 

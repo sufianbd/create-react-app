@@ -18,7 +18,9 @@ use App\Modules\Finance\Models\Budget;
 use App\Modules\Finance\Models\PriceList;
 use App\Modules\Finance\Models\DepreciationEntry;
 use App\Modules\Finance\Models\FixedAsset;
+use App\Modules\Finance\Models\Attachment;
 use App\Modules\Finance\Models\Project;
+use App\Modules\Finance\Policies\AttachmentPolicy;
 use App\Modules\Finance\Policies\AccountPolicy;
 use App\Modules\Finance\Policies\PriceListPolicy;
 use App\Modules\Finance\Policies\ProjectPolicy;
@@ -63,6 +65,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(DepreciationEntry::class, FixedAssetPolicy::class);
         Gate::policy(PriceList::class, PriceListPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
+        Gate::policy(Attachment::class, AttachmentPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);

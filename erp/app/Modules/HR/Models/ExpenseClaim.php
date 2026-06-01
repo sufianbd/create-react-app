@@ -4,6 +4,7 @@ namespace App\Modules\HR\Models;
 
 use App\Models\User;
 use App\Modules\Core\Traits\BelongsToTenant;
+use App\Modules\Finance\Traits\HasAttachments;
 use DomainException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 class ExpenseClaim extends Model
 {
     use BelongsToTenant;
+    use HasAttachments;
     use SoftDeletes;
 
     protected $fillable = [

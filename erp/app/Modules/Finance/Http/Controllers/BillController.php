@@ -105,7 +105,7 @@ class BillController extends Controller
     {
         $this->authorize('view', $bill);
 
-        $bill->load(['contact', 'items', 'payments', 'creator']);
+        $bill->load(['contact', 'items', 'payments', 'creator', 'attachments']);
 
         return Inertia::render('Finance/Bills/Show', [
             'bill'        => new BillResource($bill),

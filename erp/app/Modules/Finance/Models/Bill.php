@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Core\Traits\BelongsToTenant;
 use App\Modules\Core\Traits\HasAuditLog;
 use App\Modules\Finance\Traits\HasLineItemTotals;
+use App\Modules\Finance\Traits\HasAttachments;
 use App\Modules\Finance\Traits\HasStatusTransitions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ class Bill extends Model
     use HasAuditLog;
     use SoftDeletes;
     use HasLineItemTotals;
+    use HasAttachments;
     use HasStatusTransitions;
 
     protected $fillable = [

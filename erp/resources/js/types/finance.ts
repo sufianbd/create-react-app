@@ -113,6 +113,7 @@ export interface Invoice {
     amount_paid?: number;
     amount_due?: number;
     transitions?: InvoiceStatus[];
+    attachments?: Attachment[];
     creator?: string | null;
     created_at?: string;
 }
@@ -166,6 +167,7 @@ export interface Bill {
     amount_paid?: number;
     amount_due?: number;
     transitions?: BillStatus[];
+    attachments?: Attachment[];
 }
 
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'cancelled';
@@ -296,6 +298,7 @@ export interface Project {
     time_entries_count?: number;
     total_hours?: number;
     billable_hours?: number;
+    attachments?: Attachment[];
 }
 
 export interface ProjectTimeEntry {
@@ -308,4 +311,16 @@ export interface ProjectTimeEntry {
     billed: boolean;
     entry_date: string;
     user?: { id: number; name: string };
+}
+
+export interface Attachment {
+    id: number;
+    filename: string;
+    disk: string;
+    path: string;
+    mime_type: string | null;
+    size: number | null;
+    uploaded_by: number | null;
+    uploader?: { id: number; name: string };
+    created_at: string;
 }

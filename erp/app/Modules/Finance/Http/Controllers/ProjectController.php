@@ -87,7 +87,7 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
-        $project->load(['timeEntries.user', 'contact', 'invoice']);
+        $project->load(['timeEntries.user', 'contact', 'invoice', 'attachments']);
 
         return Inertia::render('Finance/Projects/Show', [
             'project' => [
@@ -104,6 +104,11 @@ class ProjectController extends Controller
                 'invoice'      => $project->invoice ? ['id' => $project->invoice->id, 'reference' => $project->invoice->number ?? '#' . $project->invoice->id] : null,
                 'total_hours'  => $project->total_hours,
                 'billable_hours' => $project->billable_hours,
+                'attachments'  => $project->attachments->map(fn ($a) => [
+                    'id' => $a->id, 'filename' => $a->filename, 'disk' => $a->disk,
+                    'path' => $a->path, 'mime_type' => $a->mime_type, 'size' => $a->size,
+                    'uploaded_by' => $a->uploaded_by, 'created_at' => $a->created_at?->toIso8601String(),
+                ]),
                 'time_entries' => $project->timeEntries->map(fn ($e) => [
                     'id'          => $e->id,
                     'project_id'  => $e->project_id,

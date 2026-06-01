@@ -3,6 +3,7 @@
 namespace App\Modules\Finance\Models;
 
 use App\Modules\Core\Traits\BelongsToTenant;
+use App\Modules\Finance\Traits\HasAttachments;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Project extends Model
 {
     use BelongsToTenant;
+    use HasAttachments;
     use SoftDeletes;
 
     protected $fillable = [

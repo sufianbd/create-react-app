@@ -49,6 +49,11 @@ class BillResource extends JsonResource
                 fn () => $this->amount_due
             ),
             'transitions'   => $this->availableTransitions(),
+            'attachments'   => $this->whenLoaded('attachments', fn () => $this->attachments->map(fn ($a) => [
+                'id' => $a->id, 'filename' => $a->filename, 'disk' => $a->disk,
+                'path' => $a->path, 'mime_type' => $a->mime_type, 'size' => $a->size,
+                'uploaded_by' => $a->uploaded_by, 'created_at' => $a->created_at?->toIso8601String(),
+            ])),
             'creator'       => $this->whenLoaded('creator', fn () => $this->creator?->name),
             'created_at'    => $this->created_at?->toDateString(),
         ];

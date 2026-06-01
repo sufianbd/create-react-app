@@ -6,6 +6,7 @@ import { InvoiceStatusBadge } from '@/Components/Finance/InvoiceStatusBadge';
 import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
 import type { Invoice, InvoiceStatus, PaymentMethod } from '@/types/finance';
+import AttachmentPanel from '@/Components/Finance/AttachmentPanel';
 
 interface Props extends PageProps { invoice: Invoice; }
 
@@ -293,6 +294,15 @@ export default function InvoiceShow({ invoice }: Props) {
                         <p className="text-sm text-slate-700">{invoice.notes}</p>
                     </div>
                 )}
+
+                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <AttachmentPanel
+                        attachments={invoice.attachments ?? []}
+                        modelType="invoices"
+                        modelId={invoice.id}
+                        canDelete={can('finance.delete')}
+                    />
+                </div>
             </div>
         </AppLayout>
     );

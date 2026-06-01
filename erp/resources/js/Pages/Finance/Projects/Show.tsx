@@ -5,6 +5,8 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
 import type { PageProps } from '@/types';
 import type { Project, ProjectTimeEntry, Contact } from '@/types/finance';
+import AttachmentPanel from '@/Components/Finance/AttachmentPanel';
+import { usePermission } from '@/Hooks/usePermission';
 
 interface Props extends PageProps {
     project: Project;
@@ -19,6 +21,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ProjectShow({ project, contacts }: Props) {
+    const { can } = usePermission();
     const [selectedEntries, setSelectedEntries] = useState<number[]>([]);
 
     const timeForm = useForm({
@@ -221,6 +224,16 @@ export default function ProjectShow({ project, contacts }: Props) {
                             <Button type="submit" disabled={timeForm.processing}>Log Time</Button>
                         </div>
                     </form>
+                </div>
+
+                {/* Attachments */}
+                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <AttachmentPanel
+                        attachments={project.attachments ?? []}
+                        modelType="projects"
+                        modelId={project.id}
+                        canDelete={can('finance.delete')}
+                    />
                 </div>
 
                 {/* Edit Project */}

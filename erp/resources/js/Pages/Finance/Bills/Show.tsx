@@ -6,6 +6,7 @@ import { BillStatusBadge } from '@/Components/Finance/BillStatusBadge';
 import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
 import type { Bill, BillStatus, PaymentMethod } from '@/types/finance';
+import AttachmentPanel from '@/Components/Finance/AttachmentPanel';
 
 interface Props extends PageProps { bill: Bill; }
 
@@ -290,6 +291,15 @@ export default function BillShow({ bill }: Props) {
                         <p className="text-sm text-slate-700">{bill.notes}</p>
                     </div>
                 )}
+
+                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <AttachmentPanel
+                        attachments={bill.attachments ?? []}
+                        modelType="bills"
+                        modelId={bill.id}
+                        canDelete={can('finance.delete')}
+                    />
+                </div>
             </div>
         </AppLayout>
     );
