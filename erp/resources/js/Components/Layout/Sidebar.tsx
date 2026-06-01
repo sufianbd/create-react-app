@@ -81,6 +81,7 @@ const navItems: NavItem[] = [
             { label: 'VAT Report',         href: '/finance/reports/vat-report',          icon: <span /> },
             { label: 'Exchange Rates',      href: '/finance/exchange-rates',                    icon: <span /> },
             { label: 'Bank Accounts',       href: '/finance/bank-accounts',                    icon: <span /> },
+            { label: 'Budgets',             href: '/finance/budgets',                          icon: <span /> },
             { label: 'Reconciliation',      href: '/finance/reconciliation',                   icon: <span /> },
         ],
     },

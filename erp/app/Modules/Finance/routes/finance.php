@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Finance\Http\Controllers\AccountController;
+use App\Modules\Finance\Http\Controllers\BudgetController;
 use App\Modules\Finance\Http\Controllers\BankAccountController;
 use App\Modules\Finance\Http\Controllers\BankStatementController;
 use App\Modules\Finance\Http\Controllers\BillController;
@@ -122,6 +123,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('/exchange-rates',              [ExchangeRateController::class, 'index'])->name('exchange-rates.index');
     Route::post('/exchange-rates',             [ExchangeRateController::class, 'store'])->name('exchange-rates.store');
     Route::delete('/exchange-rates/{exchangeRate}', [ExchangeRateController::class, 'destroy'])->name('exchange-rates.destroy');
+
+    // Budgets
+    Route::resource('budgets', BudgetController::class)->except(['edit', 'update']);
 
     // Bank Accounts
     Route::resource('bank-accounts', BankAccountController::class);
