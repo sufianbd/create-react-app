@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserManagementController;
@@ -32,6 +33,10 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->group(function () {
     Route::patch('users/{user}/role',            [UserManagementController::class, 'updateRole'])->name('settings.users.update-role');
     Route::patch('users/{user}/toggle-active',   [UserManagementController::class, 'toggleActive'])->name('settings.users.toggle-active');
     Route::delete('users/{user}',                [UserManagementController::class, 'destroy'])->name('settings.users.destroy');
+
+    Route::get('company',        [CompanySettingsController::class, 'show'])->name('settings.company.show');
+    Route::patch('company',      [CompanySettingsController::class, 'update'])->name('settings.company.update');
+    Route::post('company/logo',  [CompanySettingsController::class, 'uploadLogo'])->name('settings.company.logo');
 });
 
 require __DIR__ . '/auth.php';

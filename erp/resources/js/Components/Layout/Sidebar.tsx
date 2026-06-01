@@ -131,6 +131,7 @@ const navItems: NavItem[] = [
         permission: 'roles.manage',
         children: [
             { label: 'Users', href: '/settings/users', icon: <span /> },
+            { label: 'Company', href: '/settings/company', icon: <span /> },
         ],
     },
 ];

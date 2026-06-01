@@ -18,6 +18,15 @@ class Tenant extends Model
         'domain',
         'settings',
         'is_active',
+        'email',
+        'phone',
+        'address',
+        'city',
+        'country',
+        'currency_code',
+        'timezone',
+        'date_format',
+        'logo_path',
     ];
 
     protected $casts = [
