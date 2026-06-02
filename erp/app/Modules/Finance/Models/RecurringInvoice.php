@@ -20,8 +20,9 @@ class RecurringInvoice extends Model
     use HasLineItemTotals;
 
     protected $fillable = [
-        'tenant_id', 'contact_id', 'frequency', 'start_date', 'next_run_date',
-        'end_date', 'due_days', 'status', 'auto_send', 'notes',
+        'tenant_id', 'contact_id', 'reference_prefix', 'frequency', 'interval',
+        'start_date', 'next_run_date', 'end_date', 'due_days', 'status',
+        'auto_send', 'currency_code', 'exchange_rate', 'notes',
         'last_generated_at', 'generated_count', 'created_by',
     ];
 
@@ -34,11 +35,15 @@ class RecurringInvoice extends Model
     ];
 
     protected $attributes = [
-        'status'          => 'active',
-        'frequency'       => 'monthly',
-        'due_days'        => 30,
-        'generated_count' => 0,
-        'auto_send'       => false,
+        'status'           => 'active',
+        'frequency'        => 'monthly',
+        'interval'         => 1,
+        'reference_prefix' => 'REC-INV',
+        'currency_code'    => 'USD',
+        'exchange_rate'    => 1,
+        'due_days'         => 30,
+        'generated_count'  => 0,
+        'auto_send'        => false,
     ];
 
     public function contact(): BelongsTo
@@ -51,9 +56,30 @@ class RecurringInvoice extends Model
         return $this->hasMany(RecurringInvoiceItem::class);
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class, 'recurring_invoice_id');
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Compute the next run date relative to a given Carbon date,
+     * respecting both the frequency and the interval multiplier.
+     */
+    public function computeNextRunDate(\Carbon\Carbon $from): \Carbon\Carbon
+    {
+        $n = (int) ($this->interval ?? 1);
+
+        return match ($this->frequency) {
+            'weekly'    => $from->copy()->addWeeks($n),
+            'quarterly' => $from->copy()->addMonthsNoOverflow($n * 3),
+            'yearly'    => $from->copy()->addYears($n),
+            default     => $from->copy()->addMonthsNoOverflow($n),
+        };
     }
 
     public function scopeDue($query)
@@ -64,17 +90,12 @@ class RecurringInvoice extends Model
 
     protected function intervalAdvance(\Carbon\Carbon $date): \Carbon\Carbon
     {
-        return match ($this->frequency) {
-            'weekly'    => $date->copy()->addWeek(),
-            'quarterly' => $date->copy()->addMonthsNoOverflow(3),
-            'yearly'    => $date->copy()->addYear(),
-            default     => $date->copy()->addMonthNoOverflow(),
-        };
+        return $this->computeNextRunDate($date);
     }
 
     public function advanceSchedule(): void
     {
-        $next = $this->intervalAdvance(\Carbon\Carbon::parse($this->next_run_date));
+        $next = $this->computeNextRunDate(\Carbon\Carbon::parse($this->next_run_date));
 
         if ($this->end_date && $next->gt(\Carbon\Carbon::parse($this->end_date))) {
             $this->status = 'ended';
@@ -92,18 +113,22 @@ class RecurringInvoice extends Model
                 $this->load('items');
             }
 
-            $invoice = Invoice::create([
-                'tenant_id'  => $this->tenant_id,
-                'contact_id' => $this->contact_id,
-                'issue_date' => now()->toDateString(),
-                'due_date'   => now()->addDays($this->due_days)->toDateString(),
-                'status'     => $this->auto_send ? 'sent' : 'draft',
-                'notes'      => $this->notes,
-                'created_by' => $this->created_by,
-            ]);
+            $nextCount   = $this->generated_count + 1;
+            $prefix      = $this->reference_prefix ?: 'REC-INV';
+            $refNumber   = "{$prefix}-{$nextCount}";
 
-            $invoice->update([
-                'number' => 'INV-' . now()->format('Y') . '-' . str_pad((string) $invoice->id, 5, '0', STR_PAD_LEFT),
+            $invoice = Invoice::create([
+                'tenant_id'            => $this->tenant_id,
+                'recurring_invoice_id' => $this->id,
+                'contact_id'           => $this->contact_id,
+                'number'               => $refNumber,
+                'issue_date'           => now()->toDateString(),
+                'due_date'             => now()->addDays($this->due_days)->toDateString(),
+                'status'               => $this->auto_send ? 'sent' : 'draft',
+                'currency_code'        => $this->currency_code ?? 'USD',
+                'exchange_rate'        => $this->exchange_rate ?? 1,
+                'notes'                => $this->notes,
+                'created_by'           => $this->created_by,
             ]);
 
             foreach ($this->items as $item) {
@@ -116,7 +141,7 @@ class RecurringInvoice extends Model
                 ]);
             }
 
-            $this->generated_count = $this->generated_count + 1;
+            $this->generated_count   = $nextCount;
             $this->last_generated_at = now();
             $this->save();
 

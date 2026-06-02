@@ -61,16 +61,20 @@ class RecurringInvoiceController extends Controller
 
         $recurringInvoice = DB::transaction(function () use ($data) {
             $recurringInvoice = RecurringInvoice::create([
-                'tenant_id'     => auth()->user()->tenant_id,
-                'contact_id'    => $data['contact_id'] ?? null,
-                'frequency'     => $data['frequency'],
-                'start_date'    => $data['start_date'],
-                'next_run_date' => $data['start_date'],
-                'end_date'      => $data['end_date'] ?? null,
-                'due_days'      => $data['due_days'],
-                'auto_send'     => (bool) ($data['auto_send'] ?? false),
-                'notes'         => $data['notes'] ?? null,
-                'created_by'    => auth()->id(),
+                'tenant_id'        => auth()->user()->tenant_id,
+                'contact_id'       => $data['contact_id'] ?? null,
+                'reference_prefix' => $data['reference_prefix'] ?? 'REC-INV',
+                'frequency'        => $data['frequency'],
+                'interval'         => $data['interval'] ?? 1,
+                'start_date'       => $data['start_date'],
+                'next_run_date'    => $data['start_date'],
+                'end_date'         => $data['end_date'] ?? null,
+                'due_days'         => $data['due_days'],
+                'auto_send'        => (bool) ($data['auto_send'] ?? false),
+                'currency_code'    => $data['currency_code'] ?? 'USD',
+                'exchange_rate'    => $data['exchange_rate'] ?? 1,
+                'notes'            => $data['notes'] ?? null,
+                'created_by'       => auth()->id(),
             ]);
 
             foreach ($data['items'] as $item) {
@@ -96,10 +100,9 @@ class RecurringInvoiceController extends Controller
 
         $recurringInvoice->load(['contact', 'items', 'creator']);
 
-        $generatedInvoices = Invoice::where('tenant_id', $recurringInvoice->tenant_id)
-            ->where('contact_id', $recurringInvoice->contact_id)
+        $generatedInvoices = $recurringInvoice->invoices()
             ->latest('issue_date')
-            ->take(10)
+            ->take(20)
             ->get(['id', 'number', 'issue_date', 'status']);
 
         return Inertia::render('Finance/RecurringInvoices/Show', [

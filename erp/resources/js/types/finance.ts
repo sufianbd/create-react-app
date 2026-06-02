@@ -258,12 +258,14 @@ export interface RecurringInvoiceItem {
 }
 export interface RecurringInvoice {
     id: number; status: RecurringStatus; frequency: RecurringFrequency;
+    reference_prefix?: string; interval?: number;
     start_date: string; next_run_date: string; end_date?: string;
-    due_days: number; auto_send: boolean; notes?: string;
-    last_generated_at?: string; generated_count: number;
+    due_days: number; auto_send: boolean;
+    currency_code?: string; exchange_rate?: number;
+    notes?: string; last_generated_at?: string; generated_count: number;
     contact?: { id: number; name: string } | null;
     items?: RecurringInvoiceItem[]; subtotal?: number; tax_total?: number; total?: number;
-    created_by?: string; created_at?: string;
+    invoices?: Invoice[]; created_by?: string; created_at?: string;
 }
 
 export interface ExchangeRate {

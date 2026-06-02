@@ -23,7 +23,7 @@ class Invoice extends Model
     use HasStatusTransitions;
 
     protected $fillable = [
-        'tenant_id', 'contact_id', 'number',
+        'tenant_id', 'recurring_invoice_id', 'contact_id', 'number',
         'issue_date', 'due_date', 'status', 'notes', 'created_by',
         'currency_code', 'exchange_rate',
     ];
@@ -69,5 +69,10 @@ class Invoice extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function recurringInvoice(): BelongsTo
+    {
+        return $this->belongsTo(RecurringInvoice::class);
     }
 }

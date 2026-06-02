@@ -348,3 +348,229 @@ test('staff cannot create a recurring invoice', function () {
 test('guest cannot access recurring invoices', function () {
     $this->get('/finance/recurring-invoices')->assertRedirect();
 });
+
+// ── Phase 34 additions ────────────────────────────────────────────────────────
+
+test('reference prefix is used in generated invoice number', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'        => $this->tenant->id,
+        'contact_id'       => $this->customer->id,
+        'reference_prefix' => 'RETAINER',
+        'start_date'       => '2026-06-01',
+        'next_run_date'    => '2026-06-01',
+        'created_by'       => $this->admin->id,
+    ]);
+
+    RecurringInvoiceItem::create([
+        'recurring_invoice_id' => $ri->id,
+        'description'          => 'Monthly retainer',
+        'quantity'             => 1,
+        'unit_price'           => 500,
+        'tax_rate'             => 0,
+    ]);
+
+    $invoice = $ri->generateInvoice();
+
+    expect($invoice->number)->toBe('RETAINER-1');
+});
+
+test('second generated invoice increments reference number', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'        => $this->tenant->id,
+        'contact_id'       => $this->customer->id,
+        'reference_prefix' => 'SVC',
+        'start_date'       => '2026-06-01',
+        'next_run_date'    => '2026-06-01',
+        'created_by'       => $this->admin->id,
+    ]);
+
+    RecurringInvoiceItem::create([
+        'recurring_invoice_id' => $ri->id,
+        'description'          => 'Service',
+        'quantity'             => 1,
+        'unit_price'           => 100,
+        'tax_rate'             => 0,
+    ]);
+
+    $ri->generateInvoice();
+    $invoice2 = $ri->fresh()->generateInvoice();
+
+    expect($invoice2->number)->toBe('SVC-2');
+});
+
+test('recurring_invoice_id is stored on generated invoice', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'     => $this->tenant->id,
+        'contact_id'    => $this->customer->id,
+        'start_date'    => '2026-06-01',
+        'next_run_date' => '2026-06-01',
+        'created_by'    => $this->admin->id,
+    ]);
+
+    RecurringInvoiceItem::create([
+        'recurring_invoice_id' => $ri->id,
+        'description'          => 'Service',
+        'quantity'             => 1,
+        'unit_price'           => 100,
+        'tax_rate'             => 0,
+    ]);
+
+    $invoice = $ri->generateInvoice();
+
+    expect($invoice->recurring_invoice_id)->toBe($ri->id);
+});
+
+test('invoices relationship returns generated invoices', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'     => $this->tenant->id,
+        'contact_id'    => $this->customer->id,
+        'start_date'    => '2026-06-01',
+        'next_run_date' => '2026-06-01',
+        'created_by'    => $this->admin->id,
+    ]);
+
+    RecurringInvoiceItem::create([
+        'recurring_invoice_id' => $ri->id,
+        'description'          => 'Service',
+        'quantity'             => 1,
+        'unit_price'           => 200,
+        'tax_rate'             => 0,
+    ]);
+
+    $ri->generateInvoice();
+    $ri->generateInvoice();
+
+    expect($ri->invoices()->count())->toBe(2);
+});
+
+test('currency code and exchange rate are passed to generated invoice', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'     => $this->tenant->id,
+        'contact_id'    => $this->customer->id,
+        'currency_code' => 'EUR',
+        'exchange_rate' => 1.10,
+        'start_date'    => '2026-06-01',
+        'next_run_date' => '2026-06-01',
+        'created_by'    => $this->admin->id,
+    ]);
+
+    RecurringInvoiceItem::create([
+        'recurring_invoice_id' => $ri->id,
+        'description'          => 'Service',
+        'quantity'             => 1,
+        'unit_price'           => 100,
+        'tax_rate'             => 0,
+    ]);
+
+    $invoice = $ri->generateInvoice();
+
+    expect($invoice->currency_code)->toBe('EUR');
+    expect((float) $invoice->exchange_rate)->toEqualWithDelta(1.10, 0.0001);
+});
+
+test('computeNextRunDate respects interval multiplier', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'     => $this->tenant->id,
+        'frequency'     => 'monthly',
+        'interval'      => 3,
+        'start_date'    => '2026-01-01',
+        'next_run_date' => '2026-01-01',
+        'created_by'    => $this->admin->id,
+    ]);
+
+    $next = $ri->computeNextRunDate(\Carbon\Carbon::parse('2026-01-01'));
+
+    expect($next->toDateString())->toBe('2026-04-01');
+});
+
+test('computeNextRunDate works for weekly frequency', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'     => $this->tenant->id,
+        'frequency'     => 'weekly',
+        'interval'      => 2,
+        'start_date'    => '2026-06-01',
+        'next_run_date' => '2026-06-01',
+        'created_by'    => $this->admin->id,
+    ]);
+
+    $next = $ri->computeNextRunDate(\Carbon\Carbon::parse('2026-06-01'));
+
+    expect($next->toDateString())->toBe('2026-06-15');
+});
+
+test('computeNextRunDate works for quarterly frequency', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'     => $this->tenant->id,
+        'frequency'     => 'quarterly',
+        'interval'      => 1,
+        'start_date'    => '2026-01-01',
+        'next_run_date' => '2026-01-01',
+        'created_by'    => $this->admin->id,
+    ]);
+
+    $next = $ri->computeNextRunDate(\Carbon\Carbon::parse('2026-01-01'));
+
+    expect($next->toDateString())->toBe('2026-04-01');
+});
+
+test('computeNextRunDate works for yearly frequency', function () {
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'     => $this->tenant->id,
+        'frequency'     => 'yearly',
+        'interval'      => 1,
+        'start_date'    => '2026-03-15',
+        'next_run_date' => '2026-03-15',
+        'created_by'    => $this->admin->id,
+    ]);
+
+    $next = $ri->computeNextRunDate(\Carbon\Carbon::parse('2026-03-15'));
+
+    expect($next->toDateString())->toBe('2027-03-15');
+});
+
+test('interval 1 monthly schedule advances by one month on generate', function () {
+    Carbon::setTestNow('2026-06-01');
+    app()->instance('tenant', $this->tenant);
+
+    $ri = RecurringInvoice::create([
+        'tenant_id'     => $this->tenant->id,
+        'contact_id'    => $this->customer->id,
+        'frequency'     => 'monthly',
+        'interval'      => 1,
+        'start_date'    => '2026-06-01',
+        'next_run_date' => '2026-06-01',
+        'created_by'    => $this->admin->id,
+    ]);
+
+    RecurringInvoiceItem::create([
+        'recurring_invoice_id' => $ri->id,
+        'description'          => 'Service',
+        'quantity'             => 1,
+        'unit_price'           => 100,
+        'tax_rate'             => 0,
+    ]);
+
+    $ri->generateInvoice();
+
+    expect($ri->fresh()->next_run_date->toDateString())->toBe('2026-07-01');
+
+    Carbon::setTestNow();
+});
