@@ -91,14 +91,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::delete('recurring-invoices/{recurringInvoice}', [RecurringInvoiceController::class, 'destroy'])->name('recurring-invoices.destroy');
 
     // Credit Notes
-    Route::get('credit-notes', [CreditNoteController::class, 'index'])->name('credit-notes.index');
-    Route::get('credit-notes/create', [CreditNoteController::class, 'create'])->name('credit-notes.create');
-    Route::post('credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
-    Route::get('credit-notes/{creditNote}', [CreditNoteController::class, 'show'])->name('credit-notes.show');
-    Route::patch('credit-notes/{creditNote}/issue', [CreditNoteController::class, 'issue'])->name('credit-notes.issue');
-    Route::patch('credit-notes/{creditNote}/apply', [CreditNoteController::class, 'apply'])->name('credit-notes.apply');
-    Route::patch('credit-notes/{creditNote}/cancel', [CreditNoteController::class, 'cancel'])->name('credit-notes.cancel');
-    Route::delete('credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
+    Route::resource('credit-notes', CreditNoteController::class)->except(['edit', 'update']);
+    Route::post('credit-notes/{creditNote}/issue', [CreditNoteController::class, 'issue'])->name('credit-notes.issue');
+    Route::post('credit-notes/{creditNote}/void', [CreditNoteController::class, 'void'])->name('credit-notes.void');
 
     // Reports
     Route::get('reports/trial-balance', [ReportController::class, 'trialBalance'])

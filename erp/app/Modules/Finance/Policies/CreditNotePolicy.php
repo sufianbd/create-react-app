@@ -24,11 +24,11 @@ class CreditNotePolicy
 
     public function update(User $user, CreditNote $creditNote): bool
     {
-        return $user->can('finance.update');
+        return $user->can('finance.create');
     }
 
     public function delete(User $user, CreditNote $creditNote): bool
     {
-        return $user->can('finance.delete') && $creditNote->status === 'draft';
+        return $user->can('finance.delete');
     }
 }

@@ -201,18 +201,37 @@ export interface Quote {
     created_at?: string;
 }
 
-export type CreditNoteStatus = 'draft' | 'issued' | 'applied' | 'cancelled';
+export type CreditNoteStatus = 'draft' | 'issued' | 'applied' | 'void';
 export interface CreditNoteItem {
-    id?: number; description: string; quantity: number;
-    unit_price: number; tax_rate: number; line_total?: number;
+    id: number;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    tax_rate: number;
+    line_total: number;
 }
 export interface CreditNote {
-    id: number; number?: string; status: CreditNoteStatus;
-    issue_date: string; reason?: string; notes?: string;
-    contact?: { id: number; name: string } | null;
-    invoice?: { id: number; number?: string } | null;
-    items?: CreditNoteItem[]; subtotal?: number; tax_total?: number; total?: number;
-    transitions?: string[]; created_by?: string; created_at?: string;
+    id: number;
+    reference: string;
+    contact_id: number | null;
+    original_invoice_id: number | null;
+    original_bill_id: number | null;
+    type: 'sale' | 'purchase';
+    status: CreditNoteStatus;
+    issue_date: string;
+    currency_code: string;
+    exchange_rate: number;
+    subtotal: number;
+    tax_total: number;
+    total: number;
+    amount_applied: number;
+    amount_remaining: number;
+    notes: string | null;
+    contact?: Contact;
+    invoice?: Invoice | null;
+    bill?: Bill | null;
+    items?: CreditNoteItem[];
+    created_at: string;
 }
 
 export type SalesOrderStatus = 'draft' | 'confirmed' | 'fulfilled' | 'cancelled';

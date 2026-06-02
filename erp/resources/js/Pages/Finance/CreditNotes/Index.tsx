@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Table } from '@/Components/Common/Table';
 import { Button } from '@/Components/Common/Button';
@@ -6,35 +6,15 @@ import { Pagination } from '@/Components/Inventory/Pagination';
 import { CreditNoteStatusBadge } from '@/Components/Finance/CreditNoteStatusBadge';
 import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
-import type { CreditNote, CreditNoteStatus, Contact } from '@/types/finance';
+import type { CreditNote } from '@/types/finance';
 import type { Paginator } from '@/types/inventory';
 
 interface Props extends PageProps {
     creditNotes: Paginator<CreditNote>;
-    contacts: Pick<Contact, 'id' | 'name'>[];
-    filters: { status?: CreditNoteStatus; contact_id?: number; search?: string };
 }
 
-const STATUS_TABS: Array<{ value: CreditNoteStatus | ''; label: string }> = [
-    { value: '', label: 'All' },
-    { value: 'draft', label: 'Draft' },
-    { value: 'issued', label: 'Issued' },
-    { value: 'applied', label: 'Applied' },
-    { value: 'cancelled', label: 'Cancelled' },
-];
-
-export default function CreditNotesIndex({ creditNotes, contacts, filters }: Props) {
+export default function CreditNotesIndex({ creditNotes }: Props) {
     const { can } = usePermission();
-
-    function setStatus(status: string) {
-        router.get('/finance/credit-notes', { ...filters, status: status || undefined }, { preserveState: true, replace: true });
-    }
-
-    function handleSearch(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        const search = (e.currentTarget.elements.namedItem('search') as HTMLInputElement).value;
-        router.get('/finance/credit-notes', { ...filters, search }, { preserveState: true, replace: true });
-    }
 
     return (
         <AppLayout>
@@ -52,52 +32,23 @@ export default function CreditNotesIndex({ creditNotes, contacts, filters }: Pro
                     </div>
                 </div>
 
-                {/* Status tabs */}
-                <div className="flex gap-1 border-b border-slate-200">
-                    {STATUS_TABS.map((tab) => (
-                        <button key={tab.value}
-                            onClick={() => setStatus(tab.value)}
-                            className={[
-                                'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
-                                (filters.status ?? '') === tab.value
-                                    ? 'border-indigo-600 text-indigo-700'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700',
-                            ].join(' ')}>
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-                    <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
-                        <form onSubmit={handleSearch} className="flex flex-1 gap-2">
-                            <input name="search" type="text" defaultValue={filters.search ?? ''}
-                                placeholder="Search by credit note number…"
-                                className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
-                            <Button type="submit" variant="secondary" size="sm">Search</Button>
-                        </form>
-                        <select value={filters.contact_id ?? ''}
-                            onChange={(e) => router.get('/finance/credit-notes', { ...filters, contact_id: e.target.value || undefined }, { preserveState: true, replace: true })}
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none">
-                            <option value="">All Contacts</option>
-                            {contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
                     <Table
                         columns={[
-                            { key: 'number', header: 'Number', render: (cn) => (
+                            { key: 'reference', header: 'Reference', render: (cn) => (
                                 <Link href={`/finance/credit-notes/${cn.id}`} className="font-mono text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                                    {cn.number ?? `#${cn.id}`}
+                                    {cn.reference}
                                 </Link>
                             )},
-                            { key: 'contact', header: 'Contact', render: (cn) => cn.contact?.name ?? '—' },
-                            { key: 'invoice', header: 'Invoice', render: (cn) => cn.invoice?.number ?? '—' },
-                            { key: 'issue_date', header: 'Issue Date', render: (cn) => cn.issue_date },
-                            { key: 'total', header: 'Total', render: (cn) => cn.total !== undefined ? Number(cn.total).toFixed(2) : '—' },
-                            { key: 'status', header: 'Status', render: (cn) => <CreditNoteStatusBadge status={cn.status} /> },
-                            { key: 'actions', header: '', render: (cn) => (
-                                <Link href={`/finance/credit-notes/${cn.id}`} className="text-sm text-indigo-600 hover:text-indigo-800">View</Link>
+                            { key: 'type', header: 'Type', render: (cn) => (
+                                <span className="capitalize">{cn.type}</span>
                             )},
+                            { key: 'contact', header: 'Contact', render: (cn) => cn.contact?.name ?? '—' },
+                            { key: 'issue_date', header: 'Issue Date', render: (cn) => cn.issue_date },
+                            { key: 'total', header: 'Total', render: (cn) => Number(cn.total).toFixed(2) },
+                            { key: 'amount_applied', header: 'Applied', render: (cn) => Number(cn.amount_applied).toFixed(2) },
+                            { key: 'amount_remaining', header: 'Remaining', render: (cn) => Number(cn.amount_remaining).toFixed(2) },
+                            { key: 'status', header: 'Status', render: (cn) => <CreditNoteStatusBadge status={cn.status} /> },
                         ]}
                         data={creditNotes.data}
                         emptyMessage="No credit notes found."

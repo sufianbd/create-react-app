@@ -9,23 +9,17 @@ class CreditNoteItem extends Model
 {
     protected $table = 'credit_note_items';
 
-    protected $fillable = [
-        'credit_note_id', 'description', 'quantity', 'unit_price', 'tax_rate',
-    ];
-
-    protected $casts = [
-        'quantity'   => 'decimal:2',
-        'unit_price' => 'decimal:2',
-        'tax_rate'   => 'decimal:2',
-    ];
+    protected $fillable = ['credit_note_id', 'description', 'quantity', 'unit_price', 'tax_rate', 'line_total'];
 
     public function creditNote(): BelongsTo
     {
         return $this->belongsTo(CreditNote::class);
     }
 
-    public function getLineTotalAttribute(): float
+    protected static function booted(): void
     {
-        return (float) $this->quantity * (float) $this->unit_price * (1 + (float) $this->tax_rate / 100);
+        static::saving(function (self $item) {
+            $item->line_total = round((float) $item->quantity * (float) $item->unit_price, 2);
+        });
     }
 }

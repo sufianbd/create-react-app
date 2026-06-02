@@ -3,123 +3,102 @@
 namespace App\Modules\Finance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Finance\Http\Requests\StoreCreditNoteRequest;
-use App\Modules\Finance\Http\Resources\CreditNoteResource;
+use App\Modules\Finance\Models\Bill;
 use App\Modules\Finance\Models\Contact;
 use App\Modules\Finance\Models\CreditNote;
-use App\Modules\Finance\Models\CreditNoteItem;
 use App\Modules\Finance\Models\Invoice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CreditNoteController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
         $this->authorize('viewAny', CreditNote::class);
 
-        $creditNotes = CreditNote::with(['contact', 'invoice'])
-            ->when($request->status, fn ($q) => $q->where('status', $request->status))
-            ->when($request->contact_id, fn ($q) => $q->where('contact_id', $request->contact_id))
-            ->when($request->search, fn ($q) => $q->where('number', 'like', "%{$request->search}%"))
-            ->latest('issue_date')
-            ->paginate(25)
-            ->withQueryString();
+        $creditNotes = CreditNote::with(['contact'])
+            ->orderByDesc('issue_date')
+            ->paginate(25);
 
-        return Inertia::render('Finance/CreditNotes/Index', [
-            'creditNotes' => CreditNoteResource::collection($creditNotes),
-            'contacts'    => Contact::customers()->active()->orderBy('name')->get(['id', 'name']),
-            'filters'     => $request->only(['status', 'contact_id', 'search']),
-            'breadcrumbs' => [
-                ['label' => 'Finance'],
-                ['label' => 'Credit Notes', 'href' => route('finance.credit-notes.index')],
-            ],
-        ]);
+        return Inertia::render('Finance/CreditNotes/Index', compact('creditNotes'));
     }
 
     public function create(Request $request): Response
     {
         $this->authorize('create', CreditNote::class);
 
-        $sourceInvoice = null;
-        if ($request->invoice_id) {
-            $invoice = Invoice::with(['items', 'contact'])->find($request->invoice_id);
-            if ($invoice) {
-                $sourceInvoice = [
-                    'id'      => $invoice->id,
-                    'number'  => $invoice->number,
-                    'contact' => $invoice->contact ? [
-                        'id' => $invoice->contact->id, 'name' => $invoice->contact->name,
-                    ] : null,
-                    'items'   => $invoice->items->map(fn ($item) => [
-                        'description' => $item->description,
-                        'quantity'    => $item->quantity,
-                        'unit_price'  => $item->unit_price,
-                        'tax_rate'    => $item->tax_rate,
-                    ]),
-                ];
-            }
-        }
+        $contacts = Contact::orderBy('name')->get(['id', 'name', 'type']);
+        $invoices = Invoice::where('status', 'sent')
+            ->orderByDesc('issue_date')->get(['id', 'number']);
+        $bills = Bill::where('status', 'received')
+            ->orderByDesc('issue_date')->get(['id', 'number']);
+        $type = $request->get('type', 'sale');
 
-        $invoices = Invoice::with('contact')
-            ->latest('issue_date')
-            ->get(['id', 'number', 'contact_id'])
-            ->map(fn ($invoice) => [
-                'id'           => $invoice->id,
-                'number'       => $invoice->number,
-                'contact_name' => $invoice->contact?->name,
-            ]);
-
-        return Inertia::render('Finance/CreditNotes/Create', [
-            'contacts'      => Contact::customers()->active()->orderBy('name')->get(['id', 'name']),
-            'invoices'      => $invoices,
-            'sourceInvoice' => $sourceInvoice,
-            'breadcrumbs'   => [
-                ['label' => 'Finance'],
-                ['label' => 'Credit Notes', 'href' => route('finance.credit-notes.index')],
-                ['label' => 'New Credit Note'],
-            ],
-        ]);
+        return Inertia::render('Finance/CreditNotes/Create', compact('contacts', 'invoices', 'bills', 'type'));
     }
 
-    public function store(StoreCreditNoteRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', CreditNote::class);
 
-        $data = $request->validated();
+        $data = $request->validate([
+            'reference'           => 'required|string|max:100',
+            'contact_id'          => 'nullable|exists:contacts,id',
+            'original_invoice_id' => 'nullable|exists:invoices,id',
+            'original_bill_id'    => 'nullable|exists:bills,id',
+            'type'                => 'required|in:sale,purchase',
+            'issue_date'          => 'required|date',
+            'currency_code'       => 'required|string|size:3',
+            'exchange_rate'       => 'required|numeric|min:0.000001',
+            'notes'               => 'nullable|string',
+            'items'               => 'required|array|min:1',
+            'items.*.description' => 'required|string',
+            'items.*.quantity'    => 'required|numeric|min:0.01',
+            'items.*.unit_price'  => 'required|numeric|min:0',
+            'items.*.tax_rate'    => 'required|numeric|min:0|max:100',
+        ]);
 
-        $creditNote = DB::transaction(function () use ($data) {
-            $creditNote = CreditNote::create([
-                'tenant_id'  => auth()->user()->tenant_id,
-                'contact_id' => $data['contact_id'] ?? null,
-                'invoice_id' => $data['invoice_id'] ?? null,
-                'issue_date' => $data['issue_date'],
-                'reason'     => $data['reason'] ?? null,
-                'notes'      => $data['notes'] ?? null,
-                'created_by' => auth()->id(),
+        $cn = CreditNote::create([
+            'tenant_id'           => auth()->user()->tenant_id,
+            'reference'           => $data['reference'],
+            'contact_id'          => $data['contact_id'] ?? null,
+            'original_invoice_id' => $data['original_invoice_id'] ?? null,
+            'original_bill_id'    => $data['original_bill_id'] ?? null,
+            'type'                => $data['type'],
+            'status'              => 'draft',
+            'issue_date'          => $data['issue_date'],
+            'currency_code'       => $data['currency_code'],
+            'exchange_rate'       => $data['exchange_rate'],
+            'notes'               => $data['notes'] ?? null,
+            'subtotal'            => 0,
+            'tax_total'           => 0,
+            'total'               => 0,
+            'amount_applied'      => 0,
+        ]);
+
+        foreach ($data['items'] as $item) {
+            $cn->items()->create([
+                'description' => $item['description'],
+                'quantity'    => $item['quantity'],
+                'unit_price'  => $item['unit_price'],
+                'tax_rate'    => $item['tax_rate'],
+                'line_total'  => round($item['quantity'] * $item['unit_price'], 2),
             ]);
+        }
 
-            $creditNote->update([
-                'number' => 'CN-' . now()->format('Y') . '-' . str_pad((string) $creditNote->id, 5, '0', STR_PAD_LEFT),
-            ]);
+        // Recalculate totals explicitly after items are created
+        $cn->refresh()->load('items');
+        $subtotal  = $cn->items->sum('line_total');
+        $tax_total = $cn->items->sum(fn ($i) => $i->line_total * $i->tax_rate / 100);
+        $cn->update([
+            'subtotal'  => $subtotal,
+            'tax_total' => $tax_total,
+            'total'     => $subtotal + $tax_total,
+        ]);
 
-            foreach ($data['items'] as $item) {
-                CreditNoteItem::create([
-                    'credit_note_id' => $creditNote->id,
-                    'description'    => $item['description'],
-                    'quantity'       => $item['quantity'],
-                    'unit_price'     => $item['unit_price'],
-                    'tax_rate'       => $item['tax_rate'],
-                ]);
-            }
-
-            return $creditNote;
-        });
-
-        return redirect()->route('finance.credit-notes.show', $creditNote)
+        return redirect()->route('finance.credit-notes.show', $cn)
             ->with('success', 'Credit note created.');
     }
 
@@ -127,61 +106,36 @@ class CreditNoteController extends Controller
     {
         $this->authorize('view', $creditNote);
 
-        $creditNote->load(['contact', 'invoice', 'items', 'creator']);
+        $creditNote->load(['contact', 'invoice', 'bill', 'items']);
 
-        return Inertia::render('Finance/CreditNotes/Show', [
-            'creditNote'  => new CreditNoteResource($creditNote),
-            'breadcrumbs' => [
-                ['label' => 'Finance'],
-                ['label' => 'Credit Notes', 'href' => route('finance.credit-notes.index')],
-                ['label' => $creditNote->number ?? "Credit Note #{$creditNote->id}"],
-            ],
-        ]);
+        return Inertia::render('Finance/CreditNotes/Show', compact('creditNote'));
     }
 
     public function issue(CreditNote $creditNote): RedirectResponse
     {
         $this->authorize('update', $creditNote);
 
-        try {
-            $creditNote->transitionTo('issued');
-        } catch (\DomainException $e) {
-            return back()->withErrors(['status' => $e->getMessage()]);
-        }
+        abort_unless($creditNote->status === 'draft', 422, 'Only draft credit notes can be issued.');
+        $creditNote->update(['status' => 'issued']);
 
         return back()->with('success', 'Credit note issued.');
     }
 
-    public function apply(CreditNote $creditNote): RedirectResponse
+    public function void(CreditNote $creditNote): RedirectResponse
     {
         $this->authorize('update', $creditNote);
 
-        try {
-            $creditNote->transitionTo('applied');
-        } catch (\DomainException $e) {
-            return back()->withErrors(['status' => $e->getMessage()]);
-        }
+        abort_unless(in_array($creditNote->status, ['draft', 'issued']), 422, 'Cannot void applied credit notes.');
+        $creditNote->update(['status' => 'void']);
 
-        return back()->with('success', 'Credit note applied.');
-    }
-
-    public function cancel(CreditNote $creditNote): RedirectResponse
-    {
-        $this->authorize('update', $creditNote);
-
-        try {
-            $creditNote->transitionTo('cancelled');
-        } catch (\DomainException $e) {
-            return back()->withErrors(['status' => $e->getMessage()]);
-        }
-
-        return back()->with('success', 'Credit note cancelled.');
+        return back()->with('success', 'Credit note voided.');
     }
 
     public function destroy(CreditNote $creditNote): RedirectResponse
     {
         $this->authorize('delete', $creditNote);
 
+        abort_unless($creditNote->status === 'draft', 422, 'Only draft credit notes can be deleted.');
         $creditNote->delete();
 
         return redirect()->route('finance.credit-notes.index')
