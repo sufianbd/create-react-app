@@ -182,7 +182,7 @@ class ReportController extends Controller
         $asOf = $request->as_of ?? now()->toDateString();
 
         $invoices = Invoice::with(['contact', 'items', 'payments'])
-            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->whereNotIn('status', ['draft', 'paid', 'cancelled'])
             ->get()
             ->map(function ($inv) use ($asOf) {
                 $daysOverdue = 0;
@@ -232,7 +232,7 @@ class ReportController extends Controller
         $asOf = $request->as_of ?? now()->toDateString();
 
         $bills = Bill::with(['contact', 'items', 'payments'])
-            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->whereNotIn('status', ['draft', 'paid', 'cancelled'])
             ->get()
             ->map(function ($bill) use ($asOf) {
                 $daysOverdue = 0;
@@ -599,7 +599,7 @@ class ReportController extends Controller
         $asOf = $request->as_of ?? now()->toDateString();
 
         $invoices = Invoice::with(['contact', 'items', 'payments'])
-            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->whereNotIn('status', ['draft', 'paid', 'cancelled'])
             ->get();
 
         $rows = [];
@@ -645,7 +645,7 @@ class ReportController extends Controller
         $asOf = $request->as_of ?? now()->toDateString();
 
         $bills = Bill::with(['contact', 'items', 'payments'])
-            ->whereNotIn('status', ['paid', 'cancelled'])
+            ->whereNotIn('status', ['draft', 'paid', 'cancelled'])
             ->get();
 
         $rows = [];
