@@ -14,8 +14,11 @@ class StoreSalesOrderRequest extends FormRequest
         return [
             'contact_id'          => ['nullable', Rule::exists('contacts', 'id')],
             'warehouse_id'        => ['nullable', Rule::exists('warehouses', 'id')],
+            'reference'           => ['nullable', 'string', 'max:100', Rule::unique('sales_orders', 'reference')],
             'order_date'          => ['required', 'date'],
             'expected_date'       => ['nullable', 'date', 'after_or_equal:order_date'],
+            'currency_code'       => ['nullable', 'string', 'size:3'],
+            'exchange_rate'       => ['nullable', 'numeric', 'min:0.000001'],
             'notes'               => ['nullable', 'string'],
             'items'               => ['required', 'array', 'min:1'],
             'items.*.product_id'  => ['nullable', Rule::exists('products', 'id')],

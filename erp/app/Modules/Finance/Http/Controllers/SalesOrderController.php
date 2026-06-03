@@ -70,8 +70,11 @@ class SalesOrderController extends Controller
                 'tenant_id'     => auth()->user()->tenant_id,
                 'contact_id'    => $data['contact_id'] ?? null,
                 'warehouse_id'  => $data['warehouse_id'] ?? null,
+                'reference'     => $data['reference'] ?? null,
                 'order_date'    => $data['order_date'],
                 'expected_date' => $data['expected_date'] ?? null,
+                'currency_code' => $data['currency_code'] ?? 'USD',
+                'exchange_rate' => $data['exchange_rate'] ?? 1,
                 'notes'         => $data['notes'] ?? null,
                 'created_by'    => auth()->id(),
             ]);
@@ -169,13 +172,16 @@ class SalesOrderController extends Controller
             $salesOrder->load('items');
 
             $invoice = Invoice::create([
-                'tenant_id'  => $salesOrder->tenant_id,
-                'contact_id' => $salesOrder->contact_id,
-                'issue_date' => now()->toDateString(),
-                'due_date'   => now()->addDays(30)->toDateString(),
-                'status'     => 'draft',
-                'notes'      => $salesOrder->notes,
-                'created_by' => auth()->id(),
+                'tenant_id'      => $salesOrder->tenant_id,
+                'sales_order_id' => $salesOrder->id,
+                'contact_id'     => $salesOrder->contact_id,
+                'issue_date'     => now()->toDateString(),
+                'due_date'       => now()->addDays(30)->toDateString(),
+                'status'         => 'draft',
+                'notes'          => $salesOrder->notes,
+                'created_by'     => auth()->id(),
+                'currency_code'  => $salesOrder->currency_code ?? 'USD',
+                'exchange_rate'  => $salesOrder->exchange_rate ?? 1,
             ]);
 
             $invoice->update([

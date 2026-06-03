@@ -345,3 +345,164 @@ test('staff cannot create a sales order', function () {
 test('guest cannot access sales orders', function () {
     $this->get('/finance/sales-orders')->assertRedirect();
 });
+
+// ── Phase 40 — Sales Orders with invoice conversion ──────────────────────
+
+test('admin can list sales orders', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+    $this->get('/finance/sales-orders')->assertStatus(200);
+});
+
+test('admin can view create form', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+    $this->get('/finance/sales-orders/create')->assertStatus(200);
+});
+
+test('admin can create sales order with reference', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+
+    $this->post('/finance/sales-orders', [
+        'contact_id'    => $this->customer->id,
+        'reference'     => 'SO-2026-P40',
+        'order_date'    => '2026-01-15',
+        'currency_code' => 'USD',
+        'exchange_rate' => 1,
+        'items'         => [
+            ['description' => 'Widget', 'quantity' => 2, 'unit_price' => 100, 'tax_rate' => 10],
+        ],
+    ])->assertRedirect();
+
+    expect(SalesOrder::withoutGlobalScopes()->count())->toBeGreaterThan(0);
+    $so = SalesOrder::withoutGlobalScopes()->where('reference', 'SO-2026-P40')->first();
+    expect($so)->not->toBeNull();
+    expect($so->currency_code)->toBe('USD');
+    expect($so->items()->count())->toBe(1);
+});
+
+test('admin can view sales order', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+
+    $so = SalesOrder::create([
+        'tenant_id'  => $this->tenant->id,
+        'order_date' => now()->toDateString(),
+        'reference'  => 'SO-VIEW-P40',
+    ]);
+
+    $this->get("/finance/sales-orders/{$so->id}")->assertStatus(200);
+});
+
+test('admin can confirm draft order via post', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+
+    $so = SalesOrder::create([
+        'tenant_id'  => $this->tenant->id,
+        'order_date' => now()->toDateString(),
+        'reference'  => 'SO-CONF-P40',
+    ]);
+
+    $this->patch("/finance/sales-orders/{$so->id}/confirm")->assertRedirect();
+
+    expect($so->fresh()->status)->toBe('confirmed');
+});
+
+test('confirmed order can be converted to invoice with sales_order_id set', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+
+    $so = SalesOrder::create([
+        'tenant_id'  => $this->tenant->id,
+        'contact_id' => $this->customer->id,
+        'reference'  => 'SO-INV-P40',
+        'order_date' => now()->toDateString(),
+        'status'     => 'confirmed',
+    ]);
+
+    SalesOrderItem::create([
+        'sales_order_id' => $so->id,
+        'description'    => 'Phase40 Item',
+        'quantity'       => 1,
+        'unit_price'     => 500,
+        'tax_rate'       => 0,
+    ]);
+
+    $this->post("/finance/sales-orders/{$so->id}/convert-to-invoice")->assertRedirect();
+
+    $invoice = Invoice::where('sales_order_id', $so->id)->first();
+    expect($invoice)->not->toBeNull();
+    expect(InvoiceItem::where('invoice_id', $invoice->id)->count())->toBe(1);
+});
+
+test('converted invoice has correct items count', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+
+    $so = SalesOrder::create([
+        'tenant_id'  => $this->tenant->id,
+        'contact_id' => $this->customer->id,
+        'reference'  => 'SO-ITEMS-P40',
+        'order_date' => now()->toDateString(),
+        'status'     => 'confirmed',
+    ]);
+
+    SalesOrderItem::create(['sales_order_id' => $so->id, 'description' => 'Line 1', 'quantity' => 1, 'unit_price' => 100, 'tax_rate' => 0]);
+    SalesOrderItem::create(['sales_order_id' => $so->id, 'description' => 'Line 2', 'quantity' => 2, 'unit_price' => 50, 'tax_rate' => 10]);
+
+    $this->post("/finance/sales-orders/{$so->id}/convert-to-invoice")->assertRedirect();
+
+    $invoice = Invoice::where('sales_order_id', $so->id)->first();
+    expect($invoice)->not->toBeNull();
+    expect(InvoiceItem::where('invoice_id', $invoice->id)->count())->toBe(2);
+});
+
+test('admin can cancel confirmed order via post', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+
+    $so = SalesOrder::create([
+        'tenant_id'  => $this->tenant->id,
+        'order_date' => now()->toDateString(),
+        'reference'  => 'SO-CAN-P40',
+        'status'     => 'confirmed',
+    ]);
+
+    $this->patch("/finance/sales-orders/{$so->id}/cancel")->assertRedirect();
+
+    expect($so->fresh()->status)->toBe('cancelled');
+});
+
+test('invoiced order cannot be cancelled', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+
+    $so = SalesOrder::create([
+        'tenant_id'  => $this->tenant->id,
+        'order_date' => now()->toDateString(),
+        'reference'  => 'SO-INVC-P40',
+        'status'     => 'invoiced',
+    ]);
+
+    $this->patch("/finance/sales-orders/{$so->id}/cancel")->assertSessionHasErrors();
+
+    expect($so->fresh()->status)->toBe('invoiced');
+});
+
+test('staff cannot delete sales order', function () {
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
+
+    $so = SalesOrder::create([
+        'tenant_id'  => $this->tenant->id,
+        'order_date' => now()->toDateString(),
+        'reference'  => 'SO-DEL-P40',
+        'status'     => 'draft',
+    ]);
+
+    $this->actingAs($this->staff)
+        ->delete("/finance/sales-orders/{$so->id}")
+        ->assertStatus(403);
+});

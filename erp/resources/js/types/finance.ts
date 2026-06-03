@@ -234,18 +234,22 @@ export interface CreditNote {
     created_at: string;
 }
 
-export type SalesOrderStatus = 'draft' | 'confirmed' | 'fulfilled' | 'cancelled';
+export type SalesOrderStatus = 'draft' | 'confirmed' | 'fulfilled' | 'invoiced' | 'cancelled';
 export interface SalesOrderItem {
     id?: number; product_id?: number | null; product_name?: string; product_sku?: string;
     description: string; quantity: number; unit_price: number; tax_rate: number;
     quantity_fulfilled?: number; line_total?: number;
+    product?: { id: number; name: string; sku: string } | null;
 }
 export interface SalesOrder {
-    id: number; number?: string; status: SalesOrderStatus;
-    order_date: string; expected_date?: string; notes?: string;
+    id: number; number?: string; reference?: string | null; status: SalesOrderStatus;
+    order_date: string; expected_date?: string | null; notes?: string | null;
+    currency_code?: string; exchange_rate?: number;
     contact?: { id: number; name: string } | null;
+    contact_id?: number | null;
     warehouse?: { id: number; name: string } | null;
     invoice?: { id: number; number?: string } | null;
+    generated_invoice?: { id: number; number?: string } | null;
     items?: SalesOrderItem[]; subtotal?: number; tax_total?: number; total?: number;
     transitions?: string[]; created_by?: string; created_at?: string;
 }
