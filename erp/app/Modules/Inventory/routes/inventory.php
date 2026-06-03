@@ -4,6 +4,7 @@ use App\Modules\Inventory\Http\Controllers\CategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductCategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductController;
 use App\Modules\Inventory\Http\Controllers\PurchaseOrderController;
+use App\Modules\Inventory\Http\Controllers\PurchaseRequisitionController;
 use App\Modules\Inventory\Http\Controllers\ReorderController;
 use App\Modules\Inventory\Http\Controllers\StockAdjustmentController;
 use App\Modules\Inventory\Http\Controllers\StockMovementController;
@@ -67,4 +68,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::resource('stock-adjustments', StockAdjustmentController::class)->except(['edit', 'update']);
     Route::post('stock-adjustments/{stockAdjustment}/confirm', [StockAdjustmentController::class, 'confirm'])->name('stock-adjustments.confirm');
     Route::post('stock-adjustments/{stockAdjustment}/cancel', [StockAdjustmentController::class, 'cancel'])->name('stock-adjustments.cancel');
+
+    // Purchase Requisitions
+    Route::resource('purchase-requisitions', PurchaseRequisitionController::class)->except(['edit', 'update']);
+    Route::post('purchase-requisitions/{purchaseRequisition}/submit', [PurchaseRequisitionController::class, 'submit'])->name('purchase-requisitions.submit');
+    Route::post('purchase-requisitions/{purchaseRequisition}/approve', [PurchaseRequisitionController::class, 'approve'])->name('purchase-requisitions.approve');
+    Route::post('purchase-requisitions/{purchaseRequisition}/reject', [PurchaseRequisitionController::class, 'reject'])->name('purchase-requisitions.reject');
 });

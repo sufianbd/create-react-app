@@ -95,3 +95,29 @@ export interface StockAdjustment {
     items?: StockAdjustmentItem[];
     created_at: string;
 }
+
+export interface PurchaseRequisitionItem {
+    id: number;
+    product_id: number | null;
+    description: string;
+    quantity: number;
+    estimated_unit_cost: number;
+    product?: { id: number; name: string; sku: string } | null;
+}
+
+export interface PurchaseRequisition {
+    id: number;
+    reference: string;
+    requested_by: number | null;
+    approved_by: number | null;
+    status: 'draft' | 'submitted' | 'approved' | 'rejected';
+    needed_by: string | null;
+    notes: string | null;
+    rejection_reason: string | null;
+    approved_at: string | null;
+    total_estimated_cost: number;
+    requester?: { id: number; name: string } | null;
+    approver?: { id: number; name: string } | null;
+    items?: PurchaseRequisitionItem[];
+    created_at: string;
+}

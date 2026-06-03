@@ -53,6 +53,7 @@ const navItems: NavItem[] = [
             { label: 'Transfers',         href: '/inventory/warehouse-transfers',   icon: inventoryIcon },
             { label: 'Reorder',           href: '/inventory/reorder',               icon: inventoryIcon },
             { label: 'Stock Adjustments', href: '/inventory/stock-adjustments',     icon: inventoryIcon },
+            { label: 'Requisitions',      href: '/inventory/purchase-requisitions', icon: inventoryIcon },
         ],
     },
     {
