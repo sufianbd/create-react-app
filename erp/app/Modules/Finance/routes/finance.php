@@ -19,6 +19,7 @@ use App\Modules\Finance\Http\Controllers\FixedAssetController;
 use App\Modules\Finance\Http\Controllers\PriceListController;
 use App\Modules\Finance\Http\Controllers\AttachmentController;
 use App\Modules\Finance\Http\Controllers\BatchPaymentController;
+use App\Modules\Finance\Http\Controllers\DeliveryNoteController;
 use App\Modules\Finance\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 
@@ -162,4 +163,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('attachments/{modelType}/{modelId}', [AttachmentController::class, 'store'])->name('attachments.store');
     Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
     Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
+    // Delivery Notes
+    Route::resource('delivery-notes', DeliveryNoteController::class)->except(['edit', 'update']);
+    Route::post('delivery-notes/{deliveryNote}/dispatch', [DeliveryNoteController::class, 'dispatch'])->name('delivery-notes.dispatch');
+    Route::post('delivery-notes/{deliveryNote}/deliver', [DeliveryNoteController::class, 'deliver'])->name('delivery-notes.deliver');
+
 });

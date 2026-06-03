@@ -374,3 +374,29 @@ export interface BatchPayment {
     payments?: BatchPaymentItem[];
     created_at: string;
 }
+export interface DeliveryNoteItem {
+    id: number;
+    product_id: number | null;
+    description: string;
+    quantity: number;
+    product?: { id: number; name: string; sku: string } | null;
+}
+
+export interface DeliveryNote {
+    id: number;
+    reference: string;
+    sales_order_id: number | null;
+    invoice_id: number | null;
+    contact_id: number | null;
+    status: 'draft' | 'dispatched' | 'delivered';
+    dispatch_date: string | null;
+    delivery_date: string | null;
+    carrier: string | null;
+    tracking_number: string | null;
+    notes: string | null;
+    contact?: Contact | null;
+    salesOrder?: SalesOrder | null;
+    invoice?: Invoice | null;
+    items?: DeliveryNoteItem[];
+    created_at: string;
+}

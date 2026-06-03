@@ -70,6 +70,7 @@ const navItems: NavItem[] = [
             { label: 'Recurring Invoices', href: '/finance/recurring-invoices',           icon: <span /> },
             { label: 'Quotes',            href: '/finance/quotes',                        icon: <span /> },
             { label: 'Sales Orders',      href: '/finance/sales-orders',                  icon: <span /> },
+            { label: 'Delivery Notes',    href: '/finance/delivery-notes',               icon: <span /> },
             { label: 'Credit Notes',      href: '/finance/credit-notes',                  icon: <span /> },
             { label: 'Contacts',          href: '/finance/contacts',                      icon: <span /> },
             { label: 'Journal Entries',   href: '/finance/journal-entries',               icon: <span /> },
