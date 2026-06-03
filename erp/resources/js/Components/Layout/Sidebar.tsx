@@ -50,8 +50,9 @@ const navItems: NavItem[] = [
             { label: 'Suppliers',       href: '/inventory/suppliers',       icon: inventoryIcon },
             { label: 'Stock Movements', href: '/inventory/stock-movements', icon: inventoryIcon },
             { label: 'Purchase Orders', href: '/inventory/purchase-orders', icon: inventoryIcon },
-            { label: 'Transfers',       href: '/inventory/warehouse-transfers', icon: inventoryIcon },
-            { label: 'Reorder',         href: '/inventory/reorder',             icon: inventoryIcon },
+            { label: 'Transfers',         href: '/inventory/warehouse-transfers',   icon: inventoryIcon },
+            { label: 'Reorder',           href: '/inventory/reorder',               icon: inventoryIcon },
+            { label: 'Stock Adjustments', href: '/inventory/stock-adjustments',     icon: inventoryIcon },
         ],
     },
     {

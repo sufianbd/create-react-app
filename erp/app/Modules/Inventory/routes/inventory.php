@@ -5,6 +5,7 @@ use App\Modules\Inventory\Http\Controllers\ProductCategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductController;
 use App\Modules\Inventory\Http\Controllers\PurchaseOrderController;
 use App\Modules\Inventory\Http\Controllers\ReorderController;
+use App\Modules\Inventory\Http\Controllers\StockAdjustmentController;
 use App\Modules\Inventory\Http\Controllers\StockMovementController;
 use App\Modules\Inventory\Http\Controllers\SupplierController;
 use App\Modules\Inventory\Http\Controllers\WarehouseController;
@@ -61,4 +62,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
 
     // Warehouse Transfers
     Route::resource('warehouse-transfers', WarehouseTransferController::class)->only(['index', 'create', 'store']);
+
+    // Stock Adjustments
+    Route::resource('stock-adjustments', StockAdjustmentController::class)->except(['edit', 'update']);
+    Route::post('stock-adjustments/{stockAdjustment}/confirm', [StockAdjustmentController::class, 'confirm'])->name('stock-adjustments.confirm');
+    Route::post('stock-adjustments/{stockAdjustment}/cancel', [StockAdjustmentController::class, 'cancel'])->name('stock-adjustments.cancel');
 });

@@ -71,3 +71,27 @@ export interface WarehouseTransfer {
     status: 'pending' | 'completed' | 'cancelled';
     created_at: string;
 }
+
+export interface StockAdjustmentItem {
+    id: number;
+    product_id: number;
+    expected_quantity: number;
+    actual_quantity: number;
+    difference: number;
+    product?: { id: number; name: string; sku: string };
+}
+
+export interface StockAdjustment {
+    id: number;
+    warehouse_id: number;
+    reference: string;
+    reason: 'count' | 'damage' | 'theft' | 'expiry' | 'correction' | 'other';
+    status: 'draft' | 'confirmed' | 'cancelled';
+    adjusted_by: number | null;
+    confirmed_at: string | null;
+    notes: string | null;
+    warehouse?: { id: number; name: string };
+    adjuster?: { id: number; name: string } | null;
+    items?: StockAdjustmentItem[];
+    created_at: string;
+}

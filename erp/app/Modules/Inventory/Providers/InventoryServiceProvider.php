@@ -4,9 +4,11 @@ namespace App\Modules\Inventory\Providers;
 
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\ProductCategory;
+use App\Modules\Inventory\Models\StockAdjustment;
 use App\Modules\Inventory\Models\WarehouseTransfer;
 use App\Modules\Inventory\Policies\ProductCategoryPolicy;
 use App\Modules\Inventory\Policies\ProductPolicy;
+use App\Modules\Inventory\Policies\StockAdjustmentPolicy;
 use App\Modules\Inventory\Policies\WarehouseTransferPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -22,5 +24,6 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(ProductCategory::class, ProductCategoryPolicy::class);
         Gate::policy(WarehouseTransfer::class, WarehouseTransferPolicy::class);
+        Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);
     }
 }
