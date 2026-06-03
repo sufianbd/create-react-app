@@ -348,13 +348,90 @@ class ReportController extends Controller
     {
         $this->authorize('viewAny', Account::class);
 
+        $contactId = $request->get('contact_id');
+        $from      = $request->get('from', now()->startOfMonth()->toDateString());
+        $to        = $request->get('to', now()->toDateString());
+
+        $contacts = Contact::customers()->orderBy('name')->get(['id', 'name', 'email']);
+
+        if (!$contactId) {
+            return Inertia::render('Finance/Reports/CustomerStatement', [
+                'contacts'    => $contacts,
+                'contact'     => null,
+                'lines'       => [],
+                'summary'     => null,
+                'from'        => $from,
+                'to'          => $to,
+                'breadcrumbs' => [['label' => 'Finance'], ['label' => 'Reports'], ['label' => 'Customer Statement']],
+            ]);
+        }
+
+        $contact = Contact::findOrFail($contactId);
+
+        // Opening balance: sum of (total - amount_paid) for invoices before $from
+        $priorInvoices = Invoice::with(['items', 'payments'])
+            ->where('contact_id', $contactId)
+            ->where('issue_date', '<', $from)
+            ->whereNotIn('status', ['draft', 'cancelled'])
+            ->get();
+
+        $openingBalance = (float) $priorInvoices->sum(fn ($inv) => $inv->total - $inv->amount_paid);
+
+        // All invoices within date range
+        $invoices = Invoice::with(['items', 'payments'])
+            ->where('contact_id', $contactId)
+            ->whereBetween('issue_date', [$from, $to])
+            ->whereNotIn('status', ['draft', 'cancelled'])
+            ->orderBy('issue_date')
+            ->get();
+
+        $lines   = [];
+        $balance = $openingBalance;
+
+        foreach ($invoices as $inv) {
+            $balance += $inv->total;
+            $lines[] = [
+                'date'      => $inv->issue_date instanceof \Carbon\Carbon ? $inv->issue_date->toDateString() : (string) $inv->issue_date,
+                'type'      => 'Invoice',
+                'reference' => $inv->number,
+                'debit'     => $inv->total,
+                'credit'    => 0,
+                'balance'   => round($balance, 2),
+                'status'    => $inv->status,
+            ];
+
+            if ($inv->amount_paid > 0) {
+                $balance -= $inv->amount_paid;
+                $lines[] = [
+                    'date'      => $inv->issue_date instanceof \Carbon\Carbon ? $inv->issue_date->toDateString() : (string) $inv->issue_date,
+                    'type'      => 'Payment',
+                    'reference' => 'PMT-' . $inv->number,
+                    'debit'     => 0,
+                    'credit'    => $inv->amount_paid,
+                    'balance'   => round($balance, 2),
+                    'status'    => '',
+                ];
+            }
+        }
+
+        $summary = [
+            'opening_balance' => round($openingBalance, 2),
+            'total_invoiced'  => round($invoices->sum('total'), 2),
+            'total_paid'      => round($invoices->sum('amount_paid'), 2),
+            'closing_balance' => round($balance, 2),
+        ];
+
         return Inertia::render('Finance/Reports/CustomerStatement', [
-            'contacts'    => Contact::customers()->orderBy('name')->get(['id', 'name']),
-            'contact'     => null,
-            'rows'        => [],
-            'from'        => now()->startOfYear()->toDateString(),
-            'to'          => now()->toDateString(),
-            'breadcrumbs' => [['label' => 'Finance'], ['label' => 'Reports'], ['label' => 'Customer Statement']],
+            'contacts'    => $contacts,
+            'contact'     => $contact,
+            'lines'       => $lines,
+            'summary'     => $summary,
+            'from'        => $from,
+            'to'          => $to,
+            'breadcrumbs' => [
+                ['label' => 'Finance'], ['label' => 'Reports'],
+                ['label' => "Statement: {$contact->name}"],
+            ],
         ]);
     }
 
@@ -453,6 +530,54 @@ class ReportController extends Controller
                 ['label' => "Statement: {$contact->name}"],
             ],
         ]);
+    }
+
+    public function exportCustomerStatement(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Invoice::class);
+
+        $contactId = $request->get('contact_id');
+        $from      = $request->get('from', now()->startOfMonth()->toDateString());
+        $to        = $request->get('to', now()->toDateString());
+
+        abort_unless($contactId, 422, 'contact_id is required.');
+        $contact = Contact::findOrFail($contactId);
+
+        $priorInvoices = Invoice::with(['items', 'payments'])
+            ->where('contact_id', $contactId)
+            ->where('issue_date', '<', $from)
+            ->whereNotIn('status', ['draft', 'cancelled'])
+            ->get();
+
+        $openingBalance = (float) $priorInvoices->sum(fn ($inv) => $inv->total - $inv->amount_paid);
+
+        $invoices = Invoice::with(['items', 'payments'])
+            ->where('contact_id', $contactId)
+            ->whereBetween('issue_date', [$from, $to])
+            ->whereNotIn('status', ['draft', 'cancelled'])
+            ->orderBy('issue_date')
+            ->get();
+
+        $balance = $openingBalance;
+        $rows    = [['Opening Balance', '', '', '', '', round($balance, 2)]];
+
+        foreach ($invoices as $inv) {
+            $balance += $inv->total;
+            $issueDate = $inv->issue_date instanceof \Carbon\Carbon ? $inv->issue_date->toDateString() : (string) $inv->issue_date;
+            $rows[] = [$issueDate, 'Invoice', $inv->number, $inv->total, 0, round($balance, 2)];
+            if ($inv->amount_paid > 0) {
+                $balance -= $inv->amount_paid;
+                $rows[] = [$issueDate, 'Payment', 'PMT-' . $inv->number, 0, $inv->amount_paid, round($balance, 2)];
+            }
+        }
+
+        $filename = "statement-{$contact->name}-{$from}-{$to}.csv";
+
+        return $this->streamCsv(
+            $filename,
+            ['Date', 'Type', 'Reference', 'Debit', 'Credit', 'Balance'],
+            $rows
+        );
     }
 
     public function vatReport(Request $request): Response

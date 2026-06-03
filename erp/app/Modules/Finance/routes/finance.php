@@ -112,6 +112,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/account-ledger',               [ReportController::class, 'accountLedgerIndex'])->name('reports.account-ledger.index');
     Route::get('reports/account-ledger/{account}',     [ReportController::class, 'accountLedger'])->name('reports.account-ledger');
     Route::get('reports/customer-statement', [ReportController::class, 'customerStatementIndex'])->name('reports.customer-statement.index');
+    Route::get('reports/customer-statement/export', [ReportController::class, 'exportCustomerStatement'])->name('reports.customer-statement.export');
     Route::get('reports/customer-statement/{contact}', [ReportController::class, 'customerStatement'])->name('reports.customer-statement');
     Route::get('reports/vat-report', [ReportController::class, 'vatReport'])->name('reports.vat-report');
     Route::get('reports/cash-flow-forecast', [ReportController::class, 'cashFlowForecast'])->name('reports.cash-flow-forecast');
