@@ -112,6 +112,7 @@ const navItems: NavItem[] = [
             { label: 'Leave Requests', href: '/hr/leave-requests', icon: <span /> },
             { label: 'Payroll Runs',   href: '/hr/payroll-runs',   icon: <span /> },
             { label: 'Expense Claims', href: '/hr/expense-claims', icon: <span /> },
+            { label: 'Onboarding',     href: '/hr/onboarding-templates', icon: <span /> },
         ],
     },
     {

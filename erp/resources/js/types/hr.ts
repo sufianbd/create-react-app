@@ -96,3 +96,45 @@ export interface PayrollRun {
     creator?: string | null;
     created_at?: string;
 }
+
+export interface OnboardingTemplateTask {
+    id: number;
+    title: string;
+    description: string | null;
+    due_days: number;
+    sort_order: number;
+}
+
+export interface OnboardingTemplate {
+    id: number;
+    name: string;
+    description: string | null;
+    is_active: boolean;
+    tasks?: OnboardingTemplateTask[];
+    tasks_count?: number;
+    onboardings_count?: number;
+    created_at: string;
+}
+
+export interface EmployeeOnboardingTask {
+    id: number;
+    title: string;
+    description: string | null;
+    due_date: string | null;
+    completed_at: string | null;
+    is_completed: boolean;
+    sort_order: number;
+}
+
+export interface EmployeeOnboarding {
+    id: number;
+    employee_id: number;
+    template_id: number | null;
+    title: string;
+    status: 'in_progress' | 'completed' | 'cancelled';
+    started_at: string;
+    completed_at: string | null;
+    progress: number;
+    tasks?: EmployeeOnboardingTask[];
+    created_at: string;
+}

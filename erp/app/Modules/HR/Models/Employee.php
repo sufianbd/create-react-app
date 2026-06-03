@@ -47,6 +47,11 @@ class Employee extends Model
         return $this->hasMany(PayrollItem::class);
     }
 
+    public function onboardings(): HasMany
+    {
+        return $this->hasMany(EmployeeOnboarding::class);
+    }
+
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";

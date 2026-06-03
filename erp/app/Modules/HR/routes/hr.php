@@ -2,8 +2,10 @@
 
 use App\Modules\HR\Http\Controllers\DepartmentController;
 use App\Modules\HR\Http\Controllers\EmployeeController;
+use App\Modules\HR\Http\Controllers\EmployeeOnboardingController;
 use App\Modules\HR\Http\Controllers\ExpenseClaimController;
 use App\Modules\HR\Http\Controllers\LeaveRequestController;
+use App\Modules\HR\Http\Controllers\OnboardingTemplateController;
 use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
 use Illuminate\Support\Facades\Route;
@@ -52,6 +54,17 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('payroll', [PayrollController::class, 'store'])->name('payroll.store');
     Route::get('payroll/{payrollRun}', [PayrollController::class, 'show'])->name('payroll.show');
     Route::patch('payroll/{payrollRun}/process', [PayrollController::class, 'process'])->name('payroll.process');
+
+    // Onboarding Templates
+    Route::resource('onboarding-templates', OnboardingTemplateController::class)->except(['edit', 'update']);
+
+    // Employee Onboardings (nested under employees)
+    Route::prefix('employees/{employee}')->name('employees.')->group(function () {
+        Route::resource('onboardings', EmployeeOnboardingController::class)->except(['edit', 'update']);
+        Route::post('onboardings/{onboarding}/complete', [EmployeeOnboardingController::class, 'complete'])->name('onboardings.complete');
+        Route::post('onboardings/{onboarding}/tasks/{task}/complete', [EmployeeOnboardingController::class, 'completeTask'])->name('onboardings.tasks.complete');
+        Route::post('onboardings/{onboarding}/tasks/{task}/uncomplete', [EmployeeOnboardingController::class, 'uncompleteTask'])->name('onboardings.tasks.uncomplete');
+    });
 
     // Expense Claims
     Route::post('expense-claims/{expenseClaim}/submit',    [ExpenseClaimController::class, 'submit'])->name('expense-claims.submit');
