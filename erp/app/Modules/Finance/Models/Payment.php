@@ -14,7 +14,7 @@ class Payment extends Model
 
     protected $fillable = [
         'tenant_id', 'invoice_id', 'amount',
-        'payment_date', 'method', 'reference', 'notes',
+        'payment_date', 'method', 'reference', 'notes', 'batch_payment_id',
     ];
 
     protected $casts = [
@@ -25,5 +25,10 @@ class Payment extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function batchPayment(): BelongsTo
+    {
+        return $this->belongsTo(BatchPayment::class);
     }
 }

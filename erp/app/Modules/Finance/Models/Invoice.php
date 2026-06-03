@@ -40,7 +40,8 @@ class Invoice extends Model
     {
         return [
             'draft'     => ['sent', 'cancelled'],
-            'sent'      => ['paid', 'cancelled'],
+            'sent'      => ['partial', 'paid', 'cancelled'],
+            'partial'   => ['paid', 'cancelled'],
             'paid'      => [],
             'cancelled' => [],
         ];

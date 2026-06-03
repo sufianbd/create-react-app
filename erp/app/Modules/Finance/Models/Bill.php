@@ -40,7 +40,8 @@ class Bill extends Model
     {
         return [
             'draft'     => ['received', 'cancelled'],
-            'received'  => ['paid', 'cancelled'],
+            'received'  => ['partial', 'paid', 'cancelled'],
+            'partial'   => ['paid', 'cancelled'],
             'paid'      => [],
             'cancelled' => [],
         ];

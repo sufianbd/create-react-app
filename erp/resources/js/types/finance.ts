@@ -345,3 +345,28 @@ export interface Attachment {
     uploader?: { id: number; name: string };
     created_at: string;
 }
+
+export interface BatchPaymentItem {
+    id: number;
+    payable_type: string;
+    payable_id: number;
+    amount: number;
+    payment_date: string;
+    payment_method: string;
+    reference: string | null;
+    batch_payment_id: number | null;
+    invoice?: { id: number; number?: string };
+}
+
+export interface BatchPayment {
+    id: number;
+    reference: string;
+    payment_date: string;
+    payment_method: 'bank_transfer' | 'cheque' | 'cash' | 'card' | 'other';
+    type: 'received' | 'made';
+    total_amount: number;
+    notes: string | null;
+    payments_count?: number;
+    payments?: BatchPaymentItem[];
+    created_at: string;
+}
