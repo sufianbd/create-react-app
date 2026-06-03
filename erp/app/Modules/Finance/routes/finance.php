@@ -109,6 +109,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/customer-statement', [ReportController::class, 'customerStatementIndex'])->name('reports.customer-statement.index');
     Route::get('reports/customer-statement/{contact}', [ReportController::class, 'customerStatement'])->name('reports.customer-statement');
     Route::get('reports/vat-report', [ReportController::class, 'vatReport'])->name('reports.vat-report');
+    Route::get('reports/cash-flow-forecast', [ReportController::class, 'cashFlowForecast'])->name('reports.cash-flow-forecast');
 
     // CSV exports
     Route::get('reports/profit-loss/export',              [ReportController::class, 'exportProfitLoss'])->name('reports.profit-loss.export');
@@ -117,6 +118,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/aged-payables/export',            [ReportController::class, 'exportAgedPayables'])->name('reports.aged-payables.export');
     Route::get('reports/account-ledger/{account}/export', [ReportController::class, 'exportAccountLedger'])->name('reports.account-ledger.export');
     Route::get('reports/vat-report/export',               [ReportController::class, 'exportVatReport'])->name('reports.vat-report.export');
+    Route::get('reports/cash-flow-forecast/export',       [ReportController::class, 'exportCashFlowForecast'])->name('reports.cash-flow-forecast.export');
 
     // Exchange Rates
     Route::get('/exchange-rates',              [ExchangeRateController::class, 'index'])->name('exchange-rates.index');

@@ -520,6 +520,165 @@ class ReportController extends Controller
         ]);
     }
 
+    public function cashFlowForecast(Request $request): Response
+    {
+        $this->authorize('viewAny', Invoice::class);
+
+        $weeks          = (int) $request->get('weeks', 12);
+        $openingBalance = (float) $request->get('opening_balance', 0);
+        $from           = now()->startOfDay();
+        $to             = now()->addWeeks($weeks)->endOfDay();
+
+        // Collect open invoices (inflows) due within horizon
+        $invoices = Invoice::with('contact')
+            ->whereIn('status', ['sent', 'partial'])
+            ->whereBetween('due_date', [$from->toDateString(), $to->toDateString()])
+            ->get();
+
+        // Collect open bills (outflows) due within horizon
+        $bills = Bill::with('contact')
+            ->whereIn('status', ['received', 'partial'])
+            ->whereBetween('due_date', [$from->toDateString(), $to->toDateString()])
+            ->get();
+
+        // Build weekly buckets
+        $buckets = [];
+        for ($i = 0; $i < $weeks; $i++) {
+            $weekStart = now()->addWeeks($i)->startOfWeek()->toDateString();
+            $weekEnd   = now()->addWeeks($i)->endOfWeek()->toDateString();
+            $buckets[$weekStart] = [
+                'week_start' => $weekStart,
+                'week_end'   => $weekEnd,
+                'inflows'    => [],
+                'outflows'   => [],
+            ];
+        }
+
+        // Place invoices into their week bucket
+        foreach ($invoices as $inv) {
+            $due = $inv->due_date instanceof \Carbon\Carbon
+                ? $inv->due_date->toDateString()
+                : (string) $inv->due_date;
+            foreach ($buckets as $weekStart => $bucket) {
+                if ($due >= $bucket['week_start'] && $due <= $bucket['week_end']) {
+                    $buckets[$weekStart]['inflows'][] = [
+                        'reference'   => $inv->reference,
+                        'contact'     => $inv->contact?->name ?? '—',
+                        'due_date'    => $due,
+                        'amount'      => $inv->total - $inv->amount_paid,
+                    ];
+                    break;
+                }
+            }
+        }
+
+        // Place bills into their week bucket
+        foreach ($bills as $bill) {
+            $due = $bill->due_date instanceof \Carbon\Carbon
+                ? $bill->due_date->toDateString()
+                : (string) $bill->due_date;
+            foreach ($buckets as $weekStart => $bucket) {
+                if ($due >= $bucket['week_start'] && $due <= $bucket['week_end']) {
+                    $buckets[$weekStart]['outflows'][] = [
+                        'reference'   => $bill->reference,
+                        'contact'     => $bill->contact?->name ?? '—',
+                        'due_date'    => $due,
+                        'amount'      => $bill->total - $bill->amount_paid,
+                    ];
+                    break;
+                }
+            }
+        }
+
+        // Compute running balance per week
+        $balance = $openingBalance;
+        $result  = [];
+        foreach ($buckets as $bucket) {
+            $inflow  = array_sum(array_column($bucket['inflows'],  'amount'));
+            $outflow = array_sum(array_column($bucket['outflows'], 'amount'));
+            $balance += $inflow - $outflow;
+            $result[] = [
+                'week_start'      => $bucket['week_start'],
+                'week_end'        => $bucket['week_end'],
+                'inflows'         => $bucket['inflows'],
+                'outflows'        => $bucket['outflows'],
+                'total_inflow'    => round($inflow, 2),
+                'total_outflow'   => round($outflow, 2),
+                'net'             => round($inflow - $outflow, 2),
+                'closing_balance' => round($balance, 2),
+            ];
+        }
+
+        return Inertia::render('Finance/Reports/CashFlowForecast', [
+            'buckets'        => $result,
+            'openingBalance' => $openingBalance,
+            'weeks'          => $weeks,
+            'totalInflow'    => round(array_sum(array_column($result, 'total_inflow')), 2),
+            'totalOutflow'   => round(array_sum(array_column($result, 'total_outflow')), 2),
+        ]);
+    }
+
+    public function exportCashFlowForecast(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Invoice::class);
+
+        $weeks          = (int) $request->get('weeks', 12);
+        $openingBalance = (float) $request->get('opening_balance', 0);
+        $from           = now()->startOfDay();
+        $to             = now()->addWeeks($weeks)->endOfDay();
+
+        $invoices = Invoice::whereIn('status', ['sent', 'partial'])
+            ->whereBetween('due_date', [$from->toDateString(), $to->toDateString()])->get();
+        $bills    = Bill::whereIn('status', ['received', 'partial'])
+            ->whereBetween('due_date', [$from->toDateString(), $to->toDateString()])->get();
+
+        // Rebuild buckets same as above, minimal version for export
+        $buckets = [];
+        for ($i = 0; $i < $weeks; $i++) {
+            $ws = now()->addWeeks($i)->startOfWeek()->toDateString();
+            $we = now()->addWeeks($i)->endOfWeek()->toDateString();
+            $buckets[$ws] = ['week_start' => $ws, 'week_end' => $we, 'inflow' => 0.0, 'outflow' => 0.0];
+        }
+        foreach ($invoices as $inv) {
+            $due = $inv->due_date instanceof \Carbon\Carbon ? $inv->due_date->toDateString() : (string) $inv->due_date;
+            foreach ($buckets as $ws => &$b) {
+                if ($due >= $b['week_start'] && $due <= $b['week_end']) {
+                    $b['inflow'] += $inv->total - $inv->amount_paid;
+                    break;
+                }
+            }
+        }
+        foreach ($bills as $bill) {
+            $due = $bill->due_date instanceof \Carbon\Carbon ? $bill->due_date->toDateString() : (string) $bill->due_date;
+            foreach ($buckets as $ws => &$b) {
+                if ($due >= $b['week_start'] && $due <= $b['week_end']) {
+                    $b['outflow'] += $bill->total - $bill->amount_paid;
+                    break;
+                }
+            }
+        }
+
+        $balance = $openingBalance;
+        $rows = [];
+        foreach ($buckets as $b) {
+            $balance += $b['inflow'] - $b['outflow'];
+            $rows[] = [
+                $b['week_start'],
+                $b['week_end'],
+                round($b['inflow'], 2),
+                round($b['outflow'], 2),
+                round($b['inflow'] - $b['outflow'], 2),
+                round($balance, 2),
+            ];
+        }
+
+        return $this->streamCsv(
+            'cash-flow-forecast.csv',
+            ['Week Start', 'Week End', 'Inflows', 'Outflows', 'Net', 'Closing Balance'],
+            $rows
+        );
+    }
+
     // ─── CSV Export Methods ───────────────────────────────────────────────────
 
     public function exportProfitLoss(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
