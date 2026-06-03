@@ -126,6 +126,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/aged-payables/export',            [ReportController::class, 'exportAgedPayables'])->name('reports.aged-payables.export');
     Route::get('reports/account-ledger/{account}/export', [ReportController::class, 'exportAccountLedger'])->name('reports.account-ledger.export');
     Route::get('reports/vat-report/export',               [ReportController::class, 'exportVatReport'])->name('reports.vat-report.export');
+    Route::get('reports/comparative-profit-loss', [ReportController::class, 'comparativeProfitLoss'])->name('reports.comparative-profit-loss');
+    Route::get('reports/comparative-profit-loss/export', [ReportController::class, 'exportComparativeProfitLoss'])->name('reports.comparative-profit-loss.export');
     Route::get('reports/cash-flow-forecast/export',       [ReportController::class, 'exportCashFlowForecast'])->name('reports.cash-flow-forecast.export');
 
     // Exchange Rates

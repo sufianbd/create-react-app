@@ -934,7 +934,193 @@ class ReportController extends Controller
         );
     }
 
-    // ─── CSV Export Methods ───────────────────────────────────────────────────
+    public function comparativeProfitLoss(Request $request): Response
+    {
+        $this->authorize('viewAny', Account::class);
+
+        $currentFrom = $request->get('current_from', now()->startOfMonth()->toDateString());
+        $currentTo   = $request->get('current_to',   now()->toDateString());
+        $priorFrom   = $request->get('prior_from',   now()->subMonth()->startOfMonth()->toDateString());
+        $priorTo     = $request->get('prior_to',     now()->subMonth()->endOfMonth()->toDateString());
+
+        $buildSection = function (string $type, string $from, string $to): array {
+            $totals = $this->aggregateJournalLines($from, $to);
+
+            return Account::where('type', $type)
+                ->orderBy('name')
+                ->get()
+                ->map(function (Account $account) use ($totals, $type) {
+                    $row    = $totals->get($account->id);
+                    $debit  = (float) ($row?->total_debit  ?? 0);
+                    $credit = (float) ($row?->total_credit ?? 0);
+                    $balance = $type === 'income'
+                        ? $credit - $debit
+                        : $debit - $credit;
+                    return [
+                        'id'      => $account->id,
+                        'name'    => $account->name,
+                        'code'    => $account->code ?? '',
+                        'balance' => round($balance, 2),
+                    ];
+                })
+                ->filter(fn ($row) => $row['balance'] != 0)
+                ->values()
+                ->toArray();
+        };
+
+        $currentIncome   = $buildSection('income',  $currentFrom, $currentTo);
+        $currentExpenses = $buildSection('expense', $currentFrom, $currentTo);
+        $priorIncome     = $buildSection('income',  $priorFrom,   $priorTo);
+        $priorExpenses   = $buildSection('expense', $priorFrom,   $priorTo);
+
+        // Merge account lists (union of both periods)
+        $allIncomeIds  = collect(array_merge($currentIncome, $priorIncome))->pluck('id')->unique();
+        $allExpenseIds = collect(array_merge($currentExpenses, $priorExpenses))->pluck('id')->unique();
+
+        $indexBy = fn (array $rows) => collect($rows)->keyBy('id');
+
+        $currentIncomeIdx  = $indexBy($currentIncome);
+        $priorIncomeIdx    = $indexBy($priorIncome);
+        $currentExpenseIdx = $indexBy($currentExpenses);
+        $priorExpenseIdx   = $indexBy($priorExpenses);
+
+        $mergeRows = function ($ids, $currentIdx, $priorIdx) {
+            return $ids->map(function ($id) use ($currentIdx, $priorIdx) {
+                $cur = $currentIdx->get($id);
+                $pri = $priorIdx->get($id);
+                return [
+                    'id'      => $id,
+                    'name'    => ($cur ?? $pri)['name'],
+                    'code'    => ($cur ?? $pri)['code'],
+                    'current' => $cur['balance'] ?? 0,
+                    'prior'   => $pri['balance'] ?? 0,
+                    'change'  => round(($cur['balance'] ?? 0) - ($pri['balance'] ?? 0), 2),
+                ];
+            })->sortBy('name')->values()->toArray();
+        };
+
+        $incomeRows  = $mergeRows($allIncomeIds,  $currentIncomeIdx,  $priorIncomeIdx);
+        $expenseRows = $mergeRows($allExpenseIds, $currentExpenseIdx, $priorExpenseIdx);
+
+        $totalCurrentIncome   = round(collect($incomeRows)->sum('current'), 2);
+        $totalPriorIncome     = round(collect($incomeRows)->sum('prior'), 2);
+        $totalCurrentExpenses = round(collect($expenseRows)->sum('current'), 2);
+        $totalPriorExpenses   = round(collect($expenseRows)->sum('prior'), 2);
+
+        return Inertia::render('Finance/Reports/ComparativeProfitLoss', [
+            'incomeRows'           => $incomeRows,
+            'expenseRows'          => $expenseRows,
+            'totalCurrentIncome'   => $totalCurrentIncome,
+            'totalPriorIncome'     => $totalPriorIncome,
+            'totalCurrentExpenses' => $totalCurrentExpenses,
+            'totalPriorExpenses'   => $totalPriorExpenses,
+            'netCurrentProfit'     => round($totalCurrentIncome - $totalCurrentExpenses, 2),
+            'netPriorProfit'       => round($totalPriorIncome - $totalPriorExpenses, 2),
+            'currentFrom'          => $currentFrom,
+            'currentTo'            => $currentTo,
+            'priorFrom'            => $priorFrom,
+            'priorTo'              => $priorTo,
+        ]);
+    }
+
+    public function exportComparativeProfitLoss(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Account::class);
+
+        $currentFrom = $request->get('current_from', now()->startOfMonth()->toDateString());
+        $currentTo   = $request->get('current_to',   now()->toDateString());
+        $priorFrom   = $request->get('prior_from',   now()->subMonth()->startOfMonth()->toDateString());
+        $priorTo     = $request->get('prior_to',     now()->subMonth()->endOfMonth()->toDateString());
+
+        $buildSection = function (string $type, string $from, string $to): array {
+            $totals = $this->aggregateJournalLines($from, $to);
+
+            return Account::where('type', $type)
+                ->orderBy('name')
+                ->get()
+                ->map(function (Account $account) use ($totals, $type) {
+                    $row    = $totals->get($account->id);
+                    $debit  = (float) ($row?->total_debit  ?? 0);
+                    $credit = (float) ($row?->total_credit ?? 0);
+                    $balance = $type === 'income'
+                        ? $credit - $debit
+                        : $debit - $credit;
+                    return [
+                        'id'      => $account->id,
+                        'name'    => $account->name,
+                        'code'    => $account->code ?? '',
+                        'balance' => round($balance, 2),
+                    ];
+                })
+                ->filter(fn ($row) => $row['balance'] != 0)
+                ->values()
+                ->toArray();
+        };
+
+        $currentIncome   = $buildSection('income',  $currentFrom, $currentTo);
+        $currentExpenses = $buildSection('expense', $currentFrom, $currentTo);
+        $priorIncome     = $buildSection('income',  $priorFrom,   $priorTo);
+        $priorExpenses   = $buildSection('expense', $priorFrom,   $priorTo);
+
+        $allIncomeIds  = collect(array_merge($currentIncome, $priorIncome))->pluck('id')->unique();
+        $allExpenseIds = collect(array_merge($currentExpenses, $priorExpenses))->pluck('id')->unique();
+
+        $indexBy = fn (array $rows) => collect($rows)->keyBy('id');
+
+        $currentIncomeIdx  = $indexBy($currentIncome);
+        $priorIncomeIdx    = $indexBy($priorIncome);
+        $currentExpenseIdx = $indexBy($currentExpenses);
+        $priorExpenseIdx   = $indexBy($priorExpenses);
+
+        $rows = [];
+
+        foreach ($allIncomeIds as $id) {
+            $cur  = $currentIncomeIdx->get($id);
+            $pri  = $priorIncomeIdx->get($id);
+            $name = ($cur ?? $pri)['name'];
+            $code = ($cur ?? $pri)['code'];
+            $rows[] = [
+                'Income',
+                $code,
+                $name,
+                number_format($cur['balance'] ?? 0, 2, '.', ''),
+                number_format($pri['balance'] ?? 0, 2, '.', ''),
+                number_format(($cur['balance'] ?? 0) - ($pri['balance'] ?? 0), 2, '.', ''),
+            ];
+        }
+
+        foreach ($allExpenseIds as $id) {
+            $cur  = $currentExpenseIdx->get($id);
+            $pri  = $priorExpenseIdx->get($id);
+            $name = ($cur ?? $pri)['name'];
+            $code = ($cur ?? $pri)['code'];
+            $rows[] = [
+                'Expense',
+                $code,
+                $name,
+                number_format($cur['balance'] ?? 0, 2, '.', ''),
+                number_format($pri['balance'] ?? 0, 2, '.', ''),
+                number_format(($cur['balance'] ?? 0) - ($pri['balance'] ?? 0), 2, '.', ''),
+            ];
+        }
+
+        $totalCurrentIncome   = collect($currentIncome)->sum('balance');
+        $totalPriorIncome     = collect($priorIncome)->sum('balance');
+        $totalCurrentExpenses = collect($currentExpenses)->sum('balance');
+        $totalPriorExpenses   = collect($priorExpenses)->sum('balance');
+
+        $netCurrent = $totalCurrentIncome - $totalCurrentExpenses;
+        $netPrior   = $totalPriorIncome - $totalPriorExpenses;
+        $rows[] = ['Net Profit', '', '', number_format($netCurrent, 2, '.', ''), number_format($netPrior, 2, '.', ''), number_format($netCurrent - $netPrior, 2, '.', '')];
+
+        return $this->streamCsv(
+            "comparative-profit-loss-{$currentFrom}-{$currentTo}.csv",
+            ['Section', 'Code', 'Account', 'Current Period', 'Prior Period', 'Change'],
+            $rows
+        );
+    }
+
+        // ─── CSV Export Methods ───────────────────────────────────────────────────
 
     public function exportProfitLoss(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
     {

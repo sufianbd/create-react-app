@@ -86,6 +86,7 @@ const navItems: NavItem[] = [
             { label: 'Supplier Statement', href: '/finance/reports/supplier-statement',   icon: <span /> },
             { label: 'VAT Report',         href: '/finance/reports/vat-report',          icon: <span /> },
             { label: 'Cash Flow',          href: '/finance/reports/cash-flow-forecast',  icon: <span /> },
+            { label: 'Comparative P&L',    href: '/finance/reports/comparative-profit-loss', icon: <span /> },
             { label: 'Exchange Rates',      href: '/finance/exchange-rates',                    icon: <span /> },
             { label: 'Bank Accounts',       href: '/finance/bank-accounts',                    icon: <span /> },
             { label: 'Budgets',             href: '/finance/budgets',                          icon: <span /> },
