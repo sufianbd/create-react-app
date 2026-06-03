@@ -804,6 +804,136 @@ class ReportController extends Controller
         );
     }
 
+    public function supplierStatement(Request $request): Response
+    {
+        $this->authorize('viewAny', Bill::class);
+
+        $contactId = $request->get('contact_id');
+        $from      = $request->get('from', now()->startOfMonth()->toDateString());
+        $to        = $request->get('to', now()->toDateString());
+
+        $contacts = Contact::vendors()->orderBy('name')->get(['id', 'name', 'email']);
+
+        if (!$contactId) {
+            return Inertia::render('Finance/Reports/SupplierStatement', [
+                'contacts' => $contacts,
+                'contact'  => null,
+                'lines'    => [],
+                'summary'  => null,
+                'from'     => $from,
+                'to'       => $to,
+            ]);
+        }
+
+        $contact = Contact::findOrFail($contactId);
+
+        // Opening balance: unpaid bill amounts before $from
+        $openingBalance = (float) Bill::with(['items', 'payments'])
+            ->where('contact_id', $contactId)
+            ->where('issue_date', '<', $from)
+            ->whereNotIn('status', ['draft', 'cancelled'])
+            ->get()
+            ->sum(fn ($b) => $b->total - $b->amount_paid);
+
+        $bills = Bill::with(['items', 'payments'])
+            ->where('contact_id', $contactId)
+            ->whereBetween('issue_date', [$from, $to])
+            ->whereNotIn('status', ['draft', 'cancelled'])
+            ->orderBy('issue_date')
+            ->get();
+
+        $lines   = [];
+        $balance = $openingBalance;
+
+        foreach ($bills as $bill) {
+            $balance += $bill->total;
+            $lines[] = [
+                'date'      => $bill->issue_date instanceof \Carbon\Carbon ? $bill->issue_date->toDateString() : (string) $bill->issue_date,
+                'type'      => 'Bill',
+                'reference' => $bill->number,
+                'debit'     => $bill->total,
+                'credit'    => 0,
+                'balance'   => round($balance, 2),
+                'status'    => $bill->status,
+            ];
+
+            if ($bill->amount_paid > 0) {
+                $balance -= $bill->amount_paid;
+                $lines[] = [
+                    'date'      => $bill->issue_date instanceof \Carbon\Carbon ? $bill->issue_date->toDateString() : (string) $bill->issue_date,
+                    'type'      => 'Payment',
+                    'reference' => 'PMT-' . $bill->number,
+                    'debit'     => 0,
+                    'credit'    => $bill->amount_paid,
+                    'balance'   => round($balance, 2),
+                    'status'    => '',
+                ];
+            }
+        }
+
+        $summary = [
+            'opening_balance' => round($openingBalance, 2),
+            'total_billed'    => round($bills->sum('total'), 2),
+            'total_paid'      => round($bills->sum('amount_paid'), 2),
+            'closing_balance' => round($balance, 2),
+        ];
+
+        return Inertia::render('Finance/Reports/SupplierStatement', [
+            'contacts' => $contacts,
+            'contact'  => $contact,
+            'lines'    => $lines,
+            'summary'  => $summary,
+            'from'     => $from,
+            'to'       => $to,
+        ]);
+    }
+
+    public function exportSupplierStatement(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorize('viewAny', Bill::class);
+
+        $contactId = $request->get('contact_id');
+        $from      = $request->get('from', now()->startOfMonth()->toDateString());
+        $to        = $request->get('to', now()->toDateString());
+
+        abort_unless($contactId, 422, 'contact_id is required.');
+        $contact = Contact::findOrFail($contactId);
+
+        $openingBalance = (float) Bill::with(['items', 'payments'])
+            ->where('contact_id', $contactId)
+            ->where('issue_date', '<', $from)
+            ->whereNotIn('status', ['draft', 'cancelled'])
+            ->get()
+            ->sum(fn ($b) => $b->total - $b->amount_paid);
+
+        $bills = Bill::with(['items', 'payments'])
+            ->where('contact_id', $contactId)
+            ->whereBetween('issue_date', [$from, $to])
+            ->whereNotIn('status', ['draft', 'cancelled'])
+            ->orderBy('issue_date')
+            ->get();
+
+        $balance = $openingBalance;
+        $rows    = [['Opening Balance', '', '', '', '', round($balance, 2)]];
+
+        foreach ($bills as $bill) {
+            $balance += $bill->total;
+            $rows[] = [(string)$bill->issue_date, 'Bill', $bill->number, $bill->total, 0, round($balance, 2)];
+            if ($bill->amount_paid > 0) {
+                $balance -= $bill->amount_paid;
+                $rows[] = [(string)$bill->issue_date, 'Payment', 'PMT-' . $bill->number, 0, $bill->amount_paid, round($balance, 2)];
+            }
+        }
+
+        $filename = "supplier-statement-{$contact->name}-{$from}-{$to}.csv";
+
+        return $this->streamCsv(
+            $filename,
+            ['Date', 'Type', 'Reference', 'Debit', 'Credit', 'Balance'],
+            $rows
+        );
+    }
+
     // ─── CSV Export Methods ───────────────────────────────────────────────────
 
     public function exportProfitLoss(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
