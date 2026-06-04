@@ -537,3 +537,25 @@ export interface Commission {
     invoice?: Invoice;
     created_at: string;
 }
+
+export interface Contract {
+    id: number;
+    contact_id: number | null;
+    title: string;
+    reference: string | null;
+    type: 'client' | 'vendor' | 'employment' | 'nda' | 'other';
+    status: 'draft' | 'active' | 'expired' | 'terminated';
+    value: number | null;
+    currency_code: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    auto_renew: boolean;
+    renewal_notice_days: number;
+    description: string | null;
+    terms: string | null;
+    signed_at: string | null;
+    is_expiring: boolean;
+    is_expired: boolean;
+    contact?: Contact;
+    created_at: string;
+}

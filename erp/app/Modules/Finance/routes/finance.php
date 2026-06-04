@@ -30,6 +30,7 @@ use App\Modules\Finance\Http\Controllers\SubscriptionController;
 use App\Modules\Finance\Http\Controllers\SubscriptionPlanController;
 use App\Modules\Finance\Http\Controllers\CommissionController;
 use App\Modules\Finance\Http\Controllers\CommissionRuleController;
+use App\Modules\Finance\Http\Controllers\ContractController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -222,5 +223,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('commissions/{commission}/mark-paid',[CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
     Route::post('commissions/generate',             [CommissionController::class, 'generate'])->name('commissions.generate');
     Route::resource('commissions', CommissionController::class)->except(['edit', 'update']);
+
+
+    // Contracts
+    Route::post('contracts/{contract}/activate',  [ContractController::class, 'activate'])->name('contracts.activate');
+    Route::post('contracts/{contract}/terminate', [ContractController::class, 'terminate'])->name('contracts.terminate');
+    Route::resource('contracts', ContractController::class)->except(['show']);
+    Route::get('contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
 
 });

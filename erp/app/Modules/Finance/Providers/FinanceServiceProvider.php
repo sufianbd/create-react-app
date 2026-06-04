@@ -49,6 +49,8 @@ use App\Modules\Finance\Models\SubscriptionPlan;
 use App\Modules\Finance\Policies\SubscriptionPolicy;
 use App\Modules\Finance\Models\Commission;
 use App\Modules\Finance\Models\CommissionRule;
+use App\Modules\Finance\Models\Contract;
+use App\Modules\Finance\Policies\ContractPolicy;
 use App\Modules\Finance\Policies\CommissionPolicy;
 use App\Modules\Finance\Policies\CommissionRulePolicy;
 use Illuminate\Support\Facades\Gate;
@@ -88,6 +90,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(Subscription::class,     SubscriptionPolicy::class);
         Gate::policy(Commission::class,     CommissionPolicy::class);
         Gate::policy(CommissionRule::class, CommissionRulePolicy::class);
+        Gate::policy(Contract::class, ContractPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
