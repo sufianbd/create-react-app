@@ -273,3 +273,33 @@ export interface WorkSchedule {
     sunday_end: string | null;
     created_at: string;
 }
+
+export interface LoanRepayment {
+    id: number;
+    employee_loan_id: number;
+    amount: number;
+    payment_date: string;
+    notes: string | null;
+    created_at: string;
+}
+
+export interface EmployeeLoan {
+    id: number;
+    employee_id: number;
+    type: 'loan' | 'advance';
+    amount: number;
+    outstanding_balance: number;
+    interest_rate: number;
+    status: 'pending' | 'active' | 'completed' | 'cancelled';
+    approved_by: number | null;
+    approved_at: string | null;
+    disbursed_at: string | null;
+    purpose: string | null;
+    notes: string | null;
+    repayment_start_date: string | null;
+    total_repaid: number;
+    is_fully_repaid: boolean;
+    employee?: Employee;
+    repayments?: LoanRepayment[];
+    created_at: string;
+}

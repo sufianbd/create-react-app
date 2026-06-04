@@ -140,6 +140,7 @@ const navItems: NavItem[] = [
             { label: 'Applications',         href: '/hr/job-applications',      icon: <span /> },
             { label: 'Attendance',      href: '/hr/attendance',      icon: <span /> },
             { label: 'Work Schedules',  href: '/hr/work-schedules',  icon: <span /> },
+            { label: 'Loans & Advances', href: '/hr/employee-loans', icon: <span /> },
         ],
     },
     {

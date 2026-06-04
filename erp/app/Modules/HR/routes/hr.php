@@ -3,6 +3,7 @@
 use App\Modules\HR\Http\Controllers\AttendanceController;
 use App\Modules\HR\Http\Controllers\DepartmentController;
 use App\Modules\HR\Http\Controllers\EmployeeController;
+use App\Modules\HR\Http\Controllers\EmployeeLoanController;
 use App\Modules\HR\Http\Controllers\EmployeeOnboardingController;
 use App\Modules\HR\Http\Controllers\EmployeeTrainingRecordController;
 use App\Modules\HR\Http\Controllers\ExpenseClaimController;
@@ -105,4 +106,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
 
     // Work Schedules
     Route::resource('work-schedules', WorkScheduleController::class)->except(['edit', 'update']);
+
+    // Employee Loans
+    Route::post('employee-loans/{employeeLoan}/approve',    [EmployeeLoanController::class, 'approve'])->name('employee-loans.approve');
+    Route::post('employee-loans/{employeeLoan}/cancel',     [EmployeeLoanController::class, 'cancel'])->name('employee-loans.cancel');
+    Route::post('employee-loans/{employeeLoan}/repayments', [EmployeeLoanController::class, 'addRepayment'])->name('employee-loans.repayments.add');
+    Route::resource('employee-loans', EmployeeLoanController::class)->except(['edit', 'update']);
 });
