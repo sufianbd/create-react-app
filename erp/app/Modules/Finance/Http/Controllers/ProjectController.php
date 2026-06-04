@@ -5,6 +5,7 @@ namespace App\Modules\Finance\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Finance\Models\Contact;
 use App\Modules\Finance\Models\Project;
+use App\Modules\Finance\Models\ProjectTask;
 use App\Modules\Finance\Models\ProjectTimeEntry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,34 +14,21 @@ use Inertia\Response;
 
 class ProjectController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', Project::class);
 
-        $projects = Project::withCount(['timeEntries'])
-            ->with('contact')
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn ($p) => [
-                'id'                  => $p->id,
-                'name'                => $p->name,
-                'description'         => $p->description,
-                'status'              => $p->status,
-                'budget'              => $p->budget,
-                'contact_id'          => $p->contact_id,
-                'invoice_id'          => $p->invoice_id,
-                'starts_on'           => $p->starts_on?->toDateString(),
-                'ends_on'             => $p->ends_on?->toDateString(),
-                'contact'             => $p->contact ? ['id' => $p->contact->id, 'name' => $p->contact->name] : null,
-                'time_entries_count'  => $p->time_entries_count,
-            ]);
+        $query = Project::with('contact')->orderByDesc('created_at');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $projects = $query->paginate(15)->withQueryString();
 
         return Inertia::render('Finance/Projects/Index', [
             'projects' => $projects,
-            'breadcrumbs' => [
-                ['label' => 'Finance'],
-                ['label' => 'Projects'],
-            ],
+            'filters'  => $request->only('status'),
         ]);
     }
 
@@ -52,11 +40,6 @@ class ProjectController extends Controller
 
         return Inertia::render('Finance/Projects/Create', [
             'contacts' => $contacts,
-            'breadcrumbs' => [
-                ['label' => 'Finance'],
-                ['label' => 'Projects', 'href' => '/finance/projects'],
-                ['label' => 'New Project'],
-            ],
         ]);
     }
 
@@ -65,90 +48,40 @@ class ProjectController extends Controller
         $this->authorize('create', Project::class);
 
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'status'      => ['required', 'in:draft,active,completed,cancelled'],
-            'budget'      => ['nullable', 'numeric', 'min:0'],
-            'contact_id'  => ['nullable', 'exists:contacts,id'],
-            'invoice_id'  => ['nullable', 'exists:invoices,id'],
-            'starts_on'   => ['nullable', 'date'],
-            'ends_on'     => ['nullable', 'date'],
+            'name'         => ['required', 'string', 'max:255'],
+            'contact_id'   => ['nullable', 'exists:contacts,id'],
+            'status'       => ['nullable', 'in:planning,active,on_hold,completed,cancelled'],
+            'start_date'   => ['nullable', 'date'],
+            'end_date'     => ['nullable', 'date'],
+            'budget'       => ['nullable', 'numeric', 'min:0'],
+            'billing_type' => ['required', 'in:fixed,hourly,non_billable'],
+            'hourly_rate'  => ['nullable', 'numeric', 'min:0'],
+            'description'  => ['nullable', 'string'],
         ]);
+
+        $validated['status'] = $validated['status'] ?? 'planning';
 
         $project = Project::create(array_merge($validated, [
             'tenant_id' => $request->user()->tenant_id,
         ]));
 
-        return redirect()->route('finance.projects.show', $project)
-            ->with('success', 'Project created successfully.');
+        return redirect()->route('finance.projects.show', $project);
     }
 
     public function show(Project $project): Response
     {
         $this->authorize('view', $project);
 
-        $project->load(['timeEntries.user', 'contact', 'invoice', 'attachments']);
+        $project->load(['tasks.assignedTo', 'timeEntries.user', 'timeEntries.task', 'contact']);
+
+        $projectData = $project->toArray();
+        $projectData['total_hours']        = $project->total_hours;
+        $projectData['total_billed']       = $project->total_billed;
+        $projectData['completion_percent'] = $project->completion_percent;
 
         return Inertia::render('Finance/Projects/Show', [
-            'project' => [
-                'id'           => $project->id,
-                'name'         => $project->name,
-                'description'  => $project->description,
-                'status'       => $project->status,
-                'budget'       => $project->budget,
-                'contact_id'   => $project->contact_id,
-                'invoice_id'   => $project->invoice_id,
-                'starts_on'    => $project->starts_on?->toDateString(),
-                'ends_on'      => $project->ends_on?->toDateString(),
-                'contact'      => $project->contact ? ['id' => $project->contact->id, 'name' => $project->contact->name] : null,
-                'invoice'      => $project->invoice ? ['id' => $project->invoice->id, 'reference' => $project->invoice->number ?? '#' . $project->invoice->id] : null,
-                'total_hours'  => $project->total_hours,
-                'billable_hours' => $project->billable_hours,
-                'attachments'  => $project->attachments->map(fn ($a) => [
-                    'id' => $a->id, 'filename' => $a->filename, 'disk' => $a->disk,
-                    'path' => $a->path, 'mime_type' => $a->mime_type, 'size' => $a->size,
-                    'uploaded_by' => $a->uploaded_by, 'created_at' => $a->created_at?->toIso8601String(),
-                ]),
-                'time_entries' => $project->timeEntries->map(fn ($e) => [
-                    'id'          => $e->id,
-                    'project_id'  => $e->project_id,
-                    'user_id'     => $e->user_id,
-                    'description' => $e->description,
-                    'hours'       => $e->hours,
-                    'billable'    => $e->billable,
-                    'billed'      => $e->billed,
-                    'entry_date'  => $e->entry_date->toDateString(),
-                    'user'        => $e->user ? ['id' => $e->user->id, 'name' => $e->user->name] : null,
-                ]),
-            ],
-            'contacts' => Contact::orderBy('name')->get(['id', 'name']),
-            'breadcrumbs' => [
-                ['label' => 'Finance'],
-                ['label' => 'Projects', 'href' => '/finance/projects'],
-                ['label' => $project->name],
-            ],
+            'project' => $projectData,
         ]);
-    }
-
-    public function update(Request $request, Project $project): RedirectResponse
-    {
-        $this->authorize('update', $project);
-
-        $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'status'      => ['required', 'in:draft,active,completed,cancelled'],
-            'budget'      => ['nullable', 'numeric', 'min:0'],
-            'contact_id'  => ['nullable', 'exists:contacts,id'],
-            'invoice_id'  => ['nullable', 'exists:invoices,id'],
-            'starts_on'   => ['nullable', 'date'],
-            'ends_on'     => ['nullable', 'date'],
-        ]);
-
-        $project->update($validated);
-
-        return redirect()->route('finance.projects.show', $project)
-            ->with('success', 'Project updated successfully.');
     }
 
     public function destroy(Project $project): RedirectResponse
@@ -157,41 +90,68 @@ class ProjectController extends Controller
 
         $project->delete();
 
-        return redirect()->route('finance.projects.index')
-            ->with('success', 'Project deleted.');
+        return redirect()->route('finance.projects.index');
     }
 
-    public function storeTimeEntry(Request $request, Project $project): RedirectResponse
+    public function activate(Project $project): RedirectResponse
     {
         $this->authorize('update', $project);
 
+        $project->activate();
+
+        return redirect()->back();
+    }
+
+    public function complete(Project $project): RedirectResponse
+    {
+        $this->authorize('update', $project);
+
+        $project->complete();
+
+        return redirect()->back();
+    }
+
+    public function addTask(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorize('create', Project::class);
+
         $validated = $request->validate([
-            'description' => ['required', 'string'],
-            'hours'       => ['required', 'numeric', 'min:0.1'],
-            'billable'    => ['boolean'],
-            'entry_date'  => ['required', 'date'],
+            'title'           => ['required', 'string', 'max:255'],
+            'priority'        => ['nullable', 'in:low,medium,high'],
+            'due_date'        => ['nullable', 'date'],
+            'estimated_hours' => ['nullable', 'numeric'],
+            'description'     => ['nullable', 'string'],
+            'assigned_to'     => ['nullable', 'exists:users,id'],
         ]);
 
-        $project->timeEntries()->create(array_merge($validated, [
-            'user_id' => auth()->id(),
+        $validated['priority'] = $validated['priority'] ?? 'medium';
+
+        ProjectTask::create(array_merge($validated, [
+            'project_id' => $project->id,
+            'tenant_id'  => $project->tenant_id,
         ]));
 
-        return back()->with('success', 'Time entry logged.');
+        return redirect()->back();
     }
 
-    public function markBilled(Request $request, Project $project): RedirectResponse
+    public function addTimeEntry(Request $request, Project $project): RedirectResponse
     {
-        $this->authorize('update', $project);
+        $this->authorize('create', Project::class);
 
         $validated = $request->validate([
-            'entry_ids'   => ['array'],
-            'entry_ids.*' => ['exists:project_time_entries,id'],
+            'hours'       => ['required', 'numeric', 'min:0.01'],
+            'entry_date'  => ['required', 'date'],
+            'description' => ['nullable', 'string'],
+            'task_id'     => ['nullable', 'exists:project_tasks,id'],
+            'is_billable' => ['boolean'],
         ]);
 
-        ProjectTimeEntry::whereIn('id', $validated['entry_ids'] ?? [])
-            ->where('project_id', $project->id)
-            ->update(['billed' => true]);
+        ProjectTimeEntry::create(array_merge($validated, [
+            'project_id' => $project->id,
+            'tenant_id'  => $project->tenant_id,
+            'user_id'    => auth()->id(),
+        ]));
 
-        return back()->with('success', 'Entries marked as billed.');
+        return redirect()->back();
     }
 }

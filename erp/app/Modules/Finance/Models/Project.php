@@ -3,8 +3,6 @@
 namespace App\Modules\Finance\Models;
 
 use App\Modules\Core\Traits\BelongsToTenant;
-use App\Modules\Finance\Traits\HasAttachments;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,63 +11,100 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Project extends Model
 {
     use BelongsToTenant;
-    use HasAttachments;
     use SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
         'name',
         'description',
-        'status',
-        'budget',
         'contact_id',
-        'invoice_id',
-        'starts_on',
-        'ends_on',
+        'status',
+        'start_date',
+        'end_date',
+        'budget',
+        'billing_type',
+        'hourly_rate',
     ];
 
     protected $casts = [
-        'budget'    => 'float',
-        'starts_on' => 'date',
-        'ends_on'   => 'date',
+        'start_date'  => 'date',
+        'end_date'    => 'date',
+        'budget'      => 'decimal:2',
+        'hourly_rate' => 'decimal:2',
+        'status'      => 'string',
+        'billing_type' => 'string',
     ];
 
     // Relations
-
-    public function timeEntries(): HasMany
-    {
-        return $this->hasMany(ProjectTimeEntry::class);
-    }
 
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
     }
 
-    public function invoice(): BelongsTo
+    public function tasks(): HasMany
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->hasMany(ProjectTask::class);
+    }
+
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(ProjectTimeEntry::class);
+    }
+
+    // Actions
+
+    public function activate(): void
+    {
+        $this->status = 'active';
+        $this->save();
+    }
+
+    public function complete(): void
+    {
+        $this->status = 'completed';
+        $this->save();
     }
 
     // Accessors
 
     public function getTotalHoursAttribute(): float
     {
+        if ($this->relationLoaded('timeEntries')) {
+            return (float) $this->timeEntries->sum('hours');
+        }
         return (float) $this->timeEntries()->sum('hours');
     }
 
-    public function getBillableHoursAttribute(): float
+    public function getTotalBilledAttribute(): float
     {
-        return (float) $this->timeEntries()
-            ->where('billable', true)
-            ->where('billed', false)
-            ->sum('hours');
+        if ($this->billing_type === 'hourly') {
+            return $this->total_hours * (float) ($this->hourly_rate ?? 0);
+        }
+        if ($this->billing_type === 'fixed') {
+            return (float) ($this->budget ?? 0);
+        }
+        return 0.0;
     }
 
-    // Scopes
-
-    public function scopeActive(Builder $query): Builder
+    public function getCompletionPercentAttribute(): float
     {
-        return $query->where('status', 'active');
+        if ($this->relationLoaded('tasks')) {
+            $total = $this->tasks->count();
+        } else {
+            $total = $this->tasks()->count();
+        }
+
+        if ($total === 0) {
+            return 0.0;
+        }
+
+        if ($this->relationLoaded('tasks')) {
+            $completed = $this->tasks->where('status', 'done')->count();
+        } else {
+            $completed = $this->tasks()->where('status', 'done')->count();
+        }
+
+        return round(($completed / $total) * 100, 1);
     }
 }

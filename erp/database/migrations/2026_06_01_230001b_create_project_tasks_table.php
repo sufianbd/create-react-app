@@ -8,16 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('project_time_entries', function (Blueprint $table) {
+        Schema::create('project_tasks', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('task_id')->nullable()->nullOnDelete()->constrained('project_tasks');
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('title');
             $table->text('description')->nullable();
-            $table->decimal('hours', 8, 2)->default(0);
-            $table->date('entry_date');
-            $table->boolean('is_billable')->default(true);
+            $table->unsignedBigInteger('assigned_to')->nullable();
+            $table->string('status', 20)->default('todo');
+            $table->string('priority', 10)->default('medium');
+            $table->date('due_date')->nullable();
+            $table->decimal('estimated_hours', 8, 2)->nullable();
+            $table->decimal('actual_hours', 8, 2)->nullable();
             $table->timestamps();
             $table->index(['tenant_id', 'project_id']);
         });
@@ -25,6 +27,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('project_time_entries');
+        Schema::dropIfExists('project_tasks');
     }
 };

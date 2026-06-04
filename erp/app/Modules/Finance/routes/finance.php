@@ -22,6 +22,7 @@ use App\Modules\Finance\Http\Controllers\AttachmentController;
 use App\Modules\Finance\Http\Controllers\BatchPaymentController;
 use App\Modules\Finance\Http\Controllers\DeliveryNoteController;
 use App\Modules\Finance\Http\Controllers\ProjectController;
+use App\Modules\Finance\Http\Controllers\ProjectTaskController;
 use Illuminate\Support\Facades\Route;
 use App\Modules\Finance\Http\Controllers\VendorProfileController;
 use App\Modules\Finance\Http\Controllers\VendorEvaluationController;
@@ -175,10 +176,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::delete('price-lists/{priceList}/items/{item}', [PriceListController::class, 'removeItem'])->name('price-lists.items.remove');
     Route::resource('price-lists', PriceListController::class)->except(['edit']);
 
-    // Projects
-    Route::resource('projects', ProjectController::class)->except(['edit']);
-    Route::post('projects/{project}/time-entries', [ProjectController::class, 'storeTimeEntry'])->name('projects.time-entries.store');
-    Route::post('projects/{project}/mark-billed', [ProjectController::class, 'markBilled'])->name('projects.mark-billed');
+    // Projects — actions before resource
+    Route::post('projects/{project}/activate',         [ProjectController::class, 'activate'])->name('projects.activate');
+    Route::post('projects/{project}/complete',         [ProjectController::class, 'complete'])->name('projects.complete');
+    Route::post('projects/{project}/tasks',            [ProjectController::class, 'addTask'])->name('projects.tasks.add');
+    Route::patch('projects/{project}/tasks/{task}',    [ProjectTaskController::class, 'update'])->name('projects.tasks.update');
+    Route::delete('projects/{project}/tasks/{task}',   [ProjectTaskController::class, 'destroy'])->name('projects.tasks.destroy');
+    Route::post('projects/{project}/time-entries',     [ProjectController::class, 'addTimeEntry'])->name('projects.time-entries.add');
+    Route::resource('projects', ProjectController::class)->except(['edit', 'update']);
 
     // Batch Payments
     Route::resource('batch-payments', BatchPaymentController::class)->except(['edit', 'update']);

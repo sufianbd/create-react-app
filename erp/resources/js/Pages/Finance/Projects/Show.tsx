@@ -1,45 +1,59 @@
-import { Head } from '@inertiajs/react';
-import { useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
 import type { PageProps } from '@/types';
-import type { Project, ProjectTimeEntry, Contact } from '@/types/finance';
-import AttachmentPanel from '@/Components/Finance/AttachmentPanel';
-import { usePermission } from '@/Hooks/usePermission';
+import type { Project, ProjectTask, ProjectTimeEntry } from '@/types/finance';
 
 interface Props extends PageProps {
     project: Project;
-    contacts: Contact[];
 }
 
 const statusColors: Record<string, string> = {
-    draft: 'bg-slate-100 text-slate-600',
-    active: 'bg-green-50 text-green-700',
+    planning:  'bg-slate-100 text-slate-600',
+    active:    'bg-green-50 text-green-700',
+    on_hold:   'bg-yellow-50 text-yellow-700',
     completed: 'bg-blue-50 text-blue-700',
     cancelled: 'bg-red-50 text-red-700',
 };
 
-export default function ProjectShow({ project, contacts }: Props) {
-    const { can } = usePermission();
-    const [selectedEntries, setSelectedEntries] = useState<number[]>([]);
+const priorityColors: Record<string, string> = {
+    low:    'bg-slate-100 text-slate-600',
+    medium: 'bg-yellow-50 text-yellow-700',
+    high:   'bg-red-50 text-red-700',
+};
+
+const taskStatusColors: Record<string, string> = {
+    todo:        'bg-slate-100 text-slate-600',
+    in_progress: 'bg-blue-50 text-blue-700',
+    done:        'bg-green-50 text-green-700',
+    cancelled:   'bg-red-50 text-red-700',
+};
+
+export default function ProjectShow({ project }: Props) {
+    const taskForm = useForm({
+        title:           '',
+        priority:        'medium' as 'low' | 'medium' | 'high',
+        due_date:        '',
+        estimated_hours: '',
+        description:     '',
+        assigned_to:     '',
+    });
 
     const timeForm = useForm({
+        hours:       '',
+        entry_date:  new Date().toISOString().split('T')[0],
         description: '',
-        hours: '',
-        billable: true,
-        entry_date: new Date().toISOString().split('T')[0],
+        task_id:     '',
+        is_billable: true,
     });
 
-    const editForm = useForm({
-        name: project.name,
-        description: project.description ?? '',
-        status: project.status,
-        budget: project.budget != null ? String(project.budget) : '',
-        contact_id: project.contact_id != null ? String(project.contact_id) : '',
-        starts_on: project.starts_on ?? '',
-        ends_on: project.ends_on ?? '',
-    });
+    function submitTask(e: React.FormEvent) {
+        e.preventDefault();
+        taskForm.post(`/finance/projects/${project.id}/tasks`, {
+            onSuccess: () => taskForm.reset(),
+        });
+    }
 
     function submitTimeEntry(e: React.FormEvent) {
         e.preventDefault();
@@ -48,23 +62,14 @@ export default function ProjectShow({ project, contacts }: Props) {
         });
     }
 
-    function submitEdit(e: React.FormEvent) {
-        e.preventDefault();
-        editForm.patch(`/finance/projects/${project.id}`);
+    function updateTaskStatus(taskId: number, status: string) {
+        router.patch(`/finance/projects/${project.id}/tasks/${taskId}`, { status });
     }
 
-    function toggleEntry(id: number) {
-        setSelectedEntries((prev) =>
-            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-        );
-    }
-
-    function markBilled() {
-        router.post(`/finance/projects/${project.id}/mark-billed`, {
-            entry_ids: selectedEntries,
-        }, {
-            onSuccess: () => setSelectedEntries([]),
-        });
+    function deleteTask(taskId: number) {
+        if (confirm('Delete this task?')) {
+            router.delete(`/finance/projects/${project.id}/tasks/${taskId}`);
+        }
     }
 
     return (
@@ -73,23 +78,61 @@ export default function ProjectShow({ project, contacts }: Props) {
             <div className="mx-auto max-w-5xl space-y-6">
                 {/* Header */}
                 <div className="flex items-start justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold text-slate-900">{project.name}</h1>
-                        <div className="mt-1 flex items-center gap-3">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusColors[project.status] ?? 'bg-slate-100 text-slate-600'}`}>
-                                {project.status}
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                            <Link href="/finance/projects" className="text-sm text-slate-500 hover:text-slate-700">Projects</Link>
+                            <span className="text-slate-300">/</span>
+                            <h1 className="text-2xl font-semibold text-slate-900">{project.name}</h1>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[project.status] ?? 'bg-slate-100 text-slate-600'}`}>
+                                {project.status.replace('_', ' ')}
                             </span>
                             {project.contact && (
                                 <span className="text-sm text-slate-500">{project.contact.name}</span>
                             )}
+                            <span className="text-sm text-slate-500 capitalize">{project.billing_type.replace('_', ' ')}</span>
                         </div>
                     </div>
-                    <div className="text-right text-sm text-slate-500">
-                        {project.budget != null && (
-                            <div>Budget: <span className="font-medium text-slate-900">{project.budget.toFixed(2)}</span></div>
+                    <div className="flex gap-2">
+                        {(project.status === 'planning' || project.status === 'on_hold') && (
+                            <Button
+                                variant="secondary"
+                                onClick={() => router.post(`/finance/projects/${project.id}/activate`)}
+                            >
+                                Activate
+                            </Button>
                         )}
-                        {project.starts_on && <div>Start: {project.starts_on}</div>}
-                        {project.ends_on && <div>End: {project.ends_on}</div>}
+                        {project.status === 'active' && (
+                            <Button
+                                variant="secondary"
+                                onClick={() => router.post(`/finance/projects/${project.id}/complete`)}
+                            >
+                                Complete
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-4 gap-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="text-xs text-slate-500">Budget</div>
+                        <div className="text-xl font-semibold text-slate-900">
+                            {project.budget != null ? Number(project.budget).toFixed(2) : '—'}
+                        </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="text-xs text-slate-500">Total Hours</div>
+                        <div className="text-xl font-semibold text-slate-900">{Number(project.total_hours).toFixed(1)}</div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="text-xs text-slate-500">Total Billed</div>
+                        <div className="text-xl font-semibold text-slate-900">{Number(project.total_billed).toFixed(2)}</div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="text-xs text-slate-500">Completion</div>
+                        <div className="text-xl font-semibold text-slate-900">{Number(project.completion_percent).toFixed(1)}%</div>
                     </div>
                 </div>
 
@@ -97,230 +140,240 @@ export default function ProjectShow({ project, contacts }: Props) {
                     <p className="text-sm text-slate-600">{project.description}</p>
                 )}
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm text-slate-500">Total Hours</div>
-                        <div className="text-2xl font-semibold text-slate-900">{(project.total_hours ?? 0).toFixed(1)}</div>
-                    </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm text-slate-500">Billable Hours (Unbilled)</div>
-                        <div className="text-2xl font-semibold text-slate-900">{(project.billable_hours ?? 0).toFixed(1)}</div>
-                    </div>
-                </div>
-
-                {/* Time Entries */}
+                {/* Tasks Section */}
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-                        <h2 className="text-base font-semibold text-slate-900">Time Entries</h2>
-                        {selectedEntries.length > 0 && (
-                            <Button onClick={markBilled} variant="secondary">
-                                Mark {selectedEntries.length} as Billed
-                            </Button>
-                        )}
+                    <div className="px-4 py-3 border-b border-slate-200">
+                        <h2 className="text-base font-semibold text-slate-900">Tasks</h2>
                     </div>
                     <table className="min-w-full divide-y divide-slate-200">
                         <thead className="bg-slate-50">
                             <tr>
-                                <th className="w-8 px-4 py-3" />
-                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Hours</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Billable</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Billed</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Title</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Priority</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Due Date</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Est. Hrs</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Actual Hrs</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Update Status</th>
+                                <th className="px-4 py-3" />
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {(project.time_entries ?? []).length === 0 && (
+                            {(project.tasks ?? []).length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-400">
-                                        No time entries yet.
-                                    </td>
+                                    <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-400">No tasks yet.</td>
                                 </tr>
                             )}
-                            {(project.time_entries ?? []).map((entry: ProjectTimeEntry) => (
-                                <tr key={entry.id} className="hover:bg-slate-50">
-                                    <td className="px-4 py-3">
-                                        {!entry.billed && (
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedEntries.includes(entry.id)}
-                                                onChange={() => toggleEntry(entry.id)}
-                                                className="rounded border-slate-300 text-indigo-600"
-                                            />
+                            {(project.tasks ?? []).map((task: ProjectTask) => (
+                                <tr key={task.id} className="hover:bg-slate-50">
+                                    <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                                        {task.title}
+                                        {task.is_overdue && (
+                                            <span className="ml-2 text-xs text-red-500">Overdue</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-slate-600">{entry.entry_date}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-600">{entry.user?.name ?? '—'}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-900">{entry.description}</td>
-                                    <td className="px-4 py-3 text-sm text-right text-slate-700">{entry.hours.toFixed(2)}</td>
-                                    <td className="px-4 py-3 text-center">
-                                        <input type="checkbox" checked={entry.billable} readOnly className="rounded border-slate-300 text-indigo-600" />
+                                    <td className="px-4 py-3 text-sm">
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${priorityColors[task.priority] ?? ''}`}>
+                                            {task.priority}
+                                        </span>
                                     </td>
-                                    <td className="px-4 py-3 text-center">
-                                        {entry.billed ? (
-                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-50 text-green-700">Billed</span>
-                                        ) : (
-                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500">Unbilled</span>
-                                        )}
+                                    <td className="px-4 py-3 text-sm">
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${taskStatusColors[task.status] ?? ''}`}>
+                                            {task.status.replace('_', ' ')}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-600">{task.due_date ?? '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-right text-slate-600">
+                                        {task.estimated_hours != null ? Number(task.estimated_hours).toFixed(1) : '—'}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-right text-slate-600">
+                                        {task.actual_hours != null ? Number(task.actual_hours).toFixed(1) : '—'}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                        <select
+                                            defaultValue={task.status}
+                                            onChange={(e) => updateTaskStatus(task.id, e.target.value)}
+                                            className="rounded border border-slate-300 px-2 py-1 text-xs focus:outline-none"
+                                        >
+                                            <option value="todo">Todo</option>
+                                            <option value="in_progress">In Progress</option>
+                                            <option value="done">Done</option>
+                                            <option value="cancelled">Cancelled</option>
+                                        </select>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-right">
+                                        <button
+                                            onClick={() => deleteTask(task.id)}
+                                            className="text-red-500 hover:text-red-700 text-xs"
+                                        >
+                                            Delete
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Add Task Form */}
+                    <div className="border-t border-slate-200 p-4">
+                        <h3 className="text-sm font-medium text-slate-700 mb-3">Add Task</h3>
+                        <form onSubmit={submitTask} className="space-y-3">
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="col-span-2">
+                                    <input
+                                        placeholder="Task title *"
+                                        value={taskForm.data.title}
+                                        onChange={(e) => taskForm.setData('title', e.target.value)}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                                    />
+                                    {taskForm.errors.title && <p className="mt-1 text-xs text-red-500">{taskForm.errors.title}</p>}
+                                </div>
+                                <div>
+                                    <select
+                                        value={taskForm.data.priority}
+                                        onChange={(e) => taskForm.setData('priority', e.target.value as typeof taskForm.data.priority)}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none"
+                                    >
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <input
+                                        type="date"
+                                        placeholder="Due date"
+                                        value={taskForm.data.due_date}
+                                        onChange={(e) => taskForm.setData('due_date', e.target.value)}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        step={0.5}
+                                        placeholder="Est. hours"
+                                        value={taskForm.data.estimated_hours}
+                                        onChange={(e) => taskForm.setData('estimated_hours', e.target.value)}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none"
+                                    />
+                                </div>
+                                <div className="flex items-end">
+                                    <Button type="submit" disabled={taskForm.processing}>Add Task</Button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
-                {/* Log Time Form */}
-                <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-base font-semibold text-slate-900 mb-4">Log Time</h2>
-                    <form onSubmit={submitTimeEntry} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
-                                    Description <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    value={timeForm.data.description}
-                                    onChange={(e) => timeForm.setData('description', e.target.value)}
-                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
-                                {timeForm.errors.description && <p className="mt-1 text-xs text-red-500">{timeForm.errors.description}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
-                                    Hours <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    min={0.1}
-                                    step={0.1}
-                                    value={timeForm.data.hours}
-                                    onChange={(e) => timeForm.setData('hours', e.target.value)}
-                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
-                                {timeForm.errors.hours && <p className="mt-1 text-xs text-red-500">{timeForm.errors.hours}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                                <input
-                                    type="date"
-                                    value={timeForm.data.entry_date}
-                                    onChange={(e) => timeForm.setData('entry_date', e.target.value)}
-                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <label className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    checked={timeForm.data.billable}
-                                    onChange={(e) => timeForm.setData('billable', e.target.checked)}
-                                    className="rounded border-slate-300 text-indigo-600"
-                                />
-                                <span className="text-slate-700">Billable</span>
-                            </label>
-                            <Button type="submit" disabled={timeForm.processing}>Log Time</Button>
-                        </div>
-                    </form>
-                </div>
+                {/* Time Entries Section */}
+                <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+                    <div className="px-4 py-3 border-b border-slate-200">
+                        <h2 className="text-base font-semibold text-slate-900">Time Entries</h2>
+                    </div>
+                    <table className="min-w-full divide-y divide-slate-200">
+                        <thead className="bg-slate-50">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">User</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Task</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">Hours</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase">Billable</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {(project.time_entries ?? []).length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-400">No time entries yet.</td>
+                                </tr>
+                            )}
+                            {(project.time_entries ?? []).map((entry: ProjectTimeEntry) => (
+                                <tr key={entry.id} className="hover:bg-slate-50">
+                                    <td className="px-4 py-3 text-sm text-slate-600">{entry.entry_date}</td>
+                                    <td className="px-4 py-3 text-sm text-slate-600">{entry.user?.name ?? '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-slate-600">{entry.task?.title ?? '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-right text-slate-700 font-medium">{Number(entry.hours).toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-center">
+                                        {entry.is_billable ? (
+                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-50 text-green-700">Yes</span>
+                                        ) : (
+                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500">No</span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-600">{entry.description ?? '—'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
 
-                {/* Attachments */}
-                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <AttachmentPanel
-                        attachments={project.attachments ?? []}
-                        modelType="projects"
-                        modelId={project.id}
-                        canDelete={can('finance.delete')}
-                    />
-                </div>
-
-                {/* Edit Project */}
-                <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-base font-semibold text-slate-900 mb-4">Edit Project</h2>
-                    <form onSubmit={submitEdit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
-                            <input
-                                value={editForm.data.name}
-                                onChange={(e) => editForm.setData('name', e.target.value)}
-                                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            {editForm.errors.name && <p className="mt-1 text-xs text-red-500">{editForm.errors.name}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                            <textarea
-                                value={editForm.data.description}
-                                onChange={(e) => editForm.setData('description', e.target.value)}
-                                rows={2}
-                                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                                <select
-                                    value={editForm.data.status}
-                                    onChange={(e) => editForm.setData('status', e.target.value as typeof editForm.data.status)}
-                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                                >
-                                    <option value="draft">Draft</option>
-                                    <option value="active">Active</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                    {/* Add Time Entry Form */}
+                    <div className="border-t border-slate-200 p-4">
+                        <h3 className="text-sm font-medium text-slate-700 mb-3">Log Time</h3>
+                        <form onSubmit={submitTimeEntry} className="space-y-3">
+                            <div className="grid grid-cols-4 gap-3">
+                                <div>
+                                    <input
+                                        type="number"
+                                        min={0.01}
+                                        step={0.25}
+                                        placeholder="Hours *"
+                                        value={timeForm.data.hours}
+                                        onChange={(e) => timeForm.setData('hours', e.target.value)}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none"
+                                    />
+                                    {timeForm.errors.hours && <p className="mt-1 text-xs text-red-500">{timeForm.errors.hours}</p>}
+                                </div>
+                                <div>
+                                    <input
+                                        type="date"
+                                        value={timeForm.data.entry_date}
+                                        onChange={(e) => timeForm.setData('entry_date', e.target.value)}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <select
+                                        value={timeForm.data.task_id}
+                                        onChange={(e) => timeForm.setData('task_id', e.target.value)}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none"
+                                    >
+                                        <option value="">No Task</option>
+                                        {(project.tasks ?? []).map((task: ProjectTask) => (
+                                            <option key={task.id} value={task.id}>{task.title}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={timeForm.data.is_billable}
+                                            onChange={(e) => timeForm.setData('is_billable', e.target.checked)}
+                                            className="rounded border-slate-300 text-indigo-600"
+                                        />
+                                        <span className="text-slate-700">Billable</span>
+                                    </label>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Budget</label>
-                                <input
-                                    type="number"
-                                    min={0}
-                                    step={0.01}
-                                    value={editForm.data.budget}
-                                    onChange={(e) => editForm.setData('budget', e.target.value)}
-                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
+                            <div className="grid grid-cols-4 gap-3">
+                                <div className="col-span-3">
+                                    <input
+                                        placeholder="Description"
+                                        value={timeForm.data.description}
+                                        onChange={(e) => timeForm.setData('description', e.target.value)}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <Button type="submit" disabled={timeForm.processing}>Log Time</Button>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Contact</label>
-                            <select
-                                value={editForm.data.contact_id}
-                                onChange={(e) => editForm.setData('contact_id', e.target.value)}
-                                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                            >
-                                <option value="">None</option>
-                                {contacts.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-                                <input
-                                    type="date"
-                                    value={editForm.data.starts_on}
-                                    onChange={(e) => editForm.setData('starts_on', e.target.value)}
-                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-                                <input
-                                    type="date"
-                                    value={editForm.data.ends_on}
-                                    onChange={(e) => editForm.setData('ends_on', e.target.value)}
-                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={editForm.processing}>Save Changes</Button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </AppLayout>

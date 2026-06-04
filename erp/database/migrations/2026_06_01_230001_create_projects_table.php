@@ -10,17 +10,19 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('tenant_id');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('status', ['draft', 'active', 'completed', 'cancelled'])->default('active');
+            $table->foreignId('contact_id')->nullable()->nullOnDelete()->constrained('contacts');
+            $table->string('status', 20)->default('planning');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->decimal('budget', 14, 2)->nullable();
-            $table->foreignId('contact_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('invoice_id')->nullable()->constrained()->nullOnDelete();
-            $table->date('starts_on')->nullable();
-            $table->date('ends_on')->nullable();
-            $table->timestamps();
+            $table->string('billing_type', 20)->default('non_billable');
+            $table->decimal('hourly_rate', 10, 2)->nullable();
             $table->softDeletes();
+            $table->timestamps();
+            $table->index(['tenant_id', 'status']);
         });
     }
 

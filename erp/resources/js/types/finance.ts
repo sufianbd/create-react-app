@@ -314,35 +314,52 @@ export interface BankTransaction {
     imported_at: string | null;
 }
 
-export interface Project {
+export interface ProjectTask {
     id: number;
-    name: string;
+    project_id: number;
+    title: string;
     description: string | null;
-    status: 'draft' | 'active' | 'completed' | 'cancelled';
-    budget: number | null;
-    contact_id: number | null;
-    invoice_id: number | null;
-    starts_on: string | null;
-    ends_on: string | null;
-    contact?: Contact;
-    invoice?: { id: number; reference: string };
-    time_entries?: ProjectTimeEntry[];
-    time_entries_count?: number;
-    total_hours?: number;
-    billable_hours?: number;
-    attachments?: Attachment[];
+    assigned_to: number | null;
+    status: 'todo' | 'in_progress' | 'done' | 'cancelled';
+    priority: 'low' | 'medium' | 'high';
+    due_date: string | null;
+    estimated_hours: number | null;
+    actual_hours: number | null;
+    is_overdue: boolean;
+    assigned_to_user?: { id: number; name: string } | null;
 }
 
 export interface ProjectTimeEntry {
     id: number;
     project_id: number;
+    task_id: number | null;
     user_id: number;
-    description: string;
+    description: string | null;
     hours: number;
-    billable: boolean;
-    billed: boolean;
     entry_date: string;
+    is_billable: boolean;
     user?: { id: number; name: string };
+    task?: ProjectTask | null;
+}
+
+export interface Project {
+    id: number;
+    name: string;
+    description: string | null;
+    contact_id: number | null;
+    status: 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
+    start_date: string | null;
+    end_date: string | null;
+    budget: number | null;
+    billing_type: 'fixed' | 'hourly' | 'non_billable';
+    hourly_rate: number | null;
+    total_hours: number;
+    total_billed: number;
+    completion_percent: number;
+    contact?: { id: number; name: string } | null;
+    tasks?: ProjectTask[];
+    time_entries?: ProjectTimeEntry[];
+    created_at: string;
 }
 
 export interface Attachment {
