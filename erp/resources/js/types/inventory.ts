@@ -278,3 +278,30 @@ export interface ProductCostSnapshot {
     total_value: number;
     product?: Product;
 }
+
+export interface DemandForecast {
+    id: number;
+    product_id: number;
+    warehouse_id: number | null;
+    forecast_date: string;
+    forecasted_quantity: number;
+    actual_quantity: number | null;
+    method: 'moving_avg' | 'weighted_avg' | 'manual';
+    confidence_score: number | null;
+    notes: string | null;
+    accuracy: number | null;
+    product?: Product;
+    created_at: string;
+}
+
+export interface ForecastAlert {
+    id: number;
+    product_id: number;
+    alert_type: 'stockout_risk' | 'overstock' | 'reorder_point' | 'demand_spike';
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    message: string;
+    is_resolved: boolean;
+    resolved_at: string | null;
+    product?: Product;
+    created_at: string;
+}

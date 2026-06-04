@@ -73,6 +73,7 @@ const navItems: NavItem[] = [
             { label: 'QC Checklists',   href: '/inventory/qc-checklists',   icon: <span /> },
             { label: 'QC Inspections',  href: '/inventory/qc-inspections',  icon: <span /> },
             { label: 'Costing',  href: '/inventory/costing',  icon: <span /> },
+            { label: 'Demand Forecasts', href: '/inventory/demand-forecasts', icon: <span /> },
         ],
     },
     {

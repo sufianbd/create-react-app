@@ -4,6 +4,8 @@ namespace App\Modules\Inventory\Providers;
 
 use App\Modules\Inventory\Models\Asset;
 use App\Modules\Inventory\Models\AssetMaintenance;
+use App\Modules\Inventory\Models\DemandForecast;
+use App\Modules\Inventory\Models\ForecastAlert;
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\ProductBundleItem;
 use App\Modules\Inventory\Models\ProductCategory;
@@ -18,6 +20,7 @@ use App\Modules\Inventory\Models\StockTransferItem;
 use App\Modules\Inventory\Models\WarehouseStock;
 use App\Modules\Inventory\Models\WarehouseTransfer;
 use App\Modules\Inventory\Policies\AssetPolicy;
+use App\Modules\Inventory\Policies\ForecastPolicy;
 use App\Modules\Inventory\Policies\ProductCategoryPolicy;
 use App\Modules\Inventory\Policies\ProductPolicy;
 use App\Modules\Inventory\Policies\PurchaseRequisitionPolicy;
@@ -56,5 +59,7 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(QcInspectionResult::class, QcPolicy::class);
         Gate::policy(CostingLayer::class, CostingPolicy::class);
         Gate::policy(ProductCostSnapshot::class, CostingPolicy::class);
+        Gate::policy(DemandForecast::class, ForecastPolicy::class);
+        Gate::policy(ForecastAlert::class,    ForecastPolicy::class);
     }
 }

@@ -18,6 +18,7 @@ use App\Modules\Inventory\Http\Controllers\SupplierController;
 use App\Modules\Inventory\Http\Controllers\WarehouseController;
 use App\Modules\Inventory\Http\Controllers\WarehouseTransferController;
 use App\Modules\Inventory\Http\Controllers\WarehouseStockController;
+use App\Modules\Inventory\Http\Controllers\DemandForecastController;
 use App\Modules\Inventory\Http\Controllers\StockTransferController;
 use Illuminate\Support\Facades\Route;
 
@@ -121,4 +122,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::get('costing/{product}/layers',        [CostingController::class, 'layers'])->name('costing.layers');
     Route::post('costing/add-layer',              [CostingController::class, 'addLayer'])->name('costing.add-layer');
     Route::post('costing/snapshot',               [CostingController::class, 'snapshot'])->name('costing.snapshot');
+});
+
+// Demand Forecasting - custom actions BEFORE resource
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::get('demand-forecasts/alerts',                      [DemandForecastController::class, 'alerts'])->name('demand-forecasts.alerts');
+    Route::post('demand-forecasts/generate',                   [DemandForecastController::class, 'generateForecast'])->name('demand-forecasts.generate');
+    Route::post('demand-forecasts/alerts/{alert}/resolve',     [DemandForecastController::class, 'resolveAlert'])->name('demand-forecasts.alerts.resolve');
+    Route::resource('demand-forecasts', DemandForecastController::class)->except(['edit']);
 });
