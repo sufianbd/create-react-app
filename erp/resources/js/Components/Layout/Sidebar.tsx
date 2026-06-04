@@ -120,6 +120,8 @@ const navItems: NavItem[] = [
             { label: 'Commissions', href: '/finance/commissions', icon: <span /> },
             { label: 'Contracts', href: '/finance/contracts', icon: <span /> },
             { label: 'Returns',   href: '/finance/return-requests', icon: <span /> },
+            { label: 'Tax Rates',   href: '/finance/tax-rates',   icon: <span /> },
+            { label: 'Tax Groups',  href: '/finance/tax-groups',  icon: <span /> },
         ],
     },
     {

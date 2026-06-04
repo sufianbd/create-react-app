@@ -32,6 +32,8 @@ use App\Modules\Finance\Http\Controllers\CommissionController;
 use App\Modules\Finance\Http\Controllers\CommissionRuleController;
 use App\Modules\Finance\Http\Controllers\ContractController;
 use App\Modules\Finance\Http\Controllers\ReturnRequestController;
+use App\Modules\Finance\Http\Controllers\TaxRateController;
+use App\Modules\Finance\Http\Controllers\TaxGroupController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -239,5 +241,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('return-requests/{returnRequest}/reject',        [ReturnRequestController::class, 'reject'])->name('return-requests.reject');
     Route::post('return-requests/{returnRequest}/mark-refunded', [ReturnRequestController::class, 'markRefunded'])->name('return-requests.mark-refunded');
     Route::resource('return-requests', ReturnRequestController::class)->except(['edit', 'update']);
+    // Tax Rates
+    Route::resource('tax-rates', TaxRateController::class)->except(['edit', 'update']);
+
+    // Tax Groups — custom actions BEFORE resource
+    Route::post('tax-groups/{taxGroup}/rates',        [TaxGroupController::class, 'addRate'])->name('tax-groups.rates.add');
+    Route::delete('tax-groups/{taxGroup}/rates/{item}', [TaxGroupController::class, 'removeRate'])->name('tax-groups.rates.remove');
+    Route::resource('tax-groups', TaxGroupController::class)->except(['edit', 'update']);
 
 });

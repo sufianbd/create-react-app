@@ -57,6 +57,10 @@ use App\Modules\Finance\Policies\CommissionRulePolicy;
 use App\Modules\Finance\Models\ReturnRequest;
 use App\Modules\Finance\Models\ReturnRequestItem;
 use App\Modules\Finance\Policies\ReturnRequestPolicy;
+use App\Modules\Finance\Models\TaxRate;
+use App\Modules\Finance\Models\TaxGroup;
+use App\Modules\Finance\Models\TaxGroupItem;
+use App\Modules\Finance\Policies\TaxPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -99,6 +103,10 @@ class FinanceServiceProvider extends ServiceProvider
 
         Gate::policy(ReturnRequest::class,     ReturnRequestPolicy::class);
         Gate::policy(ReturnRequestItem::class, ReturnRequestPolicy::class);
+
+        Gate::policy(TaxRate::class,      TaxPolicy::class);
+        Gate::policy(TaxGroup::class,     TaxPolicy::class);
+        Gate::policy(TaxGroupItem::class, TaxPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);

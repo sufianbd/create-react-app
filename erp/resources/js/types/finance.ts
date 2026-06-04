@@ -594,3 +594,32 @@ export interface ReturnRequest {
     items?: ReturnRequestItem[];
     created_at: string;
 }
+
+export interface TaxRate {
+    id: number;
+    name: string;
+    rate: number;
+    tax_type: 'sales' | 'purchase' | 'both';
+    is_compound: boolean;
+    is_active: boolean;
+    account_id: number | null;
+    created_at: string;
+}
+
+export interface TaxGroupItem {
+    id: number;
+    tax_group_id: number;
+    tax_rate_id: number;
+    tax_rate?: TaxRate;
+}
+
+export interface TaxGroup {
+    id: number;
+    name: string;
+    description: string | null;
+    is_active: boolean;
+    total_rate?: number;
+    items_count?: number;
+    items?: TaxGroupItem[];
+    created_at: string;
+}
