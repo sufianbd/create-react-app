@@ -237,3 +237,39 @@ export interface JobApplication {
     job_position?: JobPosition;
     created_at: string;
 }
+
+export interface AttendanceRecord {
+    id: number;
+    employee_id: number;
+    work_date: string;
+    clock_in: string | null;
+    clock_out: string | null;
+    break_minutes: number;
+    status: 'present' | 'absent' | 'half_day' | 'holiday' | 'leave';
+    notes: string | null;
+    worked_hours: number | null;
+    is_late: boolean;
+    employee?: Employee;
+    created_at: string;
+}
+
+export interface WorkSchedule {
+    id: number;
+    name: string;
+    is_default: boolean;
+    monday_start: string | null;
+    monday_end: string | null;
+    tuesday_start: string | null;
+    tuesday_end: string | null;
+    wednesday_start: string | null;
+    wednesday_end: string | null;
+    thursday_start: string | null;
+    thursday_end: string | null;
+    friday_start: string | null;
+    friday_end: string | null;
+    saturday_start: string | null;
+    saturday_end: string | null;
+    sunday_start: string | null;
+    sunday_end: string | null;
+    created_at: string;
+}

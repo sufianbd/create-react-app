@@ -117,6 +117,8 @@ const navItems: NavItem[] = [
             { label: 'Training',             href: '/hr/training-courses',      icon: <span /> },
             { label: 'Job Positions',        href: '/hr/job-positions',         icon: <span /> },
             { label: 'Applications',         href: '/hr/job-applications',      icon: <span /> },
+            { label: 'Attendance',      href: '/hr/attendance',      icon: <span /> },
+            { label: 'Work Schedules',  href: '/hr/work-schedules',  icon: <span /> },
         ],
     },
     {

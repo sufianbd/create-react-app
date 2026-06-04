@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\HR\Http\Controllers\AttendanceController;
 use App\Modules\HR\Http\Controllers\DepartmentController;
 use App\Modules\HR\Http\Controllers\EmployeeController;
 use App\Modules\HR\Http\Controllers\EmployeeOnboardingController;
@@ -13,6 +14,7 @@ use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
 use App\Modules\HR\Http\Controllers\PerformanceReviewController;
 use App\Modules\HR\Http\Controllers\TrainingCourseController;
+use App\Modules\HR\Http\Controllers\WorkScheduleController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
@@ -97,4 +99,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::patch('job-applications/{jobApplication}/advance', [JobApplicationController::class, 'advance'])->name('job-applications.advance');
     Route::post('job-applications/{jobApplication}/reject',   [JobApplicationController::class, 'reject'])->name('job-applications.reject');
     Route::resource('job-applications', JobApplicationController::class)->except(['edit', 'update']);
+
+    // Attendance
+    Route::resource('attendance', AttendanceController::class)->except(['edit']);
+
+    // Work Schedules
+    Route::resource('work-schedules', WorkScheduleController::class)->except(['edit', 'update']);
 });
