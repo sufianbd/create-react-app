@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Inventory\Http\Controllers\AssetController;
+use App\Modules\Inventory\Http\Controllers\AssetMaintenanceController;
 use App\Modules\Inventory\Http\Controllers\CategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductCategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductController;
@@ -74,4 +76,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('purchase-requisitions/{purchaseRequisition}/submit', [PurchaseRequisitionController::class, 'submit'])->name('purchase-requisitions.submit');
     Route::post('purchase-requisitions/{purchaseRequisition}/approve', [PurchaseRequisitionController::class, 'approve'])->name('purchase-requisitions.approve');
     Route::post('purchase-requisitions/{purchaseRequisition}/reject', [PurchaseRequisitionController::class, 'reject'])->name('purchase-requisitions.reject');
+
+    // Assets
+    Route::post('assets/{asset}/dispose', [AssetController::class, 'dispose'])->name('assets.dispose');
+    Route::patch('assets/{asset}/assign', [AssetController::class, 'assign'])->name('assets.assign');
+    Route::resource('assets', AssetController::class)->except(['edit', 'update']);
+
+    // Asset Maintenances
+    Route::patch('asset-maintenances/{assetMaintenance}/complete', [AssetMaintenanceController::class, 'complete'])->name('asset-maintenances.complete');
+    Route::resource('asset-maintenances', AssetMaintenanceController::class)->except(['edit', 'update']);
 });

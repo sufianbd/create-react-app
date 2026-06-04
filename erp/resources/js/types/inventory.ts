@@ -121,3 +121,38 @@ export interface PurchaseRequisition {
     items?: PurchaseRequisitionItem[];
     created_at: string;
 }
+
+export interface Asset {
+    id: number;
+    name: string;
+    asset_code: string | null;
+    category: string | null;
+    location: string | null;
+    assigned_to_employee_id: number | null;
+    purchase_date: string | null;
+    purchase_cost: number | null;
+    current_value: number | null;
+    status: 'active' | 'inactive' | 'disposed' | 'under_maintenance';
+    serial_number: string | null;
+    notes: string | null;
+    disposed_at: string | null;
+    depreciation: number | null;
+    maintenances_count?: number;
+    assigned_employee?: { id: number; first_name: string; last_name: string } | null;
+    maintenances?: AssetMaintenance[];
+    created_at: string;
+}
+
+export interface AssetMaintenance {
+    id: number;
+    asset_id: number;
+    scheduled_date: string;
+    completed_date: string | null;
+    type: 'routine' | 'repair' | 'inspection' | 'calibration';
+    description: string | null;
+    cost: number | null;
+    performed_by: string | null;
+    status: 'scheduled' | 'completed' | 'cancelled';
+    asset?: Asset;
+    created_at: string;
+}
