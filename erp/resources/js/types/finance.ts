@@ -559,3 +559,33 @@ export interface Contract {
     contact?: Contact;
     created_at: string;
 }
+
+export interface ReturnRequestItem {
+    id: number;
+    return_request_id: number;
+    invoice_item_id: number | null;
+    product_name: string;
+    quantity: number;
+    unit_price: number;
+    reason: string | null;
+}
+
+export interface ReturnRequest {
+    id: number;
+    tenant_id: number;
+    invoice_id: number | null;
+    contact_id: number | null;
+    reason: string;
+    status: 'pending' | 'approved' | 'rejected' | 'refunded';
+    refund_amount: number;
+    notes: string | null;
+    approved_by: number | null;
+    approved_at: string | null;
+    refunded_at: string | null;
+    total_requested: number;
+    contact?: Contact;
+    invoice?: { id: number; number: string } | null;
+    approved_by_user?: { id: number; name: string } | null;
+    items?: ReturnRequestItem[];
+    created_at: string;
+}

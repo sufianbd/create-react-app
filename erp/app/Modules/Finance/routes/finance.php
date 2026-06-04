@@ -31,6 +31,7 @@ use App\Modules\Finance\Http\Controllers\SubscriptionPlanController;
 use App\Modules\Finance\Http\Controllers\CommissionController;
 use App\Modules\Finance\Http\Controllers\CommissionRuleController;
 use App\Modules\Finance\Http\Controllers\ContractController;
+use App\Modules\Finance\Http\Controllers\ReturnRequestController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -230,5 +231,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('contracts/{contract}/terminate', [ContractController::class, 'terminate'])->name('contracts.terminate');
     Route::resource('contracts', ContractController::class)->except(['show']);
     Route::get('contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
+
+    // Return Requests — custom actions BEFORE resource
+    Route::post('return-requests/{returnRequest}/approve',       [ReturnRequestController::class, 'approve'])->name('return-requests.approve');
+    Route::post('return-requests/{returnRequest}/reject',        [ReturnRequestController::class, 'reject'])->name('return-requests.reject');
+    Route::post('return-requests/{returnRequest}/mark-refunded', [ReturnRequestController::class, 'markRefunded'])->name('return-requests.mark-refunded');
+    Route::resource('return-requests', ReturnRequestController::class)->except(['edit', 'update']);
 
 });

@@ -118,6 +118,7 @@ const navItems: NavItem[] = [
             { label: 'Sub Plans',     href: '/finance/subscription-plans', icon: <span /> },
             { label: 'Commissions', href: '/finance/commissions', icon: <span /> },
             { label: 'Contracts', href: '/finance/contracts', icon: <span /> },
+            { label: 'Returns',   href: '/finance/return-requests', icon: <span /> },
         ],
     },
     {

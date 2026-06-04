@@ -53,6 +53,9 @@ use App\Modules\Finance\Models\Contract;
 use App\Modules\Finance\Policies\ContractPolicy;
 use App\Modules\Finance\Policies\CommissionPolicy;
 use App\Modules\Finance\Policies\CommissionRulePolicy;
+use App\Modules\Finance\Models\ReturnRequest;
+use App\Modules\Finance\Models\ReturnRequestItem;
+use App\Modules\Finance\Policies\ReturnRequestPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -91,6 +94,9 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(Commission::class,     CommissionPolicy::class);
         Gate::policy(CommissionRule::class, CommissionRulePolicy::class);
         Gate::policy(Contract::class, ContractPolicy::class);
+
+        Gate::policy(ReturnRequest::class,     ReturnRequestPolicy::class);
+        Gate::policy(ReturnRequestItem::class, ReturnRequestPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
