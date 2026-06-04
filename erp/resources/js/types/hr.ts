@@ -138,3 +138,36 @@ export interface EmployeeOnboarding {
     tasks?: EmployeeOnboardingTask[];
     created_at: string;
 }
+
+export interface PerformanceReviewGoal {
+    id: number;
+    title: string;
+    description: string | null;
+    achieved: boolean;
+    achievement_notes: string | null;
+}
+
+export interface PerformanceReviewCompetency {
+    id: number;
+    name: string;
+    rating: number | null;
+    notes: string | null;
+}
+
+export interface PerformanceReview {
+    id: number;
+    employee_id: number;
+    reviewer_id: number | null;
+    period_start: string;
+    period_end: string;
+    status: 'draft' | 'in_review' | 'completed';
+    overall_rating: number | null;
+    comments: string | null;
+    completed_at: string | null;
+    average_competency_rating: number | null;
+    employee?: Employee;
+    reviewer?: { id: number; name: string } | null;
+    goals?: PerformanceReviewGoal[];
+    competencies?: PerformanceReviewCompetency[];
+    created_at: string;
+}

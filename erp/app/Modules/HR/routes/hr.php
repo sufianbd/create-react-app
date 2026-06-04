@@ -8,6 +8,7 @@ use App\Modules\HR\Http\Controllers\LeaveRequestController;
 use App\Modules\HR\Http\Controllers\OnboardingTemplateController;
 use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
+use App\Modules\HR\Http\Controllers\PerformanceReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
@@ -65,6 +66,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
         Route::post('onboardings/{onboarding}/tasks/{task}/complete', [EmployeeOnboardingController::class, 'completeTask'])->name('onboardings.tasks.complete');
         Route::post('onboardings/{onboarding}/tasks/{task}/uncomplete', [EmployeeOnboardingController::class, 'uncompleteTask'])->name('onboardings.tasks.uncomplete');
     });
+
+    // Performance Reviews
+    Route::resource('performance-reviews', PerformanceReviewController::class)->except(['edit', 'update']);
+    Route::post('performance-reviews/{performanceReview}/start', [PerformanceReviewController::class, 'startReview'])->name('performance-reviews.start');
+    Route::post('performance-reviews/{performanceReview}/complete', [PerformanceReviewController::class, 'complete'])->name('performance-reviews.complete');
+    Route::patch('performance-reviews/{performanceReview}/goals/{goal}', [PerformanceReviewController::class, 'updateGoal'])->name('performance-reviews.goals.update');
 
     // Expense Claims
     Route::post('expense-claims/{expenseClaim}/submit',    [ExpenseClaimController::class, 'submit'])->name('expense-claims.submit');
