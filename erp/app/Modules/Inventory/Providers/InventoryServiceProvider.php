@@ -9,12 +9,16 @@ use App\Modules\Inventory\Models\ProductBundleItem;
 use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\PurchaseRequisition;
 use App\Modules\Inventory\Models\StockAdjustment;
+use App\Modules\Inventory\Models\StockTransfer;
+use App\Modules\Inventory\Models\StockTransferItem;
+use App\Modules\Inventory\Models\WarehouseStock;
 use App\Modules\Inventory\Models\WarehouseTransfer;
 use App\Modules\Inventory\Policies\AssetPolicy;
 use App\Modules\Inventory\Policies\ProductCategoryPolicy;
 use App\Modules\Inventory\Policies\ProductPolicy;
 use App\Modules\Inventory\Policies\PurchaseRequisitionPolicy;
 use App\Modules\Inventory\Policies\StockAdjustmentPolicy;
+use App\Modules\Inventory\Policies\StockTransferPolicy;
 use App\Modules\Inventory\Policies\WarehouseTransferPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -35,5 +39,8 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(Asset::class,            AssetPolicy::class);
         Gate::policy(AssetMaintenance::class, AssetPolicy::class);
         Gate::policy(ProductBundleItem::class, ProductPolicy::class);
+        Gate::policy(WarehouseStock::class,    StockTransferPolicy::class);
+        Gate::policy(StockTransfer::class,     StockTransferPolicy::class);
+        Gate::policy(StockTransferItem::class, StockTransferPolicy::class);
     }
 }

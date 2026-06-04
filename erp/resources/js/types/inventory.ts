@@ -169,3 +169,37 @@ export interface AssetMaintenance {
     asset?: Asset;
     created_at: string;
 }
+
+export interface WarehouseStock {
+    id: number;
+    warehouse_id: number;
+    product_id: number;
+    quantity: number;
+    reorder_point: number | null;
+    is_below_reorder_point: boolean;
+    warehouse?: Warehouse;
+    product?: Product;
+}
+
+export interface StockTransferItem {
+    id: number;
+    stock_transfer_id: number;
+    product_id: number;
+    quantity: number;
+    product?: Product;
+}
+
+export interface StockTransfer {
+    id: number;
+    reference: string | null;
+    from_warehouse_id: number;
+    to_warehouse_id: number;
+    status: 'draft' | 'in_transit' | 'completed' | 'cancelled';
+    notes: string | null;
+    transferred_at: string | null;
+    items_count?: number;
+    from_warehouse?: Warehouse;
+    to_warehouse?: Warehouse;
+    items?: StockTransferItem[];
+    created_at: string;
+}

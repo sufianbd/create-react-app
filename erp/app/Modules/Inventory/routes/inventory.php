@@ -14,6 +14,8 @@ use App\Modules\Inventory\Http\Controllers\StockMovementController;
 use App\Modules\Inventory\Http\Controllers\SupplierController;
 use App\Modules\Inventory\Http\Controllers\WarehouseController;
 use App\Modules\Inventory\Http\Controllers\WarehouseTransferController;
+use App\Modules\Inventory\Http\Controllers\WarehouseStockController;
+use App\Modules\Inventory\Http\Controllers\StockTransferController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
@@ -93,4 +95,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::resource('product-bundles', ProductBundleController::class)
         ->except(['edit', 'update'])
         ->parameters(['product-bundles' => 'productBundle']);
+
+    // Warehouse Stock
+    Route::resource('warehouse-stock', WarehouseStockController::class)->only(['index', 'show', 'update']);
+
+    // Stock Transfers
+    Route::post('stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete'])->name('stock-transfers.complete');
+    Route::post('stock-transfers/{stockTransfer}/cancel',   [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel');
+    Route::resource('stock-transfers', StockTransferController::class)->except(['edit', 'update']);
 });
