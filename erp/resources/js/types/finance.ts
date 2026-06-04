@@ -47,6 +47,8 @@ export interface Contact {
     is_active: boolean;
     price_list_id?: number | null;
     created_at?: string;
+    vendor_profile?: VendorProfile;
+    vendor_evaluations?: VendorEvaluation[];
 }
 
 export interface PriceList {
@@ -398,5 +400,33 @@ export interface DeliveryNote {
     salesOrder?: SalesOrder | null;
     invoice?: Invoice | null;
     items?: DeliveryNoteItem[];
+    created_at: string;
+}
+
+export interface VendorProfile {
+    id: number | null;
+    contact_id: number;
+    credit_limit: number | null;
+    payment_terms_days: number;
+    preferred_currency: string | null;
+    bank_name: string | null;
+    bank_account_number: string | null;
+    bank_routing_number: string | null;
+    notes: string | null;
+    is_over_credit_limit: boolean;
+}
+
+export interface VendorEvaluation {
+    id: number;
+    contact_id: number;
+    evaluated_by: number;
+    evaluation_date: string;
+    quality_rating: number;
+    delivery_rating: number;
+    price_rating: number;
+    communication_rating: number;
+    overall_rating: number;
+    comments: string | null;
+    evaluator?: { id: number; name: string };
     created_at: string;
 }

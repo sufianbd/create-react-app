@@ -22,6 +22,8 @@ use App\Modules\Finance\Http\Controllers\BatchPaymentController;
 use App\Modules\Finance\Http\Controllers\DeliveryNoteController;
 use App\Modules\Finance\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
+use App\Modules\Finance\Http\Controllers\VendorProfileController;
+use App\Modules\Finance\Http\Controllers\VendorEvaluationController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -172,5 +174,15 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::resource('delivery-notes', DeliveryNoteController::class)->except(['edit', 'update']);
     Route::post('delivery-notes/{deliveryNote}/dispatch', [DeliveryNoteController::class, 'dispatch'])->name('delivery-notes.dispatch');
     Route::post('delivery-notes/{deliveryNote}/deliver', [DeliveryNoteController::class, 'deliver'])->name('delivery-notes.deliver');
+
+    // Vendor Profiles (nested under contacts)
+    Route::get('vendors/{contact}/profile',  [VendorProfileController::class, 'show'])->name('vendors.profile.show');
+    Route::put('vendors/{contact}/profile',  [VendorProfileController::class, 'update'])->name('vendors.profile.update');
+
+    // Vendor Evaluations (nested under contacts)
+    Route::get('vendors/{contact}/evaluations',        [VendorEvaluationController::class, 'index'])->name('vendors.evaluations.index');
+    Route::post('vendors/{contact}/evaluations',       [VendorEvaluationController::class, 'store'])->name('vendors.evaluations.store');
+    Route::delete('vendors/{contact}/evaluations/{evaluation}', [VendorEvaluationController::class, 'destroy'])->name('vendors.evaluations.destroy');
+
 
 });

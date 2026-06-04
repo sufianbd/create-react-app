@@ -7,6 +7,7 @@ use App\Modules\Core\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contact extends Model
@@ -27,9 +28,24 @@ class Contact extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function bills(): HasMany
+    {
+        return $this->hasMany(Bill::class);
+    }
+
     public function priceList(): BelongsTo
     {
         return $this->belongsTo(PriceList::class);
+    }
+
+    public function vendorProfile(): HasOne
+    {
+        return $this->hasOne(VendorProfile::class);
+    }
+
+    public function vendorEvaluations(): HasMany
+    {
+        return $this->hasMany(VendorEvaluation::class)->latest('evaluation_date');
     }
 
     public function scopeCustomers($query)
