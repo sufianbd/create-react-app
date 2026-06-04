@@ -67,6 +67,10 @@ use App\Modules\Finance\Models\ServiceAgreement;
 use App\Modules\Finance\Models\ServiceAgreementItem;
 use App\Modules\Finance\Models\MaintenanceLog;
 use App\Modules\Finance\Policies\ServiceAgreementPolicy;
+use App\Modules\Finance\Models\LoyaltyProgram;
+use App\Modules\Finance\Models\LoyaltyEnrollment;
+use App\Modules\Finance\Models\LoyaltyTransaction;
+use App\Modules\Finance\Policies\LoyaltyPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -119,6 +123,10 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(ServiceAgreement::class,     ServiceAgreementPolicy::class);
         Gate::policy(ServiceAgreementItem::class, ServiceAgreementPolicy::class);
         Gate::policy(MaintenanceLog::class,       ServiceAgreementPolicy::class);
+
+        Gate::policy(LoyaltyProgram::class,     LoyaltyPolicy::class);
+        Gate::policy(LoyaltyEnrollment::class,  LoyaltyPolicy::class);
+        Gate::policy(LoyaltyTransaction::class, LoyaltyPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);

@@ -36,6 +36,7 @@ use App\Modules\Finance\Http\Controllers\ReturnRequestController;
 use App\Modules\Finance\Http\Controllers\TaxRateController;
 use App\Modules\Finance\Http\Controllers\TaxGroupController;
 use App\Modules\Finance\Http\Controllers\ServiceAgreementController;
+use App\Modules\Finance\Http\Controllers\LoyaltyProgramController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -262,5 +263,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('service-agreements/{serviceAgreement}/logs',                [ServiceAgreementController::class, 'addLog'])->name('service-agreements.logs.add');
     Route::post('service-agreements/{serviceAgreement}/logs/{log}/complete', [ServiceAgreementController::class, 'completeLog'])->name('service-agreements.logs.complete');
     Route::resource('service-agreements', ServiceAgreementController::class)->except(['edit', 'update']);
+
+    // Loyalty Programs
+    Route::post("loyalty-programs/{loyaltyProgram}/enroll",        [LoyaltyProgramController::class, "enroll"])->name("loyalty-programs.enroll");
+    Route::post("loyalty-programs/{loyaltyProgram}/earn-points",   [LoyaltyProgramController::class, "earnPoints"])->name("loyalty-programs.earn-points");
+    Route::post("loyalty-programs/{loyaltyProgram}/redeem-points",  [LoyaltyProgramController::class, "redeemPoints"])->name("loyalty-programs.redeem-points");
+    Route::resource("loyalty-programs", LoyaltyProgramController::class)->except(["edit", "update"]);
 
 });

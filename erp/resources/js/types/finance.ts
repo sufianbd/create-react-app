@@ -685,3 +685,40 @@ export interface ServiceAgreement {
     maintenance_logs?: MaintenanceLog[];
     created_at: string;
 }
+
+export interface LoyaltyTransaction {
+    id: number;
+    loyalty_enrollment_id: number;
+    type: 'earn' | 'redeem' | 'adjustment' | 'expire';
+    points: number;
+    description: string | null;
+    balance_after: number;
+    created_at: string;
+}
+
+export interface LoyaltyEnrollment {
+    id: number;
+    loyalty_program_id: number;
+    contact_id: number;
+    points_balance: number;
+    total_points_earned: number;
+    total_points_redeemed: number;
+    enrolled_at: string;
+    tier_name: string | null;
+    contact?: { id: number; name: string };
+    transactions?: LoyaltyTransaction[];
+}
+
+export interface LoyaltyProgram {
+    id: number;
+    name: string;
+    description: string | null;
+    points_per_currency_unit: number;
+    points_to_currency_rate: number;
+    minimum_redemption_points: number;
+    is_active: boolean;
+    tier_config: Array<{ name: string; min_points: number; discount_percent: number }> | null;
+    enrollments_count?: number;
+    enrollments?: LoyaltyEnrollment[];
+    created_at: string;
+}

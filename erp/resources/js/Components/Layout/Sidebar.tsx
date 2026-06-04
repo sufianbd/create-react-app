@@ -126,6 +126,7 @@ const navItems: NavItem[] = [
             { label: 'Tax Rates',   href: '/finance/tax-rates',   icon: <span /> },
             { label: 'Tax Groups',  href: '/finance/tax-groups',  icon: <span /> },
             { label: 'Service Agreements', href: '/finance/service-agreements', icon: <span /> },
+            { label: 'Loyalty Programs', href: '/finance/loyalty-programs', icon: <span /> },
         ],
     },
     {
