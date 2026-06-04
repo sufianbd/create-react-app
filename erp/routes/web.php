@@ -8,6 +8,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Modules\Core\Http\Controllers\AuditLogController as CoreAuditLogController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Modules\Core\Http\Controllers\NotificationRuleController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -52,6 +53,13 @@ require __DIR__ . '/auth.php';
 // Public Customer Portal (no auth required)
 Route::get('/portal/{token}', [\App\Modules\Finance\Http\Controllers\CustomerPortalController::class, 'show'])->name('portal.show');
 Route::get('/portal/{token}/invoices/{invoice}', [\App\Modules\Finance\Http\Controllers\CustomerPortalController::class, 'invoice'])->name('portal.invoice');
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Notification Rules
+    Route::resource('notification-rules', NotificationRuleController::class)->except(['edit', 'update', 'show']);
+    Route::patch('notification-rules/{notificationRule}/toggle', [NotificationRuleController::class, 'toggle'])->name('notification-rules.toggle');
+});
 
 Route::post('/notifications/refresh', function (\Illuminate\Http\Request $request) {
     \App\Services\NotificationService::clearCache($request->user()->tenant_id);

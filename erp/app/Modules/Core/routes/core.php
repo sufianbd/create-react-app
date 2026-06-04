@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
-use App\Http\Controllers\NotificationController;
+use App\Modules\Core\Http\Controllers\NotificationInboxController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
@@ -15,10 +15,10 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
 
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
 
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
-    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
-    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::get('/notifications', [NotificationInboxController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-all-read', [NotificationInboxController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::patch('/notifications/{notification}/read', [NotificationInboxController::class, 'markRead'])->name('notifications.read');
+    Route::delete('/notifications/{notification}', [NotificationInboxController::class, 'destroy'])->name('notifications.destroy');
 
     Route::get('/search', SearchController::class)->name('search');
 

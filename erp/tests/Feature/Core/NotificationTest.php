@@ -1,84 +1,93 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Core\Models\NotificationInbox;
+use App\Modules\Core\Models\NotificationRule;
 use App\Modules\Core\Models\Tenant;
-use App\Notifications\LeaveRequestActioned;
-use App\Modules\HR\Models\Employee;
-use App\Modules\HR\Models\LeaveRequest;
-use App\Modules\HR\Models\LeaveType;
 use Database\Seeders\RolePermissionSeeder;
-use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
-    $this->tenant = Tenant::create(['name' => 'Test Co', 'slug' => 'test-co']);
+    $this->tenant = Tenant::create(['name' => 'Notif Co', 'slug' => 'notif-co']);
     $this->admin  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->admin->assignRole('super-admin');
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
 });
 
-test('notifications index is accessible', function () {
-    $this->actingAs($this->admin)
-        ->get('/notifications')
-        ->assertStatus(200)
-        ->assertInertia(fn ($p) => $p->component('Notifications/Index'));
+it('user can list their notifications', function () {
+    $this->get('/notifications')->assertStatus(200);
 });
 
-test('notification can be marked as read', function () {
-    $leaveType = LeaveType::create(['tenant_id' => $this->tenant->id, 'name' => 'Annual', 'days_per_year' => 20, 'is_paid' => true]);
-    $employee  = Employee::create(['tenant_id' => $this->tenant->id, 'first_name' => 'A', 'last_name' => 'B', 'employment_type' => 'full_time', 'status' => 'active', 'salary_type' => 'monthly', 'salary_amount' => 3000, 'start_date' => now()->toDateString()]);
-    $req = LeaveRequest::create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id, 'leave_type_id' => $leaveType->id, 'start_date' => now()->addDays(1)->toDateString(), 'end_date' => now()->addDays(2)->toDateString(), 'days' => 2]);
-
-    $this->admin->notify(new LeaveRequestActioned($req, 'approved'));
-
-    $notificationId = $this->admin->unreadNotifications->first()->id;
-
-    $this->actingAs($this->admin)
-        ->patch("/notifications/{$notificationId}/read")
-        ->assertRedirect();
-
-    expect($this->admin->fresh()->unreadNotifications->count())->toBe(0);
+it('user can list notification rules', function () {
+    $this->get('/notification-rules')->assertStatus(200);
 });
 
-test('all notifications can be marked as read', function () {
-    $leaveType = LeaveType::create(['tenant_id' => $this->tenant->id, 'name' => 'Annual', 'days_per_year' => 20, 'is_paid' => true]);
-    $employee  = Employee::create(['tenant_id' => $this->tenant->id, 'first_name' => 'A', 'last_name' => 'B', 'employment_type' => 'full_time', 'status' => 'active', 'salary_type' => 'monthly', 'salary_amount' => 3000, 'start_date' => now()->toDateString()]);
-    $req = LeaveRequest::create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id, 'leave_type_id' => $leaveType->id, 'start_date' => now()->addDays(1)->toDateString(), 'end_date' => now()->addDays(2)->toDateString(), 'days' => 2]);
-
-    $this->admin->notify(new LeaveRequestActioned($req, 'approved'));
-    $this->admin->notify(new LeaveRequestActioned($req, 'rejected'));
-
-    expect($this->admin->unreadNotifications->count())->toBe(2);
-
-    $this->actingAs($this->admin)
-        ->patch('/notifications/read-all')
-        ->assertRedirect();
-
-    expect($this->admin->fresh()->unreadNotifications->count())->toBe(0);
+it('user can create notification rule', function () {
+    $this->post('/notification-rules', [
+        'name'       => 'Invoice Overdue Alert',
+        'event_type' => 'invoice.overdue',
+    ])->assertRedirect();
+    expect(NotificationRule::where('name', 'Invoice Overdue Alert')->exists())->toBeTrue();
 });
 
-test('notification can be deleted', function () {
-    $leaveType = LeaveType::create(['tenant_id' => $this->tenant->id, 'name' => 'Annual', 'days_per_year' => 20, 'is_paid' => true]);
-    $employee  = Employee::create(['tenant_id' => $this->tenant->id, 'first_name' => 'A', 'last_name' => 'B', 'employment_type' => 'full_time', 'status' => 'active', 'salary_type' => 'monthly', 'salary_amount' => 3000, 'start_date' => now()->toDateString()]);
-    $req = LeaveRequest::create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id, 'leave_type_id' => $leaveType->id, 'start_date' => now()->addDays(1)->toDateString(), 'end_date' => now()->addDays(2)->toDateString(), 'days' => 2]);
-
-    $this->admin->notify(new LeaveRequestActioned($req, 'approved'));
-    $notificationId = $this->admin->notifications->first()->id;
-
-    $this->actingAs($this->admin)
-        ->delete("/notifications/{$notificationId}")
-        ->assertRedirect();
-
-    expect($this->admin->fresh()->notifications->count())->toBe(0);
+it('NotificationInbox::send creates a notification', function () {
+    NotificationInbox::send(
+        test()->tenant->id,
+        test()->admin->id,
+        'Test Notification',
+        'test.event',
+        'This is a test',
+        '/dashboard'
+    );
+    expect(NotificationInbox::where('user_id', test()->admin->id)->exists())->toBeTrue();
 });
 
-test('LeaveRequestActioned notification uses database channel', function () {
-    Notification::fake();
+it('notification is unread by default', function () {
+    $notif = NotificationInbox::send(test()->tenant->id, test()->admin->id, 'Hello', 'test', null, null);
+    expect($notif->is_read)->toBeFalse();
+});
 
-    $leaveType = LeaveType::create(['tenant_id' => $this->tenant->id, 'name' => 'Annual', 'days_per_year' => 20, 'is_paid' => true]);
-    $employee  = Employee::create(['tenant_id' => $this->tenant->id, 'first_name' => 'A', 'last_name' => 'B', 'employment_type' => 'full_time', 'status' => 'active', 'salary_type' => 'monthly', 'salary_amount' => 3000, 'start_date' => now()->toDateString()]);
-    $req = LeaveRequest::create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id, 'leave_type_id' => $leaveType->id, 'start_date' => now()->addDays(1)->toDateString(), 'end_date' => now()->addDays(2)->toDateString(), 'days' => 2]);
+it('user can mark notification as read', function () {
+    $notif = NotificationInbox::send(test()->tenant->id, test()->admin->id, 'Hello', 'test', null, null);
+    $this->patch("/notifications/{$notif->id}/read");
+    expect($notif->fresh()->is_read)->toBeTrue();
+    expect($notif->fresh()->read_at)->not->toBeNull();
+});
 
-    $this->admin->notify(new LeaveRequestActioned($req, 'approved'));
+it('user can mark all notifications as read', function () {
+    NotificationInbox::send(test()->tenant->id, test()->admin->id, 'A', 'test', null, null);
+    NotificationInbox::send(test()->tenant->id, test()->admin->id, 'B', 'test', null, null);
+    $this->post('/notifications/mark-all-read');
+    expect(NotificationInbox::where('user_id', test()->admin->id)->where('is_read', false)->count())->toBe(0);
+});
 
-    Notification::assertSentTo($this->admin, LeaveRequestActioned::class);
+it('user can delete notification', function () {
+    $notif = NotificationInbox::send(test()->tenant->id, test()->admin->id, 'Bye', 'test', null, null);
+    $this->delete("/notifications/{$notif->id}")->assertRedirect();
+    expect(NotificationInbox::find($notif->id))->toBeNull();
+});
+
+it('user can toggle notification rule', function () {
+    $rule = NotificationRule::create([
+        'tenant_id'  => test()->tenant->id,
+        'user_id'    => test()->admin->id,
+        'name'       => 'Toggle Me',
+        'event_type' => 'test.event',
+        'is_active'  => true,
+    ]);
+    $this->patch("/notification-rules/{$rule->id}/toggle");
+    expect($rule->fresh()->is_active)->toBeFalse();
+});
+
+it('user can delete notification rule', function () {
+    $rule = NotificationRule::create([
+        'tenant_id'  => test()->tenant->id,
+        'user_id'    => test()->admin->id,
+        'name'       => 'Delete Me',
+        'event_type' => 'test.event',
+        'is_active'  => true,
+    ]);
+    $this->delete("/notification-rules/{$rule->id}")->assertRedirect();
+    expect(NotificationRule::find($rule->id))->toBeNull();
 });
