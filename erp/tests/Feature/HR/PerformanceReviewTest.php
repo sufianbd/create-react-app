@@ -2,8 +2,8 @@
 
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
-use App\Modules\HR\Models\Department;
 use App\Modules\HR\Models\Employee;
+use App\Modules\HR\Models\PerformanceKpi;
 use App\Modules\HR\Models\PerformanceReview;
 use Database\Seeders\RolePermissionSeeder;
 
@@ -18,18 +18,27 @@ beforeEach(function () {
     app()->instance('tenant', $this->tenant);
 });
 
-function makeReviewEmployee(): Employee
+function makePrEmployee(): Employee
 {
-    $dept = Department::create(['tenant_id' => test()->tenant->id, 'name' => 'Engineering']);
     return Employee::create([
         'tenant_id'     => test()->tenant->id,
-        'first_name'    => 'Jane',
-        'last_name'     => 'Smith',
-        'email'         => 'jane@example.com',
-        'department_id' => $dept->id,
+        'first_name'    => 'Alice',
+        'last_name'     => 'Jones',
+        'email'         => 'alice@test.com',
         'start_date'    => now()->toDateString(),
-        'salary_amount' => 60000,
+        'salary_amount' => 70000,
         'status'        => 'active',
+    ]);
+}
+
+function makePrReview(Employee $employee, string $status = 'draft'): PerformanceReview
+{
+    return PerformanceReview::create([
+        'tenant_id'     => test()->tenant->id,
+        'employee_id'   => $employee->id,
+        'review_period' => 'Q1 2026',
+        'review_date'   => now()->toDateString(),
+        'status'        => $status,
     ]);
 }
 
@@ -38,143 +47,115 @@ it('admin can list performance reviews', function () {
     $response->assertStatus(200);
 });
 
-it('admin can view create form', function () {
-    $response = $this->get('/hr/performance-reviews/create');
-    $response->assertStatus(200);
-});
-
-it('admin can create review with goals and competencies', function () {
-    $employee = makeReviewEmployee();
+it('admin can create a review', function () {
+    $employee = makePrEmployee();
 
     $response = $this->post('/hr/performance-reviews', [
-        'employee_id'  => $employee->id,
-        'period_start' => '2025-01-01',
-        'period_end'   => '2025-12-31',
-        'comments'     => 'Annual review',
-        'goals'        => [
-            ['title' => 'Improve performance', 'description' => 'Focus on quality'],
-        ],
-        'competencies' => [
-            ['name' => 'Communication', 'rating' => 4, 'notes' => 'Good'],
-        ],
+        'employee_id'   => $employee->id,
+        'review_period' => 'Q1 2026',
+        'review_date'   => now()->toDateString(),
     ]);
 
     $response->assertRedirect();
-
-    $review = PerformanceReview::where('employee_id', $employee->id)->first();
-    expect($review)->not->toBeNull();
-    expect($review->goals()->count())->toBe(1);
-    expect($review->competencies()->count())->toBe(1);
+    $this->assertDatabaseHas('performance_reviews', [
+        'employee_id'   => $employee->id,
+        'review_period' => 'Q1 2026',
+    ]);
 });
 
-it('admin can view review', function () {
-    $employee = makeReviewEmployee();
-    $review = PerformanceReview::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'reviewer_id'  => $this->admin->id,
-        'period_start' => '2025-01-01',
-        'period_end'   => '2025-12-31',
-        'status'       => 'draft',
-    ]);
+it('store requires employee_id, review_period, review_date', function () {
+    $this->postJson('/hr/performance-reviews', [])
+        ->assertStatus(422);
+});
+
+it('admin can view a review', function () {
+    $employee = makePrEmployee();
+    $review = makePrReview($employee);
 
     $response = $this->get("/hr/performance-reviews/{$review->id}");
     $response->assertStatus(200);
 });
 
-it('admin can start draft review', function () {
-    $employee = makeReviewEmployee();
-    $review = PerformanceReview::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'reviewer_id'  => $this->admin->id,
-        'period_start' => '2025-01-01',
-        'period_end'   => '2025-12-31',
-        'status'       => 'draft',
-    ]);
+it('admin can submit a review', function () {
+    $employee = makePrEmployee();
+    $review = makePrReview($employee);
 
-    $this->post("/hr/performance-reviews/{$review->id}/start");
+    $this->post("/hr/performance-reviews/{$review->id}/submit");
 
-    expect($review->fresh()->status)->toBe('in_review');
+    expect($review->fresh()->status)->toBe('submitted');
 });
 
-it('admin can complete in_review review', function () {
-    $employee = makeReviewEmployee();
-    $review = PerformanceReview::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'reviewer_id'  => $this->admin->id,
-        'period_start' => '2025-01-01',
-        'period_end'   => '2025-12-31',
-        'status'       => 'in_review',
-    ]);
+it('admin can acknowledge a review', function () {
+    $employee = makePrEmployee();
+    $review = makePrReview($employee, 'submitted');
 
-    $this->post("/hr/performance-reviews/{$review->id}/complete", ['overall_rating' => 4]);
+    $this->post("/hr/performance-reviews/{$review->id}/acknowledge");
 
-    $fresh = $review->fresh();
-    expect($fresh->status)->toBe('completed');
-    expect($fresh->overall_rating)->toBe(4);
+    expect($review->fresh()->status)->toBe('acknowledged');
 });
 
-it('overall_rating must be 1-5', function () {
-    $employee = makeReviewEmployee();
-    $review = PerformanceReview::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'reviewer_id'  => $this->admin->id,
-        'period_start' => '2025-01-01',
-        'period_end'   => '2025-12-31',
-        'status'       => 'in_review',
+it('admin can add a kpi', function () {
+    $employee = makePrEmployee();
+    $review = makePrReview($employee);
+
+    $response = $this->post("/hr/performance-reviews/{$review->id}/kpis", [
+        'name'         => 'Sales Target',
+        'target_score' => 100,
+        'actual_score' => 80,
     ]);
 
-    $this->postJson("/hr/performance-reviews/{$review->id}/complete", ['overall_rating' => 6])
-        ->assertStatus(422);
+    $response->assertRedirect();
+    $this->assertDatabaseHas('performance_kpis', [
+        'performance_review_id' => $review->id,
+        'name'                  => 'Sales Target',
+    ]);
 });
 
-it('admin can update goal achieved status', function () {
-    $employee = makeReviewEmployee();
-    $review = PerformanceReview::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'reviewer_id'  => $this->admin->id,
-        'period_start' => '2025-01-01',
-        'period_end'   => '2025-12-31',
-        'status'       => 'in_review',
+it('achievement_percent accessor is correct', function () {
+    $employee = makePrEmployee();
+    $review = makePrReview($employee);
+
+    $kpi = PerformanceKpi::create([
+        'tenant_id'             => test()->tenant->id,
+        'performance_review_id' => $review->id,
+        'name'                  => 'Quality',
+        'target_score'          => 100,
+        'actual_score'          => 75,
+        'weight'                => 1,
     ]);
-    $goal = $review->goals()->create(['title' => 'Improve quality', 'achieved' => false]);
 
-    $this->patch("/hr/performance-reviews/{$review->id}/goals/{$goal->id}", ['achieved' => true]);
-
-    expect($goal->fresh()->achieved)->toBeTrue();
+    expect($kpi->achievement_percent)->toBe(75.0);
 });
 
-it('average_competency_rating is computed', function () {
-    $employee = makeReviewEmployee();
-    $review = PerformanceReview::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'reviewer_id'  => $this->admin->id,
-        'period_start' => '2025-01-01',
-        'period_end'   => '2025-12-31',
-        'status'       => 'draft',
-    ]);
-    $review->competencies()->create(['name' => 'Communication', 'rating' => 4]);
-    $review->competencies()->create(['name' => 'Teamwork', 'rating' => 2]);
+it('average_kpi_score accessor is correct', function () {
+    $employee = makePrEmployee();
+    $review = makePrReview($employee);
 
-    $review->load('competencies');
-    expect($review->average_competency_rating)->toBe(3.0);
+    PerformanceKpi::create([
+        'tenant_id'             => test()->tenant->id,
+        'performance_review_id' => $review->id,
+        'name'                  => 'KPI 1',
+        'target_score'          => 100,
+        'actual_score'          => 80,
+        'weight'                => 1,
+    ]);
+
+    PerformanceKpi::create([
+        'tenant_id'             => test()->tenant->id,
+        'performance_review_id' => $review->id,
+        'name'                  => 'KPI 2',
+        'target_score'          => 100,
+        'actual_score'          => 60,
+        'weight'                => 1,
+    ]);
+
+    $review->load('kpis');
+    expect($review->average_kpi_score)->toBe(70.0);
 });
 
-it('staff cannot delete review', function () {
-    $employee = makeReviewEmployee();
-    $review = PerformanceReview::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'reviewer_id'  => $this->admin->id,
-        'period_start' => '2025-01-01',
-        'period_end'   => '2025-12-31',
-        'status'       => 'draft',
-    ]);
+it('staff cannot delete a review', function () {
+    $employee = makePrEmployee();
+    $review = makePrReview($employee);
 
     $this->actingAs($this->staff);
     $response = $this->delete("/hr/performance-reviews/{$review->id}");

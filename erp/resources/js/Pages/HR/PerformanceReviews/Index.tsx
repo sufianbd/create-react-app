@@ -6,45 +6,28 @@ import { Pagination } from '@/Components/Inventory/Pagination';
 import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
 import type { Paginator } from '@/types/inventory';
-import type { PerformanceReview } from '@/types/hr';
+import type { PerformanceReviewV2 } from '@/types/hr';
 
 interface Props extends PageProps {
-    reviews: Paginator<PerformanceReview>;
+    reviews: Paginator<PerformanceReviewV2>;
+    filters: Record<string, string>;
 }
 
 const STATUS_COLORS: Record<string, string> = {
-    draft:     'bg-slate-100 text-slate-700',
-    in_review: 'bg-blue-100 text-blue-700',
-    completed: 'bg-green-100 text-green-700',
+    draft:        'bg-slate-100 text-slate-700',
+    submitted:    'bg-blue-100 text-blue-700',
+    acknowledged: 'bg-green-100 text-green-700',
 };
 
 function StatusBadge({ status }: { status: string }) {
     return (
         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[status] ?? 'bg-slate-100 text-slate-700'}`}>
-            {status.replace('_', ' ')}
+            {status}
         </span>
     );
 }
 
-function StarRating({ rating }: { rating: number | null }) {
-    if (rating === null) return <span className="text-sm text-slate-400">—</span>;
-    return (
-        <span className="flex items-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((n) => (
-                <svg
-                    key={n}
-                    className={`h-4 w-4 ${n <= rating ? 'text-amber-400' : 'text-slate-200'}`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-            ))}
-        </span>
-    );
-}
-
-export default function PerformanceReviewsIndex({ reviews }: Props) {
+export default function PerformanceReviewsIndex({ reviews, filters }: Props) {
     const { can } = usePermission();
 
     return (
@@ -76,32 +59,41 @@ export default function PerformanceReviewsIndex({ reviews }: Props) {
                                 ),
                             },
                             {
-                                key: 'period',
+                                key: 'review_period',
                                 header: 'Period',
                                 render: (r) => (
-                                    <span className="text-sm text-slate-700">
-                                        {r.period_start} — {r.period_end}
-                                    </span>
+                                    <span className="text-sm text-slate-700">{r.review_period}</span>
                                 ),
                             },
                             {
-                                key: 'reviewer',
-                                header: 'Reviewer',
+                                key: 'review_date',
+                                header: 'Date',
                                 render: (r) => (
-                                    <span className="text-sm text-slate-700">
-                                        {r.reviewer?.name ?? '—'}
-                                    </span>
+                                    <span className="text-sm text-slate-700">{r.review_date}</span>
                                 ),
-                            },
-                            {
-                                key: 'overall_rating',
-                                header: 'Overall Rating',
-                                render: (r) => <StarRating rating={r.overall_rating} />,
                             },
                             {
                                 key: 'status',
                                 header: 'Status',
                                 render: (r) => <StatusBadge status={r.status} />,
+                            },
+                            {
+                                key: 'overall_rating',
+                                header: 'Overall Rating',
+                                render: (r) => (
+                                    <span className="text-sm text-slate-700">
+                                        {r.overall_rating != null ? `${r.overall_rating} / 5` : '—'}
+                                    </span>
+                                ),
+                            },
+                            {
+                                key: 'average_kpi_score',
+                                header: 'KPI Score',
+                                render: (r) => (
+                                    <span className="text-sm text-slate-700">
+                                        {r.average_kpi_score != null ? `${r.average_kpi_score}%` : '—'}
+                                    </span>
+                                ),
                             },
                             {
                                 key: 'actions',

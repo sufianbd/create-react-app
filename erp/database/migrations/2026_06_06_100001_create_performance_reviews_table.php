@@ -10,17 +10,20 @@ return new class extends Migration
     {
         Schema::create('performance_reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
-            $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
-            $table->foreignId('reviewer_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->date('period_start');
-            $table->date('period_end');
-            $table->enum('status', ['draft', 'in_review', 'completed'])->default('draft');
-            $table->tinyInteger('overall_rating')->unsigned()->nullable();
-            $table->text('comments')->nullable();
-            $table->timestamp('completed_at')->nullable();
-            $table->timestamps();
+            $table->unsignedBigInteger('tenant_id');
+            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('reviewer_id')->nullable();
+            $table->string('review_period');
+            $table->date('review_date');
+            $table->string('status', 20)->default('draft');
+            $table->decimal('overall_rating', 3, 1)->nullable();
+            $table->text('strengths')->nullable();
+            $table->text('improvements')->nullable();
+            $table->text('goals')->nullable();
+            $table->text('reviewer_notes')->nullable();
             $table->softDeletes();
+            $table->timestamps();
+            $table->index(['tenant_id', 'employee_id']);
         });
     }
 

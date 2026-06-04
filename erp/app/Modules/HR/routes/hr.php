@@ -78,10 +78,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     });
 
     // Performance Reviews
+    Route::post('performance-reviews/{performanceReview}/submit',        [PerformanceReviewController::class, 'submit'])->name('performance-reviews.submit');
+    Route::post('performance-reviews/{performanceReview}/acknowledge',   [PerformanceReviewController::class, 'acknowledge'])->name('performance-reviews.acknowledge');
+    Route::post('performance-reviews/{performanceReview}/kpis',          [PerformanceReviewController::class, 'addKpi'])->name('performance-reviews.kpis.add');
+    Route::patch('performance-reviews/{performanceReview}/kpis/{kpi}',   [PerformanceReviewController::class, 'updateKpi'])->name('performance-reviews.kpis.update');
+    Route::delete('performance-reviews/{performanceReview}/kpis/{kpi}',  [PerformanceReviewController::class, 'removeKpi'])->name('performance-reviews.kpis.remove');
     Route::resource('performance-reviews', PerformanceReviewController::class)->except(['edit', 'update']);
-    Route::post('performance-reviews/{performanceReview}/start', [PerformanceReviewController::class, 'startReview'])->name('performance-reviews.start');
-    Route::post('performance-reviews/{performanceReview}/complete', [PerformanceReviewController::class, 'complete'])->name('performance-reviews.complete');
-    Route::patch('performance-reviews/{performanceReview}/goals/{goal}', [PerformanceReviewController::class, 'updateGoal'])->name('performance-reviews.goals.update');
 
     // Expense Claims — custom actions BEFORE resource
     Route::post('expense-claims/{expenseClaim}/submit',     [ExpenseClaimController::class, 'submit'])->name('expense-claims.submit');

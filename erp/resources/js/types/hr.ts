@@ -360,3 +360,34 @@ export interface ExpenseClaim {
     items?: ExpenseClaimItem[];
     created_at: string;
 }
+
+export interface PerformanceKpi {
+    id: number;
+    performance_review_id: number;
+    name: string;
+    description: string | null;
+    target_score: number;
+    actual_score: number;
+    weight: number;
+    notes: string | null;
+    achievement_percent: number | null;
+}
+
+export interface PerformanceReviewV2 {
+    id: number;
+    employee_id: number;
+    reviewer_id: number | null;
+    review_period: string;
+    review_date: string;
+    status: 'draft' | 'submitted' | 'acknowledged';
+    overall_rating: number | null;
+    strengths: string | null;
+    improvements: string | null;
+    goals: string | null;
+    reviewer_notes: string | null;
+    average_kpi_score: number | null;
+    employee?: { id: number; first_name: string; last_name: string };
+    reviewer?: { id: number; name: string } | null;
+    kpis?: PerformanceKpi[];
+    created_at: string;
+}

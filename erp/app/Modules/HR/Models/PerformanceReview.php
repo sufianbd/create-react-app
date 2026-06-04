@@ -13,15 +13,26 @@ class PerformanceReview extends Model
 {
     use BelongsToTenant, SoftDeletes;
 
+    protected $table = 'performance_reviews';
+
     protected $fillable = [
-        'tenant_id', 'employee_id', 'reviewer_id', 'period_start', 'period_end',
-        'status', 'overall_rating', 'comments', 'completed_at',
+        'tenant_id',
+        'employee_id',
+        'reviewer_id',
+        'review_period',
+        'review_date',
+        'status',
+        'overall_rating',
+        'strengths',
+        'improvements',
+        'goals',
+        'reviewer_notes',
     ];
 
     protected $casts = [
-        'period_start' => 'date',
-        'period_end'   => 'date',
-        'completed_at' => 'datetime',
+        'review_date'    => 'date',
+        'overall_rating' => 'decimal:1',
+        'status'         => 'string',
     ];
 
     public function employee(): BelongsTo
@@ -34,22 +45,33 @@ class PerformanceReview extends Model
         return $this->belongsTo(User::class, 'reviewer_id');
     }
 
-    public function goals(): HasMany
+    public function kpis(): HasMany
     {
-        return $this->hasMany(PerformanceReviewGoal::class);
+        return $this->hasMany(PerformanceKpi::class);
     }
 
-    public function competencies(): HasMany
+    public function submit(): void
     {
-        return $this->hasMany(PerformanceReviewCompetency::class);
+        $this->status = 'submitted';
+        $this->save();
     }
 
-    public function getAverageCompetencyRatingAttribute(): ?float
+    public function acknowledge(): void
     {
-        $ratings = $this->competencies->whereNotNull('rating')->pluck('rating');
-        if ($ratings->isEmpty()) {
+        $this->status = 'acknowledged';
+        $this->save();
+    }
+
+    public function getAverageKpiScoreAttribute(): ?float
+    {
+        $kpis = $this->kpis->filter(fn ($kpi) => $kpi->target_score > 0);
+
+        if ($kpis->isEmpty()) {
             return null;
         }
-        return round($ratings->avg(), 1);
+
+        $total = $kpis->sum(fn ($kpi) => ($kpi->actual_score / $kpi->target_score) * 100);
+
+        return round($total / $kpis->count(), 1);
     }
 }

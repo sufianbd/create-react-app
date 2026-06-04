@@ -8,19 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('performance_review_goals', function (Blueprint $table) {
+        Schema::create('performance_kpis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('performance_review_id')->constrained('performance_reviews')->cascadeOnDelete();
-            $table->string('title');
+            $table->unsignedBigInteger('tenant_id');
+            $table->foreignId('performance_review_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
             $table->text('description')->nullable();
-            $table->boolean('achieved')->default(false);
-            $table->text('achievement_notes')->nullable();
+            $table->decimal('target_score', 8, 2)->default(100);
+            $table->decimal('actual_score', 8, 2)->default(0);
+            $table->decimal('weight', 5, 2)->default(1);
+            $table->text('notes')->nullable();
             $table->timestamps();
+            $table->index('tenant_id');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('performance_review_goals');
+        Schema::dropIfExists('performance_kpis');
     }
 };

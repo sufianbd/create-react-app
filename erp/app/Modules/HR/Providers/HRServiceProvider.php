@@ -16,6 +16,7 @@ use App\Modules\HR\Models\LeaveRequest;
 use App\Modules\HR\Models\LoanRepayment;
 use App\Modules\HR\Models\OnboardingTemplate;
 use App\Modules\HR\Models\PayrollRun;
+use App\Modules\HR\Models\PerformanceKpi;
 use App\Modules\HR\Models\PerformanceReview;
 use App\Modules\HR\Models\ShiftAssignment;
 use App\Modules\HR\Models\ShiftTemplate;
@@ -59,6 +60,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(LoanRepayment::class,           LoanPolicy::class);
         Gate::policy(OnboardingTemplate::class,      OnboardingTemplatePolicy::class);
         Gate::policy(PayrollRun::class,              PayrollRunPolicy::class);
+        Gate::policy(PerformanceKpi::class,          PerformanceReviewPolicy::class);
         Gate::policy(PerformanceReview::class,       PerformanceReviewPolicy::class);
         Gate::policy(TrainingCourse::class,          TrainingPolicy::class);
         Gate::policy(EmployeeTrainingRecord::class,  TrainingPolicy::class);
