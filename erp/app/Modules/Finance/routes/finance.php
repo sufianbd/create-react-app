@@ -37,6 +37,7 @@ use App\Modules\Finance\Http\Controllers\TaxRateController;
 use App\Modules\Finance\Http\Controllers\TaxGroupController;
 use App\Modules\Finance\Http\Controllers\ServiceAgreementController;
 use App\Modules\Finance\Http\Controllers\LoyaltyProgramController;
+use App\Modules\Finance\Http\Controllers\LeadController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -269,5 +270,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post("loyalty-programs/{loyaltyProgram}/earn-points",   [LoyaltyProgramController::class, "earnPoints"])->name("loyalty-programs.earn-points");
     Route::post("loyalty-programs/{loyaltyProgram}/redeem-points",  [LoyaltyProgramController::class, "redeemPoints"])->name("loyalty-programs.redeem-points");
     Route::resource("loyalty-programs", LoyaltyProgramController::class)->except(["edit", "update"]);
+
+    // Leads
+    Route::post('leads/{lead}/mark-won',    [LeadController::class, 'markWon'])->name('leads.mark-won');
+    Route::post('leads/{lead}/mark-lost',   [LeadController::class, 'markLost'])->name('leads.mark-lost');
+    Route::post('leads/{lead}/activities',  [LeadController::class, 'addActivity'])->name('leads.activities.add');
+    Route::resource('leads', LeadController::class)->except(['edit']);
 
 });

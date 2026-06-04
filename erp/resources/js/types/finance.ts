@@ -722,3 +722,37 @@ export interface LoyaltyProgram {
     enrollments?: LoyaltyEnrollment[];
     created_at: string;
 }
+
+export interface LeadActivity {
+    id: number;
+    lead_id: number;
+    user_id: number;
+    type: 'call' | 'email' | 'meeting' | 'note' | 'task';
+    description: string;
+    activity_date: string;
+    outcome: string | null;
+    duration_minutes: number | null;
+    user?: { id: number; name: string };
+}
+
+export interface Lead {
+    id: number;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    company: string | null;
+    source: 'website' | 'referral' | 'cold_call' | 'trade_show' | 'social_media' | 'other';
+    stage: 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
+    assigned_to: number | null;
+    estimated_value: number | null;
+    probability: number;
+    notes: string | null;
+    lost_reason: string | null;
+    won_at: string | null;
+    lost_at: string | null;
+    expected_close_date: string | null;
+    weighted_value: number;
+    assigned_to_user?: { id: number; name: string } | null;
+    activities?: LeadActivity[];
+    created_at: string;
+}

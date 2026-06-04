@@ -68,6 +68,9 @@ use App\Modules\Finance\Models\ServiceAgreementItem;
 use App\Modules\Finance\Models\MaintenanceLog;
 use App\Modules\Finance\Policies\ServiceAgreementPolicy;
 use App\Modules\Finance\Models\LoyaltyProgram;
+use App\Modules\Finance\Models\Lead;
+use App\Modules\Finance\Models\LeadActivity;
+use App\Modules\Finance\Policies\LeadPolicy;
 use App\Modules\Finance\Models\LoyaltyEnrollment;
 use App\Modules\Finance\Models\LoyaltyTransaction;
 use App\Modules\Finance\Policies\LoyaltyPolicy;
@@ -125,6 +128,9 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(MaintenanceLog::class,       ServiceAgreementPolicy::class);
 
         Gate::policy(LoyaltyProgram::class,     LoyaltyPolicy::class);
+
+        Gate::policy(Lead::class,         LeadPolicy::class);
+        Gate::policy(LeadActivity::class, LeadPolicy::class);
         Gate::policy(LoyaltyEnrollment::class,  LoyaltyPolicy::class);
         Gate::policy(LoyaltyTransaction::class, LoyaltyPolicy::class);
 
