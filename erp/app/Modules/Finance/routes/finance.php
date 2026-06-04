@@ -35,6 +35,7 @@ use App\Modules\Finance\Http\Controllers\ContractController;
 use App\Modules\Finance\Http\Controllers\ReturnRequestController;
 use App\Modules\Finance\Http\Controllers\TaxRateController;
 use App\Modules\Finance\Http\Controllers\TaxGroupController;
+use App\Modules\Finance\Http\Controllers\ServiceAgreementController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -253,5 +254,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('tax-groups/{taxGroup}/rates',        [TaxGroupController::class, 'addRate'])->name('tax-groups.rates.add');
     Route::delete('tax-groups/{taxGroup}/rates/{item}', [TaxGroupController::class, 'removeRate'])->name('tax-groups.rates.remove');
     Route::resource('tax-groups', TaxGroupController::class)->except(['edit', 'update']);
+
+    // Service Agreements — custom actions BEFORE resource
+    Route::post('service-agreements/{serviceAgreement}/activate',             [ServiceAgreementController::class, 'activate'])->name('service-agreements.activate');
+    Route::post('service-agreements/{serviceAgreement}/terminate',            [ServiceAgreementController::class, 'terminate'])->name('service-agreements.terminate');
+    Route::post('service-agreements/{serviceAgreement}/items',               [ServiceAgreementController::class, 'addItem'])->name('service-agreements.items.add');
+    Route::post('service-agreements/{serviceAgreement}/logs',                [ServiceAgreementController::class, 'addLog'])->name('service-agreements.logs.add');
+    Route::post('service-agreements/{serviceAgreement}/logs/{log}/complete', [ServiceAgreementController::class, 'completeLog'])->name('service-agreements.logs.complete');
+    Route::resource('service-agreements', ServiceAgreementController::class)->except(['edit', 'update']);
 
 });

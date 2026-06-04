@@ -640,3 +640,48 @@ export interface TaxGroup {
     items?: TaxGroupItem[];
     created_at: string;
 }
+
+export interface ServiceAgreementItem {
+    id: number;
+    service_agreement_id: number;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+}
+
+export interface MaintenanceLog {
+    id: number;
+    service_agreement_id: number;
+    technician_id: number | null;
+    log_date: string;
+    description: string;
+    status: 'scheduled' | 'completed' | 'cancelled';
+    resolution: string | null;
+    hours_spent: number | null;
+    next_service_date: string | null;
+    technician?: { id: number; name: string } | null;
+}
+
+export interface ServiceAgreement {
+    id: number;
+    contact_id: number | null;
+    title: string;
+    description: string | null;
+    agreement_type: 'maintenance' | 'support' | 'sla' | 'retainer';
+    status: 'draft' | 'active' | 'expired' | 'terminated';
+    start_date: string | null;
+    end_date: string | null;
+    value: number | null;
+    billing_cycle: 'monthly' | 'quarterly' | 'annually' | 'one_time';
+    auto_renew: boolean;
+    terms: string | null;
+    signed_at: string | null;
+    is_expired: boolean;
+    is_expiring: boolean;
+    days_remaining: number | null;
+    contact?: { id: number; name: string } | null;
+    service_items?: ServiceAgreementItem[];
+    maintenance_logs?: MaintenanceLog[];
+    created_at: string;
+}

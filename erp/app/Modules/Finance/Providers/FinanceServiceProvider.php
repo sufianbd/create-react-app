@@ -63,6 +63,10 @@ use App\Modules\Finance\Models\TaxRate;
 use App\Modules\Finance\Models\TaxGroup;
 use App\Modules\Finance\Models\TaxGroupItem;
 use App\Modules\Finance\Policies\TaxPolicy;
+use App\Modules\Finance\Models\ServiceAgreement;
+use App\Modules\Finance\Models\ServiceAgreementItem;
+use App\Modules\Finance\Models\MaintenanceLog;
+use App\Modules\Finance\Policies\ServiceAgreementPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -111,6 +115,10 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(TaxRate::class,      TaxPolicy::class);
         Gate::policy(TaxGroup::class,     TaxPolicy::class);
         Gate::policy(TaxGroupItem::class, TaxPolicy::class);
+
+        Gate::policy(ServiceAgreement::class,     ServiceAgreementPolicy::class);
+        Gate::policy(ServiceAgreementItem::class, ServiceAgreementPolicy::class);
+        Gate::policy(MaintenanceLog::class,       ServiceAgreementPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
