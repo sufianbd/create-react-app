@@ -5,6 +5,7 @@ namespace App\Modules\Inventory\Providers;
 use App\Modules\Inventory\Models\Asset;
 use App\Modules\Inventory\Models\AssetMaintenance;
 use App\Modules\Inventory\Models\Product;
+use App\Modules\Inventory\Models\ProductBundleItem;
 use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\PurchaseRequisition;
 use App\Modules\Inventory\Models\StockAdjustment;
@@ -33,5 +34,6 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(PurchaseRequisition::class, PurchaseRequisitionPolicy::class);
         Gate::policy(Asset::class,            AssetPolicy::class);
         Gate::policy(AssetMaintenance::class, AssetPolicy::class);
+        Gate::policy(ProductBundleItem::class, ProductPolicy::class);
     }
 }

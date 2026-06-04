@@ -3,6 +3,7 @@
 use App\Modules\Inventory\Http\Controllers\AssetController;
 use App\Modules\Inventory\Http\Controllers\AssetMaintenanceController;
 use App\Modules\Inventory\Http\Controllers\CategoryController;
+use App\Modules\Inventory\Http\Controllers\ProductBundleController;
 use App\Modules\Inventory\Http\Controllers\ProductCategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductController;
 use App\Modules\Inventory\Http\Controllers\PurchaseOrderController;
@@ -85,4 +86,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     // Asset Maintenances
     Route::patch('asset-maintenances/{assetMaintenance}/complete', [AssetMaintenanceController::class, 'complete'])->name('asset-maintenances.complete');
     Route::resource('asset-maintenances', AssetMaintenanceController::class)->except(['edit', 'update']);
+
+    // Product Bundles
+    Route::post('product-bundles/{productBundle}/items', [ProductBundleController::class, 'addItem'])->name('product-bundles.items.add');
+    Route::delete('product-bundles/{productBundle}/items/{item}', [ProductBundleController::class, 'removeItem'])->name('product-bundles.items.remove');
+    Route::resource('product-bundles', ProductBundleController::class)
+        ->except(['edit', 'update'])
+        ->parameters(['product-bundles' => 'productBundle']);
 });

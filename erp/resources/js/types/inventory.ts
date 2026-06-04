@@ -21,6 +21,15 @@ export interface StockLevelInfo {
     warehouse_id: number; warehouse_name?: string;
     quantity: string; reserved_quantity: string; available: number;
 }
+export interface ProductBundleItem {
+    id: number;
+    bundle_product_id: number;
+    component_product_id: number;
+    quantity: number;
+    bundle_product?: Product;
+    component_product?: Product;
+}
+
 export interface Product {
     id: number; sku: string; name: string; description?: string;
     category_id?: number | null;
@@ -32,6 +41,10 @@ export interface Product {
     preferred_supplier?: { id: number; name: string } | null;
     is_active: boolean; stock_levels?: StockLevelInfo[]; total_quantity?: number;
     total_stock?: number; needs_reorder?: boolean; created_at?: string;
+    is_bundle?: boolean;
+    bundle_items?: ProductBundleItem[];
+    stock_quantity?: number;
+    stock_sufficient_for_bundle?: boolean;
 }
 export interface StockMovement {
     id: number; product_id: number; warehouse_id: number;

@@ -19,7 +19,7 @@ class Product extends Model
         'tenant_id', 'sku', 'name', 'description',
         'category_id', 'uom_id', 'cost_price',
         'sale_price', 'reorder_point', 'reorder_quantity',
-        'preferred_supplier_id', 'is_active',
+        'preferred_supplier_id', 'is_active', 'is_bundle', 'stock_quantity',
     ];
 
     protected $casts = [
@@ -28,6 +28,8 @@ class Product extends Model
         'reorder_point'        => 'float',
         'reorder_quantity'     => 'float',
         'is_active'            => 'boolean',
+        'is_bundle'            => 'boolean',
+        'stock_quantity'       => 'decimal:4',
     ];
 
     public function category(): BelongsTo
@@ -53,6 +55,35 @@ class Product extends Model
     public function preferredSupplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'preferred_supplier_id');
+    }
+
+    public function bundleItems(): HasMany
+    {
+        return $this->hasMany(ProductBundleItem::class, 'bundle_product_id');
+    }
+
+    public function componentInBundles(): HasMany
+    {
+        return $this->hasMany(ProductBundleItem::class, 'component_product_id');
+    }
+
+    public function getStockSufficientForBundleAttribute(): bool
+    {
+        if (! $this->is_bundle) {
+            return true;
+        }
+
+        foreach ($this->bundleItems as $item) {
+            $component = $item->componentProduct;
+            if ($component === null) {
+                return false;
+            }
+            if ((float) $component->stock_quantity < (float) $item->quantity) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function getTotalQuantityAttribute(): float
