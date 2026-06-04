@@ -8,6 +8,8 @@ use App\Modules\Inventory\Http\Controllers\ProductCategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductController;
 use App\Modules\Inventory\Http\Controllers\PurchaseOrderController;
 use App\Modules\Inventory\Http\Controllers\PurchaseRequisitionController;
+use App\Modules\Inventory\Http\Controllers\QcChecklistController;
+use App\Modules\Inventory\Http\Controllers\QcInspectionController;
 use App\Modules\Inventory\Http\Controllers\ReorderController;
 use App\Modules\Inventory\Http\Controllers\StockAdjustmentController;
 use App\Modules\Inventory\Http\Controllers\StockMovementController;
@@ -103,4 +105,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('stock-transfers/{stockTransfer}/complete', [StockTransferController::class, 'complete'])->name('stock-transfers.complete');
     Route::post('stock-transfers/{stockTransfer}/cancel',   [StockTransferController::class, 'cancel'])->name('stock-transfers.cancel');
     Route::resource('stock-transfers', StockTransferController::class)->except(['edit', 'update']);
+
+    // QC Checklists
+    Route::resource('qc-checklists', QcChecklistController::class)->except(['edit', 'update']);
+
+    // QC Inspections
+    Route::patch('qc-inspections/{qcInspection}/results/{result}', [QcInspectionController::class, 'updateResult'])->name('qc-inspections.results.update');
+    Route::post('qc-inspections/{qcInspection}/complete', [QcInspectionController::class, 'complete'])->name('qc-inspections.complete');
+    Route::resource('qc-inspections', QcInspectionController::class)->except(['edit', 'update']);
 });

@@ -70,6 +70,8 @@ const navItems: NavItem[] = [
             { label: 'Bundles',      href: '/inventory/product-bundles',    icon: <span /> },
             { label: 'Warehouse Stock', href: '/inventory/warehouse-stock', icon: <span /> },
             { label: 'Transfers',       href: '/inventory/stock-transfers', icon: <span /> },
+            { label: 'QC Checklists',   href: '/inventory/qc-checklists',   icon: <span /> },
+            { label: 'QC Inspections',  href: '/inventory/qc-inspections',  icon: <span /> },
         ],
     },
     {

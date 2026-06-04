@@ -8,6 +8,10 @@ use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\ProductBundleItem;
 use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\PurchaseRequisition;
+use App\Modules\Inventory\Models\QcChecklist;
+use App\Modules\Inventory\Models\QcChecklistItem;
+use App\Modules\Inventory\Models\QcInspection;
+use App\Modules\Inventory\Models\QcInspectionResult;
 use App\Modules\Inventory\Models\StockAdjustment;
 use App\Modules\Inventory\Models\StockTransfer;
 use App\Modules\Inventory\Models\StockTransferItem;
@@ -17,6 +21,7 @@ use App\Modules\Inventory\Policies\AssetPolicy;
 use App\Modules\Inventory\Policies\ProductCategoryPolicy;
 use App\Modules\Inventory\Policies\ProductPolicy;
 use App\Modules\Inventory\Policies\PurchaseRequisitionPolicy;
+use App\Modules\Inventory\Policies\QcPolicy;
 use App\Modules\Inventory\Policies\StockAdjustmentPolicy;
 use App\Modules\Inventory\Policies\StockTransferPolicy;
 use App\Modules\Inventory\Policies\WarehouseTransferPolicy;
@@ -42,5 +47,9 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(WarehouseStock::class,    StockTransferPolicy::class);
         Gate::policy(StockTransfer::class,     StockTransferPolicy::class);
         Gate::policy(StockTransferItem::class, StockTransferPolicy::class);
+        Gate::policy(QcChecklist::class,        QcPolicy::class);
+        Gate::policy(QcChecklistItem::class,    QcPolicy::class);
+        Gate::policy(QcInspection::class,       QcPolicy::class);
+        Gate::policy(QcInspectionResult::class, QcPolicy::class);
     }
 }

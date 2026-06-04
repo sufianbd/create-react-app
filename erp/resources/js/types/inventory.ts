@@ -203,3 +203,51 @@ export interface StockTransfer {
     items?: StockTransferItem[];
     created_at: string;
 }
+
+export interface QcChecklistItem {
+    id: number;
+    qc_checklist_id: number;
+    name: string;
+    description: string | null;
+    is_required: boolean;
+    sort_order: number;
+}
+
+export interface QcChecklist {
+    id: number;
+    name: string;
+    product_id: number | null;
+    description: string | null;
+    is_active: boolean;
+    items_count?: number;
+    product?: Product;
+    items?: QcChecklistItem[];
+    created_at: string;
+}
+
+export interface QcInspectionResult {
+    id: number;
+    qc_inspection_id: number;
+    qc_checklist_item_id: number;
+    result: 'pass' | 'fail' | 'na';
+    notes: string | null;
+    checklist_item?: QcChecklistItem;
+}
+
+export interface QcInspection {
+    id: number;
+    qc_checklist_id: number;
+    product_id: number | null;
+    inspector_id: number | null;
+    batch_reference: string | null;
+    status: 'pending' | 'in_progress' | 'passed' | 'failed';
+    overall_result: 'pass' | 'fail' | 'conditional' | null;
+    notes: string | null;
+    inspected_at: string | null;
+    pass_rate: number | null;
+    checklist?: QcChecklist;
+    product?: Product;
+    inspector?: { id: number; name: string } | null;
+    results?: QcInspectionResult[];
+    created_at: string;
+}
