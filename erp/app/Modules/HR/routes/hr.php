@@ -18,6 +18,7 @@ use App\Modules\HR\Http\Controllers\TrainingCourseController;
 use App\Modules\HR\Http\Controllers\ShiftAssignmentController;
 use App\Modules\HR\Http\Controllers\ShiftTemplateController;
 use App\Modules\HR\Http\Controllers\WorkScheduleController;
+use App\Modules\HR\Models\ExpenseClaimItem;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
@@ -82,11 +83,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('performance-reviews/{performanceReview}/complete', [PerformanceReviewController::class, 'complete'])->name('performance-reviews.complete');
     Route::patch('performance-reviews/{performanceReview}/goals/{goal}', [PerformanceReviewController::class, 'updateGoal'])->name('performance-reviews.goals.update');
 
-    // Expense Claims
-    Route::post('expense-claims/{expenseClaim}/submit',    [ExpenseClaimController::class, 'submit'])->name('expense-claims.submit');
-    Route::post('expense-claims/{expenseClaim}/approve',   [ExpenseClaimController::class, 'approve'])->name('expense-claims.approve');
-    Route::post('expense-claims/{expenseClaim}/reject',    [ExpenseClaimController::class, 'reject'])->name('expense-claims.reject');
-    Route::post('expense-claims/{expenseClaim}/reimburse', [ExpenseClaimController::class, 'reimburse'])->name('expense-claims.reimburse');
+    // Expense Claims — custom actions BEFORE resource
+    Route::post('expense-claims/{expenseClaim}/submit',     [ExpenseClaimController::class, 'submit'])->name('expense-claims.submit');
+    Route::post('expense-claims/{expenseClaim}/approve',    [ExpenseClaimController::class, 'approve'])->name('expense-claims.approve');
+    Route::post('expense-claims/{expenseClaim}/reject',     [ExpenseClaimController::class, 'reject'])->name('expense-claims.reject');
+    Route::post('expense-claims/{expenseClaim}/mark-paid',  [ExpenseClaimController::class, 'markPaid'])->name('expense-claims.mark-paid');
+    Route::post('expense-claims/{expenseClaim}/items',      [ExpenseClaimController::class, 'addItem'])->name('expense-claims.items.add');
+    Route::delete('expense-claims/{expenseClaim}/items/{item}', [ExpenseClaimController::class, 'removeItem'])->name('expense-claims.items.remove');
     Route::resource('expense-claims', ExpenseClaimController::class)->except(['edit', 'update']);
 
     // Training

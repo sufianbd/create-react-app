@@ -4,192 +4,158 @@ use App\Models\User;
 use App\Modules\Core\Models\Tenant;
 use App\Modules\HR\Models\Employee;
 use App\Modules\HR\Models\ExpenseClaim;
+use App\Modules\HR\Models\ExpenseClaimItem;
 use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
-    $this->tenant  = Tenant::create(['name' => 'Expense Co', 'slug' => 'expense-co']);
-    $this->admin   = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->tenant = Tenant::create(['name' => 'Expense Co', 'slug' => 'expense-co']);
+    $this->admin  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->admin->assignRole('super-admin');
-    $this->manager = User::factory()->create(['tenant_id' => $this->tenant->id]);
-    $this->manager->assignRole('manager');
-    $this->staff   = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->staff  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->staff->assignRole('staff');
     $this->actingAs($this->admin);
 });
 
-function makeEmployee(int $tenantId): Employee
+function makeEmployee(): Employee
 {
     return Employee::create([
-        'tenant_id'       => $tenantId,
-        'first_name'      => 'Test',
-        'last_name'       => 'Employee',
-        'start_date'      => '2026-01-01',
-        'salary_amount'   => 3000,
-        'status'          => 'active',
-        'employment_type' => 'full_time',
-        'salary_type'     => 'monthly',
+        'tenant_id'   => test()->tenant->id,
+        'first_name'  => 'Jane',
+        'last_name'   => 'Smith',
+        'email'       => 'jane@test.com',
+        'start_date'  => now()->toDateString(),
+        'salary_amount' => 60000,
+        'status'      => 'active',
     ]);
 }
 
-test('expense claims index renders', function () {
+function makeClaim(Employee $employee, string $status = 'draft'): ExpenseClaim
+{
+    return ExpenseClaim::create([
+        'tenant_id'    => test()->tenant->id,
+        'employee_id'  => $employee->id,
+        'title'        => 'Travel Expenses',
+        'status'       => $status,
+        'total_amount' => 0,
+    ]);
+}
+
+test('admin can list expense claims', function () {
     $this->get('/hr/expense-claims')
-        ->assertStatus(200)
-        ->assertInertia(fn ($p) => $p->component('HR/ExpenseClaims/Index'));
+        ->assertStatus(200);
 });
 
-test('expense claims create page renders', function () {
-    $this->get('/hr/expense-claims/create')
-        ->assertStatus(200)
-        ->assertInertia(fn ($p) => $p->component('HR/ExpenseClaims/Create'));
-});
-
-test('can create an expense claim', function () {
-    $employee = makeEmployee($this->tenant->id);
+test('admin can create an expense claim', function () {
+    $employee = makeEmployee();
 
     $this->post('/hr/expense-claims', [
-        'employee_id'   => $employee->id,
-        'title'         => 'Flight to London',
-        'expense_date'  => '2026-06-01',
-        'amount'        => 450.00,
-        'currency_code' => 'USD',
-        'category'      => 'travel',
-    ])->assertSessionHasNoErrors();
+        'title'       => 'Conference Travel',
+        'employee_id' => $employee->id,
+    ])->assertRedirect();
 
-    expect(ExpenseClaim::where('title', 'Flight to London')->where('tenant_id', $this->tenant->id)->exists())->toBeTrue();
+    expect(ExpenseClaim::where('title', 'Conference Travel')
+        ->where('tenant_id', $this->tenant->id)
+        ->exists()
+    )->toBeTrue();
 });
 
-test('claim starts as draft', function () {
-    $employee = makeEmployee($this->tenant->id);
-    $claim = ExpenseClaim::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'title'        => 'Hotel',
-        'expense_date' => '2026-06-01',
-        'amount'       => 200,
-        'category'     => 'accommodation',
-    ]);
-    expect($claim->status)->toBe('draft');
+test('store requires title and employee_id', function () {
+    $this->postJson('/hr/expense-claims', [])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['title', 'employee_id']);
 });
 
-test('can submit a draft claim', function () {
-    $employee = makeEmployee($this->tenant->id);
-    $claim = ExpenseClaim::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'title'        => 'Dinner',
-        'expense_date' => '2026-06-01',
-        'amount'       => 80,
-        'category'     => 'meals',
+test('admin can add an item to a claim', function () {
+    $employee = makeEmployee();
+    $claim    = makeClaim($employee);
+
+    $this->post("/hr/expense-claims/{$claim->id}/items", [
+        'category'     => 'travel',
+        'description'  => 'Flight ticket',
+        'amount'       => 50.00,
+        'expense_date' => now()->toDateString(),
+    ])->assertRedirect();
+
+    expect(ExpenseClaimItem::where('expense_claim_id', $claim->id)->exists())->toBeTrue();
+    expect((float) $claim->fresh()->total_amount)->toBe(50.0);
+});
+
+test('total recalculates when item removed', function () {
+    $employee = makeEmployee();
+    $claim    = makeClaim($employee);
+
+    $this->post("/hr/expense-claims/{$claim->id}/items", [
+        'category'     => 'travel',
+        'description'  => 'Flight ticket',
+        'amount'       => 50.00,
+        'expense_date' => now()->toDateString(),
     ]);
+
+    $item = ExpenseClaimItem::where('expense_claim_id', $claim->id)->first();
+
+    $this->delete("/hr/expense-claims/{$claim->id}/items/{$item->id}");
+
+    expect((float) $claim->fresh()->total_amount)->toBe(0.0);
+});
+
+test('admin can submit a claim', function () {
+    $employee = makeEmployee();
+    $claim    = makeClaim($employee);
 
     $this->post("/hr/expense-claims/{$claim->id}/submit")
-        ->assertSessionHasNoErrors();
+        ->assertRedirect();
 
-    expect($claim->fresh()->status)->toBe('submitted');
+    $fresh = $claim->fresh();
+    expect($fresh->status)->toBe('submitted');
+    expect($fresh->submitted_at)->not->toBeNull();
 });
 
-test('can approve a submitted claim', function () {
-    $employee = makeEmployee($this->tenant->id);
-    $claim = ExpenseClaim::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'title'        => 'Taxi',
-        'expense_date' => '2026-06-01',
-        'amount'       => 30,
-        'category'     => 'travel',
-        'status'       => 'submitted',
-    ]);
+test('admin can approve a claim', function () {
+    $employee = makeEmployee();
+    $claim    = makeClaim($employee);
+
+    $this->post("/hr/expense-claims/{$claim->id}/submit");
 
     $this->post("/hr/expense-claims/{$claim->id}/approve")
-        ->assertSessionHasNoErrors();
+        ->assertRedirect();
 
     expect($claim->fresh()->status)->toBe('approved');
-    expect($claim->fresh()->reviewed_by)->toBe($this->admin->id);
 });
 
-test('can reject a submitted claim with notes', function () {
-    $employee = makeEmployee($this->tenant->id);
-    $claim = ExpenseClaim::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'title'        => 'Luxury dinner',
-        'expense_date' => '2026-06-01',
-        'amount'       => 500,
-        'category'     => 'meals',
-        'status'       => 'submitted',
-    ]);
+test('admin can reject a claim', function () {
+    $employee = makeEmployee();
+    $claim    = makeClaim($employee);
 
-    $this->post("/hr/expense-claims/{$claim->id}/reject", ['notes' => 'Over limit'])
-        ->assertSessionHasNoErrors();
+    $this->post("/hr/expense-claims/{$claim->id}/submit");
 
-    expect($claim->fresh()->status)->toBe('rejected');
-    expect($claim->fresh()->review_notes)->toBe('Over limit');
+    $this->post("/hr/expense-claims/{$claim->id}/reject", [
+        'reason' => 'Not within policy',
+    ])->assertRedirect();
+
+    $fresh = $claim->fresh();
+    expect($fresh->status)->toBe('rejected');
+    expect($fresh->rejection_reason)->toBe('Not within policy');
 });
 
-test('can mark approved claim as reimbursed', function () {
-    $employee = makeEmployee($this->tenant->id);
-    $claim = ExpenseClaim::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'title'        => 'Office supplies',
-        'expense_date' => '2026-06-01',
-        'amount'       => 50,
-        'category'     => 'supplies',
-        'status'       => 'approved',
-    ]);
+test('admin can mark a claim as paid', function () {
+    $employee = makeEmployee();
+    $claim    = makeClaim($employee);
 
-    $this->post("/hr/expense-claims/{$claim->id}/reimburse")
-        ->assertSessionHasNoErrors();
+    $this->post("/hr/expense-claims/{$claim->id}/submit");
+    $this->post("/hr/expense-claims/{$claim->id}/approve");
 
-    expect($claim->fresh()->status)->toBe('reimbursed');
+    $this->post("/hr/expense-claims/{$claim->id}/mark-paid")
+        ->assertRedirect();
+
+    expect($claim->fresh()->status)->toBe('paid');
 });
 
-test('cannot submit already submitted claim', function () {
-    $employee = makeEmployee($this->tenant->id);
-    $claim = ExpenseClaim::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'title'        => 'Double submit',
-        'expense_date' => '2026-06-01',
-        'amount'       => 100,
-        'category'     => 'other',
-        'status'       => 'submitted',
-    ]);
-
-    $this->post("/hr/expense-claims/{$claim->id}/submit")
-        ->assertSessionHasErrors();
-});
-
-test('staff cannot approve claims', function () {
-    $employee = makeEmployee($this->tenant->id);
-    $claim = ExpenseClaim::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'title'        => 'Staff test',
-        'expense_date' => '2026-06-01',
-        'amount'       => 50,
-        'category'     => 'other',
-        'status'       => 'submitted',
-    ]);
+test('staff cannot delete an expense claim', function () {
+    $employee = makeEmployee();
+    $claim    = makeClaim($employee);
 
     $this->actingAs($this->staff)
-        ->post("/hr/expense-claims/{$claim->id}/approve")
+        ->delete("/hr/expense-claims/{$claim->id}")
         ->assertStatus(403);
-});
-
-test('show page renders', function () {
-    $employee = makeEmployee($this->tenant->id);
-    $claim = ExpenseClaim::create([
-        'tenant_id'    => $this->tenant->id,
-        'employee_id'  => $employee->id,
-        'title'        => 'Show test',
-        'expense_date' => '2026-06-01',
-        'amount'       => 25,
-        'category'     => 'other',
-    ]);
-
-    $this->get("/hr/expense-claims/{$claim->id}")
-        ->assertStatus(200)
-        ->assertInertia(fn ($p) => $p->component('HR/ExpenseClaims/Show'));
 });

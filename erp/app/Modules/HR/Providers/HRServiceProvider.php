@@ -9,6 +9,7 @@ use App\Modules\HR\Models\EmployeeLoan;
 use App\Modules\HR\Models\EmployeeOnboarding;
 use App\Modules\HR\Models\EmployeeTrainingRecord;
 use App\Modules\HR\Models\ExpenseClaim;
+use App\Modules\HR\Models\ExpenseClaimItem;
 use App\Modules\HR\Models\JobApplication;
 use App\Modules\HR\Models\JobPosition;
 use App\Modules\HR\Models\LeaveRequest;
@@ -51,6 +52,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(EmployeeLoan::class,            LoanPolicy::class);
         Gate::policy(EmployeeOnboarding::class,      EmployeeOnboardingPolicy::class);
         Gate::policy(ExpenseClaim::class,            ExpenseClaimPolicy::class);
+        Gate::policy(ExpenseClaimItem::class,        ExpenseClaimPolicy::class);
         Gate::policy(JobApplication::class,          RecruitmentPolicy::class);
         Gate::policy(JobPosition::class,             RecruitmentPolicy::class);
         Gate::policy(LeaveRequest::class,            LeaveRequestPolicy::class);

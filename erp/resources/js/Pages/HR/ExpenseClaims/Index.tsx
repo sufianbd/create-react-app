@@ -3,40 +3,31 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Table } from '@/Components/Common/Table';
 import { Button } from '@/Components/Common/Button';
 import { Pagination } from '@/Components/Inventory/Pagination';
-import { ExpenseStatusBadge } from '@/Components/HR/ExpenseStatusBadge';
 import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
 import type { Paginator } from '@/types/inventory';
-
-export type ExpenseStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'reimbursed';
-
-interface ExpenseClaim {
-    id: number;
-    employee_id: number;
-    employee_name?: string;
-    employee?: { id: number; full_name: string } | null;
-    title: string;
-    category: string;
-    amount: number;
-    currency_code: string;
-    expense_date: string;
-    status: ExpenseStatus;
-    created_at?: string;
-}
+import type { ExpenseClaim } from '@/types/hr';
 
 interface Props extends PageProps {
     claims: Paginator<ExpenseClaim>;
     filters: { status?: string };
-    categories: string[];
 }
 
-const STATUS_TABS: Array<{ value: ExpenseStatus | ''; label: string }> = [
+const STATUS_COLORS: Record<string, string> = {
+    draft:     'bg-slate-100 text-slate-700',
+    submitted: 'bg-yellow-100 text-yellow-700',
+    approved:  'bg-green-100 text-green-700',
+    rejected:  'bg-red-100 text-red-700',
+    paid:      'bg-blue-100 text-blue-700',
+};
+
+const STATUS_TABS = [
     { value: '', label: 'All' },
     { value: 'draft', label: 'Draft' },
     { value: 'submitted', label: 'Submitted' },
     { value: 'approved', label: 'Approved' },
     { value: 'rejected', label: 'Rejected' },
-    { value: 'reimbursed', label: 'Reimbursed' },
+    { value: 'paid', label: 'Paid' },
 ];
 
 export default function ExpenseClaimsIndex({ claims, filters }: Props) {
@@ -62,7 +53,6 @@ export default function ExpenseClaimsIndex({ claims, filters }: Props) {
                     )}
                 </div>
 
-                {/* Status tabs */}
                 <div className="flex gap-1 border-b border-slate-200">
                     {STATUS_TABS.map((tab) => (
                         <button
@@ -87,9 +77,9 @@ export default function ExpenseClaimsIndex({ claims, filters }: Props) {
                                 key: 'employee',
                                 header: 'Employee',
                                 render: (r) => (
-                                    <Link href={`/hr/expense-claims/${r.id}`} className="font-medium text-slate-900 hover:text-indigo-600">
-                                        {r.employee?.full_name ?? r.employee_name ?? '—'}
-                                    </Link>
+                                    <span className="font-medium text-slate-900">
+                                        {r.employee ? `${r.employee.first_name} ${r.employee.last_name}` : '—'}
+                                    </span>
                                 ),
                             },
                             {
@@ -98,28 +88,27 @@ export default function ExpenseClaimsIndex({ claims, filters }: Props) {
                                 render: (r) => <span className="text-sm text-slate-700">{r.title}</span>,
                             },
                             {
-                                key: 'category',
-                                header: 'Category',
-                                render: (r) => <span className="text-sm text-slate-700 capitalize">{r.category}</span>,
-                            },
-                            {
-                                key: 'amount',
-                                header: 'Amount',
+                                key: 'total_amount',
+                                header: 'Total Amount',
                                 render: (r) => (
                                     <span className="text-sm font-medium text-slate-900">
-                                        {r.currency_code} {Number(r.amount).toFixed(2)}
+                                        ${Number(r.total_amount).toFixed(2)}
                                     </span>
                                 ),
                             },
                             {
-                                key: 'expense_date',
-                                header: 'Date',
-                                render: (r) => <span className="text-sm text-slate-500">{r.expense_date}</span>,
-                            },
-                            {
                                 key: 'status',
                                 header: 'Status',
-                                render: (r) => <ExpenseStatusBadge status={r.status} />,
+                                render: (r) => (
+                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[r.status] ?? 'bg-slate-100 text-slate-700'}`}>
+                                        {r.status}
+                                    </span>
+                                ),
+                            },
+                            {
+                                key: 'created_at',
+                                header: 'Date',
+                                render: (r) => <span className="text-sm text-slate-500">{r.created_at?.slice(0, 10)}</span>,
                             },
                             {
                                 key: 'actions',

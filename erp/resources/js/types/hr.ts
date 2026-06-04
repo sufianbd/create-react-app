@@ -330,3 +330,33 @@ export interface ShiftAssignment {
     employee?: { id: number; first_name: string; last_name: string };
     created_at: string;
 }
+
+export interface ExpenseClaimItem {
+    id: number;
+    expense_claim_id: number;
+    category: string;
+    description: string;
+    amount: number;
+    expense_date: string;
+    receipt_reference: string | null;
+}
+
+export interface ExpenseClaim {
+    id: number;
+    employee_id: number;
+    title: string;
+    description: string | null;
+    status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'paid';
+    total_amount: number;
+    total_items: number;
+    submitted_at: string | null;
+    approved_by: number | null;
+    approved_at: string | null;
+    paid_at: string | null;
+    rejection_reason: string | null;
+    notes: string | null;
+    employee?: { id: number; first_name: string; last_name: string };
+    approved_by_user?: { id: number; name: string } | null;
+    items?: ExpenseClaimItem[];
+    created_at: string;
+}

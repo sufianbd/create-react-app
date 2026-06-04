@@ -4,96 +4,84 @@ namespace App\Modules\HR\Models;
 
 use App\Models\User;
 use App\Modules\Core\Traits\BelongsToTenant;
-use App\Modules\Finance\Traits\HasAttachments;
-use DomainException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Auth;
 
 class ExpenseClaim extends Model
 {
     use BelongsToTenant;
-    use HasAttachments;
     use SoftDeletes;
 
+    protected $table = 'expense_claims';
+
     protected $fillable = [
-        'tenant_id', 'employee_id', 'submitted_by', 'title', 'description',
-        'expense_date', 'amount', 'currency_code', 'category', 'receipt_path',
-        'status', 'reviewed_by', 'reviewed_at', 'review_notes', 'created_by',
+        'tenant_id', 'employee_id', 'title', 'description', 'status',
+        'total_amount', 'submitted_at', 'approved_by', 'approved_at',
+        'paid_at', 'rejection_reason', 'notes',
     ];
 
     protected $casts = [
-        'expense_date' => 'date',
-        'reviewed_at'  => 'datetime',
-        'amount'       => 'float',
+        'total_amount' => 'decimal:2',
+        'submitted_at' => 'datetime',
+        'approved_at'  => 'datetime',
+        'paid_at'      => 'datetime',
+        'status'       => 'string',
     ];
-
-    protected $attributes = ['status' => 'draft'];
 
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
 
-    public function submitter(): BelongsTo
+    public function approvedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'submitted_by');
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
-    public function reviewer(): BelongsTo
+    public function items(): HasMany
     {
-        return $this->belongsTo(User::class, 'reviewed_by');
+        return $this->hasMany(ExpenseClaimItem::class);
     }
 
     public function submit(): void
     {
-        if ($this->status !== 'draft') {
-            throw new DomainException("Only draft claims can be submitted. Current status: {$this->status}.");
-        }
-
-        $this->update([
-            'status'       => 'submitted',
-            'submitted_by' => Auth::id(),
-        ]);
+        $this->status       = 'submitted';
+        $this->submitted_at = now();
+        $this->save();
     }
 
-    public function approve(string $notes = ''): void
+    public function approve(User $user): void
     {
-        if ($this->status !== 'submitted') {
-            throw new DomainException("Only submitted claims can be approved. Current status: {$this->status}.");
-        }
-
-        $this->update([
-            'status'       => 'approved',
-            'reviewed_by'  => Auth::id(),
-            'reviewed_at'  => now(),
-            'review_notes' => $notes,
-        ]);
+        $this->status      = 'approved';
+        $this->approved_by = $user->id;
+        $this->approved_at = now();
+        $this->save();
     }
 
-    public function reject(string $notes = ''): void
+    public function reject(string $reason): void
     {
-        if ($this->status !== 'submitted') {
-            throw new DomainException("Only submitted claims can be rejected. Current status: {$this->status}.");
-        }
-
-        $this->update([
-            'status'       => 'rejected',
-            'reviewed_by'  => Auth::id(),
-            'reviewed_at'  => now(),
-            'review_notes' => $notes,
-        ]);
+        $this->status           = 'rejected';
+        $this->rejection_reason = $reason;
+        $this->save();
     }
 
-    public function reimburse(): void
+    public function markPaid(): void
     {
-        if ($this->status !== 'approved') {
-            throw new DomainException("Only approved claims can be reimbursed. Current status: {$this->status}.");
-        }
+        $this->status  = 'paid';
+        $this->paid_at = now();
+        $this->save();
+    }
 
-        $this->update([
-            'status' => 'reimbursed',
-        ]);
+    public function recalculateTotal(): void
+    {
+        $this->total_amount = $this->items()->sum('amount');
+        $this->save();
+    }
+
+    public function getTotalItemsAttribute(): int
+    {
+        return $this->items()->count();
     }
 }

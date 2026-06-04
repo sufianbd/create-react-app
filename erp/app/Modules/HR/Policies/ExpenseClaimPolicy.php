@@ -24,17 +24,11 @@ class ExpenseClaimPolicy
 
     public function update(User $user, ExpenseClaim $expenseClaim): bool
     {
-        return $user->can('hr.update');
+        return $user->can('hr.create');
     }
 
     public function delete(User $user, ExpenseClaim $expenseClaim): bool
     {
-        return $user->can('hr.delete') && $expenseClaim->status === 'draft';
-    }
-
-    public function approve(User $user, ExpenseClaim $expenseClaim): bool
-    {
-        return $user->can('hr.update')
-            && $user->hasAnyRole(['admin', 'manager', 'super-admin']);
+        return $user->can('hr.delete');
     }
 }
