@@ -16,6 +16,8 @@ use App\Modules\HR\Models\LoanRepayment;
 use App\Modules\HR\Models\OnboardingTemplate;
 use App\Modules\HR\Models\PayrollRun;
 use App\Modules\HR\Models\PerformanceReview;
+use App\Modules\HR\Models\ShiftAssignment;
+use App\Modules\HR\Models\ShiftTemplate;
 use App\Modules\HR\Models\TrainingCourse;
 use App\Modules\HR\Models\WorkSchedule;
 use App\Modules\HR\Policies\AttendancePolicy;
@@ -29,6 +31,7 @@ use App\Modules\HR\Policies\OnboardingTemplatePolicy;
 use App\Modules\HR\Policies\PayrollRunPolicy;
 use App\Modules\HR\Policies\PerformanceReviewPolicy;
 use App\Modules\HR\Policies\RecruitmentPolicy;
+use App\Modules\HR\Policies\ShiftPolicy;
 use App\Modules\HR\Policies\TrainingPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -57,5 +60,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(PerformanceReview::class,       PerformanceReviewPolicy::class);
         Gate::policy(TrainingCourse::class,          TrainingPolicy::class);
         Gate::policy(EmployeeTrainingRecord::class,  TrainingPolicy::class);
+        Gate::policy(ShiftTemplate::class,           ShiftPolicy::class);
+        Gate::policy(ShiftAssignment::class,         ShiftPolicy::class);
     }
 }

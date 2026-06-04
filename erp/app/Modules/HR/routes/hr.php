@@ -15,6 +15,8 @@ use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
 use App\Modules\HR\Http\Controllers\PerformanceReviewController;
 use App\Modules\HR\Http\Controllers\TrainingCourseController;
+use App\Modules\HR\Http\Controllers\ShiftAssignmentController;
+use App\Modules\HR\Http\Controllers\ShiftTemplateController;
 use App\Modules\HR\Http\Controllers\WorkScheduleController;
 use Illuminate\Support\Facades\Route;
 
@@ -106,6 +108,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
 
     // Work Schedules
     Route::resource('work-schedules', WorkScheduleController::class)->except(['edit', 'update']);
+
+    // Shift Templates
+    Route::resource('shift-templates', ShiftTemplateController::class)->except(['edit', 'update']);
+
+    // Shift Assignments — markStatus BEFORE resource
+    Route::patch('shift-assignments/{shiftAssignment}/status', [ShiftAssignmentController::class, 'markStatus'])->name('shift-assignments.status');
+    Route::resource('shift-assignments', ShiftAssignmentController::class)->except(['edit', 'update', 'show']);
 
     // Employee Loans
     Route::post('employee-loans/{employeeLoan}/approve',    [EmployeeLoanController::class, 'approve'])->name('employee-loans.approve');

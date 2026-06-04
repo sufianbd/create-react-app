@@ -303,3 +303,30 @@ export interface EmployeeLoan {
     repayments?: LoanRepayment[];
     created_at: string;
 }
+
+export interface ShiftTemplate {
+    id: number;
+    name: string;
+    start_time: string;
+    end_time: string;
+    break_minutes: number;
+    days_of_week: number[] | null;
+    color: string;
+    is_active: boolean;
+    duration_hours: number;
+    assignments_count?: number;
+    created_at: string;
+}
+
+export interface ShiftAssignment {
+    id: number;
+    shift_template_id: number;
+    employee_id: number;
+    assigned_date: string;
+    notes: string | null;
+    status: 'scheduled' | 'completed' | 'absent' | 'swapped';
+    is_upcoming: boolean;
+    shift_template?: ShiftTemplate;
+    employee?: { id: number; first_name: string; last_name: string };
+    created_at: string;
+}
