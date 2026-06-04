@@ -112,6 +112,8 @@ const navItems: NavItem[] = [
             { label: 'Projects',             href: '/finance/projects',                         icon: <span /> },
             { label: 'Batch Payments',       href: '/finance/batch-payments',                   icon: <span /> },
             { label: 'Doc Templates',        href: '/finance/document-templates',               icon: <span /> },
+            { label: 'Subscriptions', href: '/finance/subscriptions', icon: <span /> },
+            { label: 'Sub Plans',     href: '/finance/subscription-plans', icon: <span /> },
         ],
     },
     {

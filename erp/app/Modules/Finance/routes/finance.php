@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\Route;
 use App\Modules\Finance\Http\Controllers\VendorProfileController;
 use App\Modules\Finance\Http\Controllers\VendorEvaluationController;
 use App\Modules\Finance\Http\Controllers\DocumentTemplateController;
+use App\Modules\Finance\Http\Controllers\SubscriptionController;
+use App\Modules\Finance\Http\Controllers\SubscriptionPlanController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -195,6 +197,16 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('document-templates/preview', [DocumentTemplateController::class, 'preview'])->name('document-templates.preview');
     Route::resource('document-templates', DocumentTemplateController::class)->except(['show']);
     Route::get('document-templates/{documentTemplate}', [DocumentTemplateController::class, 'show'])->name('document-templates.show');
+
+    // Subscription Plans
+    Route::resource('subscription-plans', SubscriptionPlanController::class)->except(['edit', 'update']);
+
+    // Subscriptions
+    Route::post('subscriptions/{subscription}/activate',        [SubscriptionController::class, 'activate'])->name('subscriptions.activate');
+    Route::post('subscriptions/{subscription}/cancel',          [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('subscriptions/{subscription}/pause',           [SubscriptionController::class, 'pause'])->name('subscriptions.pause');
+    Route::post('subscriptions/{subscription}/generate-invoice',[SubscriptionController::class, 'generateInvoice'])->name('subscriptions.generate-invoice');
+    Route::resource('subscriptions', SubscriptionController::class)->except(['edit', 'update']);
 
     // Customer Portal Token (admin generates token for a contact)
     Route::post('contacts/{contact}/portal-token', [\App\Modules\Finance\Http\Controllers\CustomerPortalController::class, 'generateToken'])->name('contacts.portal-token');

@@ -44,6 +44,9 @@ use App\Modules\Finance\Policies\JournalEntryPolicy;
 use App\Modules\Finance\Policies\QuotePolicy;
 use App\Modules\Finance\Policies\RecurringInvoicePolicy;
 use App\Modules\Finance\Policies\SalesOrderPolicy;
+use App\Modules\Finance\Models\Subscription;
+use App\Modules\Finance\Models\SubscriptionPlan;
+use App\Modules\Finance\Policies\SubscriptionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -77,6 +80,8 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(Attachment::class, AttachmentPolicy::class);
         Gate::policy(BatchPayment::class, BatchPaymentPolicy::class);
         Gate::policy(DocumentTemplate::class, DocumentTemplatePolicy::class);
+        Gate::policy(SubscriptionPlan::class, SubscriptionPolicy::class);
+        Gate::policy(Subscription::class,     SubscriptionPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);

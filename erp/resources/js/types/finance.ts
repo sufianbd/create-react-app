@@ -479,3 +479,33 @@ export interface DocumentTemplate {
     is_active: boolean;
     created_at: string;
 }
+
+export interface SubscriptionPlan {
+    id: number;
+    name: string;
+    description: string | null;
+    billing_cycle: 'monthly' | 'quarterly' | 'annually';
+    price: number;
+    currency_code: string;
+    trial_days: number;
+    is_active: boolean;
+    subscriptions_count?: number;
+    created_at: string;
+}
+
+export interface Subscription {
+    id: number;
+    contact_id: number;
+    subscription_plan_id: number;
+    status: 'trial' | 'active' | 'paused' | 'cancelled' | 'expired';
+    started_at: string;
+    trial_ends_at: string | null;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    cancelled_at: string | null;
+    next_invoice_date: string | null;
+    notes: string | null;
+    contact?: Contact;
+    plan?: SubscriptionPlan;
+    created_at: string;
+}
