@@ -17,6 +17,7 @@ class RolePermissionSeeder extends Seeder
         'users.delete'  => ['super-admin'],
         'roles.manage'  => ['super-admin'],
         'tenants.manage' => ['super-admin'],
+        'audit.view'    => ['super-admin'],
 
         // Inventory
         'inventory.view'   => ['super-admin', 'admin', 'manager', 'staff'],

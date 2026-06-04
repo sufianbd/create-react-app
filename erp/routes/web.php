@@ -5,6 +5,7 @@ use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserManagementController;
+use App\Modules\Core\Http\Controllers\AuditLogController as CoreAuditLogController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -40,6 +41,10 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->group(function () {
     Route::post('company/logo',  [CompanySettingsController::class, 'uploadLogo'])->name('settings.company.logo');
 
     Route::get('audit-log', [AuditLogController::class, 'index'])->name('settings.audit-log');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/audit-logs', [CoreAuditLogController::class, 'index'])->name('audit-logs.index');
 });
 
 require __DIR__ . '/auth.php';
