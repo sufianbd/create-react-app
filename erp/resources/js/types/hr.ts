@@ -391,3 +391,32 @@ export interface PerformanceReviewV2 {
     kpis?: PerformanceKpi[];
     created_at: string;
 }
+
+export interface Payslip {
+    id: number;
+    payroll_run_id: number;
+    employee_id: number;
+    gross_amount: number;
+    total_deductions: number;
+    net_amount: number;
+    tax_amount: number;
+    notes: string | null;
+    effective_tax_rate: number;
+    employee?: { id: number; first_name: string; last_name: string };
+}
+
+export interface PayrollRunV2 {
+    id: number;
+    period_start: string;
+    period_end: string;
+    run_date: string;
+    status: 'draft' | 'processing' | 'approved' | 'paid';
+    total_gross: number;
+    total_deductions: number;
+    total_net: number;
+    notes: string | null;
+    approved_by: number | null;
+    approved_at: string | null;
+    payslips?: Payslip[];
+    created_at: string;
+}

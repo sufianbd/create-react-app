@@ -15,17 +15,19 @@ class PayrollRun extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'tenant_id', 'period_start', 'period_end', 'status', 'notes', 'created_by',
+        'tenant_id', 'period_start', 'period_end', 'run_date', 'status', 'notes', 'created_by',
         'period_label', 'total_gross', 'total_deductions', 'total_net',
-        'employee_count', 'processed_at',
+        'employee_count', 'processed_at', 'approved_by', 'approved_at',
     ];
 
     protected $casts = [
-        'period_start'  => 'date',
-        'period_end'    => 'date',
-        'processed_at'  => 'datetime',
-        'total_gross'   => 'decimal:2',
-        'total_net'     => 'decimal:2',
+        'period_start'     => 'date',
+        'period_end'       => 'date',
+        'run_date'         => 'date',
+        'processed_at'     => 'datetime',
+        'approved_at'      => 'datetime',
+        'total_gross'      => 'decimal:2',
+        'total_net'        => 'decimal:2',
         'total_deductions' => 'decimal:2',
     ];
 
@@ -36,9 +38,19 @@ class PayrollRun extends Model
         return $this->hasMany(PayrollItem::class);
     }
 
+    public function payslips(): HasMany
+    {
+        return $this->hasMany(Payslip::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function getTotalGrossAttribute(): float
@@ -59,7 +71,7 @@ class PayrollRun extends Model
     }
 
     /**
-     * Process the payroll run.
+     * Process the payroll run (legacy method).
      * Computes totals from active employees' salary_amount for this tenant.
      */
     public function process(): void
@@ -80,12 +92,82 @@ class PayrollRun extends Model
         $employeeCount = $employees->count();
 
         $this->update([
-            'status'         => 'processed',
-            'total_gross'    => $totalGross,
+            'status'           => 'processed',
+            'total_gross'      => $totalGross,
             'total_deductions' => $totalDeductions,
-            'total_net'      => $totalNet,
-            'employee_count' => $employeeCount,
-            'processed_at'   => now(),
+            'total_net'        => $totalNet,
+            'employee_count'   => $employeeCount,
+            'processed_at'     => now(),
         ]);
+    }
+
+    /**
+     * Approve the payroll run.
+     */
+    public function approve(User $user): void
+    {
+        $this->status      = 'approved';
+        $this->approved_by = $user->id;
+        $this->approved_at = now();
+        $this->save();
+    }
+
+    /**
+     * Mark the payroll run as paid.
+     */
+    public function markPaid(): void
+    {
+        $this->status = 'paid';
+        $this->save();
+    }
+
+    /**
+     * Recalculate totals from payslips.
+     */
+    public function recalculateTotals(): void
+    {
+        $payslips = $this->payslips()->get();
+        $this->total_gross      = $payslips->sum('gross_amount');
+        $this->total_deductions = $payslips->sum('total_deductions');
+        $this->total_net        = $payslips->sum('net_amount');
+        $this->save();
+    }
+
+    /**
+     * Generate payslips for all active employees with salary_amount > 0.
+     * Returns count of payslips generated.
+     */
+    public function generatePayslips(): int
+    {
+        $employees = Employee::withoutGlobalScopes()
+            ->where('tenant_id', $this->tenant_id)
+            ->where('status', 'active')
+            ->where('salary_amount', '>', 0)
+            ->get();
+
+        $count = 0;
+        foreach ($employees as $employee) {
+            $gross      = (float) $employee->salary_amount;
+            $tax        = round($gross * 0.10, 2);
+            $deductions = $tax;
+            $net        = $gross - $deductions;
+
+            Payslip::updateOrCreate(
+                [
+                    'payroll_run_id' => $this->id,
+                    'employee_id'    => $employee->id,
+                ],
+                [
+                    'tenant_id'        => $this->tenant_id,
+                    'gross_amount'     => $gross,
+                    'tax_amount'       => $tax,
+                    'total_deductions' => $deductions,
+                    'net_amount'       => $net,
+                ]
+            );
+            $count++;
+        }
+
+        return $count;
     }
 }

@@ -59,12 +59,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
         ->name('payroll-runs.process');
     Route::resource('payroll-runs', PayrollRunController::class)->except(['edit', 'update']);
 
-    // Legacy payroll routes (for backward compat with existing tests)
-    Route::get('payroll', [PayrollController::class, 'index'])->name('payroll.index');
-    Route::get('payroll/create', [PayrollController::class, 'create'])->name('payroll.create');
-    Route::post('payroll', [PayrollController::class, 'store'])->name('payroll.store');
-    Route::get('payroll/{payrollRun}', [PayrollController::class, 'show'])->name('payroll.show');
-    Route::patch('payroll/{payrollRun}/process', [PayrollController::class, 'process'])->name('payroll.process');
+    // Payroll — custom actions BEFORE resource
+    Route::post('payroll/{payrollRun}/generate',   [PayrollController::class, 'generate'])->name('payroll.generate');
+    Route::post('payroll/{payrollRun}/approve',    [PayrollController::class, 'approve'])->name('payroll.approve');
+    Route::post('payroll/{payrollRun}/mark-paid',  [PayrollController::class, 'markPaid'])->name('payroll.mark-paid');
+    Route::patch('payroll/{payrollRun}/process',   [PayrollController::class, 'process'])->name('payroll.process');
+    Route::resource('payroll', PayrollController::class)->except(['edit', 'update']);
 
     // Onboarding Templates
     Route::resource('onboarding-templates', OnboardingTemplateController::class)->except(['edit', 'update']);

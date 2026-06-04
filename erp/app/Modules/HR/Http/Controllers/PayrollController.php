@@ -8,14 +8,108 @@ use App\Modules\HR\Http\Resources\PayrollRunResource;
 use App\Modules\HR\Models\Employee;
 use App\Modules\HR\Models\PayrollItem;
 use App\Modules\HR\Models\PayrollRun;
+use App\Modules\HR\Models\Payslip;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PayrollController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
+    {
+        $this->authorize('viewAny', PayrollRun::class);
+
+        $query = PayrollRun::query()->latest('period_start');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $runs = $query->paginate(15);
+
+        return Inertia::render('HR/Payroll/Index', [
+            'runs'    => $runs,
+            'filters' => $request->only(['status']),
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('HR/Payroll/Create');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'period_start' => ['required', 'date'],
+            'period_end'   => ['required', 'date', 'after_or_equal:period_start'],
+            'run_date'     => ['required', 'date'],
+            'notes'        => ['nullable', 'string'],
+        ]);
+
+        $run = PayrollRun::create([
+            'tenant_id'    => auth()->user()->tenant_id,
+            'period_start' => $validated['period_start'],
+            'period_end'   => $validated['period_end'],
+            'run_date'     => $validated['run_date'],
+            'notes'        => $validated['notes'] ?? null,
+            'status'       => 'draft',
+        ]);
+
+        return redirect()->route('hr.payroll.show', $run);
+    }
+
+    public function show(PayrollRun $payrollRun): Response
+    {
+        $payrollRun->load(['payslips.employee']);
+
+        return Inertia::render('HR/Payroll/Show', [
+            'payrollRun' => $payrollRun,
+        ]);
+    }
+
+    public function destroy(PayrollRun $payrollRun): RedirectResponse
+    {
+        $this->authorize('delete', $payrollRun);
+
+        $payrollRun->delete();
+
+        return redirect()->route('hr.payroll.index');
+    }
+
+    public function generate(Request $request, PayrollRun $payrollRun): RedirectResponse
+    {
+        $this->authorize('update', $payrollRun);
+
+        $count = $payrollRun->generatePayslips();
+        $payrollRun->recalculateTotals();
+
+        return back()->with('success', "Generated {$count} payslips.");
+    }
+
+    public function approve(PayrollRun $payrollRun): RedirectResponse
+    {
+        $this->authorize('update', $payrollRun);
+
+        $payrollRun->approve(auth()->user());
+
+        return back()->with('success', 'Payroll run approved.');
+    }
+
+    public function markPaid(PayrollRun $payrollRun): RedirectResponse
+    {
+        $this->authorize('update', $payrollRun);
+
+        $payrollRun->markPaid();
+
+        return back()->with('success', 'Payroll run marked as paid.');
+    }
+
+    // ─── Legacy methods (backward-compat with existing PayrollTest.php) ───
+
+    public function legacyIndex(): Response
     {
         $this->authorize('viewAny', Employee::class);
 
@@ -25,6 +119,7 @@ class PayrollController extends Controller
 
         return Inertia::render('HR/Payroll/Index', [
             'runs'        => PayrollRunResource::collection($runs),
+            'filters'     => [],
             'breadcrumbs' => [
                 ['label' => 'HR'],
                 ['label' => 'Payroll', 'href' => route('hr.payroll.index')],
@@ -32,7 +127,7 @@ class PayrollController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function legacyCreate(): Response
     {
         $this->authorize('create', Employee::class);
 
@@ -55,7 +150,7 @@ class PayrollController extends Controller
         ]);
     }
 
-    public function store(StorePayrollRunRequest $request): RedirectResponse
+    public function legacyStore(StorePayrollRunRequest $request): RedirectResponse
     {
         $this->authorize('create', Employee::class);
 
@@ -73,7 +168,7 @@ class PayrollController extends Controller
             $items = $request->input('items', []);
 
             foreach ($items as $item) {
-                $gross = (float) ($item['gross_salary'] ?? 0);
+                $gross      = (float) ($item['gross_salary'] ?? 0);
                 $deductions = (float) ($item['deductions'] ?? 0);
 
                 PayrollItem::create([
@@ -93,7 +188,7 @@ class PayrollController extends Controller
             ->with('success', 'Payroll run created.');
     }
 
-    public function show(PayrollRun $payrollRun): Response
+    public function legacyShow(PayrollRun $payrollRun): Response
     {
         $this->authorize('viewAny', Employee::class);
 

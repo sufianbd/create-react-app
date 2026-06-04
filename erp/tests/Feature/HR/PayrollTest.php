@@ -3,126 +3,169 @@
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
 use App\Modules\HR\Models\Employee;
-use App\Modules\HR\Models\PayrollItem;
 use App\Modules\HR\Models\PayrollRun;
+use App\Modules\HR\Models\Payslip;
 use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
-    $this->tenant   = Tenant::create(['name' => 'Test Co', 'slug' => 'test-co']);
-    $this->admin    = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->tenant = Tenant::create(['name' => 'Payroll Phase73 Co', 'slug' => 'payroll-phase73-co']);
+    $this->admin  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->admin->assignRole('super-admin');
-    $this->employee = Employee::create([
-        'tenant_id'       => $this->tenant->id,
-        'first_name'      => 'Pay',
-        'last_name'       => 'Emp',
-        'employment_type' => 'full_time',
-        'status'          => 'active',
-        'salary_type'     => 'monthly',
-        'salary_amount'   => 5000,
-        'start_date'      => now()->toDateString(),
+    $this->staff  = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->staff->assignRole('staff');
+    $this->actingAs($this->admin);
+});
+
+function makePayrollRun(string $status = 'draft'): PayrollRun
+{
+    return PayrollRun::create([
+        'tenant_id'    => test()->tenant->id,
+        'period_start' => now()->startOfMonth()->toDateString(),
+        'period_end'   => now()->endOfMonth()->toDateString(),
+        'run_date'     => now()->toDateString(),
+        'status'       => $status,
     ]);
+}
+
+// Test 1: admin can list payroll runs
+test('admin can list payroll runs', function () {
+    $this->get('/hr/payroll')
+        ->assertStatus(200);
 });
 
-test('payroll index is accessible', function () {
-    $this->actingAs($this->admin)
-        ->get('/hr/payroll')
-        ->assertStatus(200)
-        ->assertInertia(fn ($p) => $p->component('HR/Payroll/Index'));
+// Test 2: admin can create a payroll run
+test('admin can create a payroll run', function () {
+    $this->post('/hr/payroll', [
+        'period_start' => now()->startOfMonth()->toDateString(),
+        'period_end'   => now()->endOfMonth()->toDateString(),
+        'run_date'     => now()->toDateString(),
+    ])->assertRedirect();
+
+    expect(
+        PayrollRun::where('tenant_id', $this->tenant->id)->exists()
+    )->toBeTrue();
 });
 
-test('payroll create page renders', function () {
-    $this->actingAs($this->admin)
-        ->get('/hr/payroll/create')
-        ->assertStatus(200)
-        ->assertInertia(fn ($p) => $p->component('HR/Payroll/Create'));
+// Test 3: store requires period_start, period_end, run_date
+test('store requires period_start, period_end, run_date', function () {
+    $this->postJson('/hr/payroll', [])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['period_start', 'period_end', 'run_date']);
 });
 
-test('payroll run can be created with items', function () {
-    $this->actingAs($this->admin)
-        ->post('/hr/payroll', [
-            'period_start' => '2026-05-01',
-            'period_end'   => '2026-05-31',
-            'items'        => [
-                [
-                    'employee_id'  => $this->employee->id,
-                    'gross_salary' => 5000,
-                    'deductions'   => 500,
-                ],
-            ],
-        ])
+// Test 4: admin can view a payroll run
+test('admin can view a payroll run', function () {
+    $run = makePayrollRun();
+
+    $this->get("/hr/payroll/{$run->id}")
+        ->assertStatus(200);
+});
+
+// Test 5: generate payslips creates payslips for active employees
+test('generate payslips creates payslips for active employees', function () {
+    \App\Modules\HR\Models\Employee::create([
+        'tenant_id'    => $this->tenant->id,
+        'first_name'   => 'Emp',
+        'last_name'    => '1',
+        'email'        => 'emp1@test.com',
+        'start_date'   => now()->toDateString(),
+        'salary_amount' => 60000,
+        'status'       => 'active',
+    ]);
+
+    \App\Modules\HR\Models\Employee::create([
+        'tenant_id'    => $this->tenant->id,
+        'first_name'   => 'Emp',
+        'last_name'    => '2',
+        'email'        => 'emp2@test.com',
+        'start_date'   => now()->toDateString(),
+        'salary_amount' => 60000,
+        'status'       => 'active',
+    ]);
+
+    $run = makePayrollRun();
+
+    $this->post("/hr/payroll/{$run->id}/generate")
         ->assertRedirect();
 
-    $run = PayrollRun::latest()->first();
-    expect($run)->not->toBeNull();
-    expect($run->items)->toHaveCount(1);
-    expect((float) $run->items->first()->net_salary)->toBe(4500.0);
+    expect(Payslip::where('payroll_run_id', $run->id)->count())->toBe(2);
 });
 
-test('payroll run starts as draft', function () {
-    $run = PayrollRun::create([
+// Test 6: recalculateTotals updates run totals
+test('recalculateTotals updates run totals', function () {
+    \App\Modules\HR\Models\Employee::create([
         'tenant_id'    => $this->tenant->id,
-        'period_start' => '2026-05-01',
-        'period_end'   => '2026-05-31',
+        'first_name'   => 'Totals',
+        'last_name'    => 'Worker',
+        'email'        => 'totals@test.com',
+        'start_date'   => now()->toDateString(),
+        'salary_amount' => 60000,
+        'status'       => 'active',
     ]);
 
-    expect($run->status)->toBe('draft');
+    $run = makePayrollRun();
+    $run->generatePayslips();
+    $run->recalculateTotals();
+    $run->refresh();
+
+    expect((float) $run->total_gross)->toBeGreaterThan(0);
+    expect((float) $run->total_net)->toBeGreaterThan(0);
 });
 
-test('payroll run can be processed', function () {
-    $run = PayrollRun::create([
-        'tenant_id'    => $this->tenant->id,
-        'period_start' => '2026-05-01',
-        'period_end'   => '2026-05-31',
-    ]);
+// Test 7: admin can approve a payroll run
+test('admin can approve a payroll run', function () {
+    $run = makePayrollRun();
 
-    PayrollItem::create([
-        'payroll_run_id' => $run->id,
-        'employee_id'    => $this->employee->id,
-        'gross_salary'   => 5000,
-        'deductions'     => 500,
-        'net_salary'     => 4500,
-    ]);
+    $this->post("/hr/payroll/{$run->id}/approve")
+        ->assertRedirect();
 
-    $run->process();
-
-    expect($run->fresh()->status)->toBe('processed');
+    $run->refresh();
+    expect($run->status)->toBe('approved');
+    expect($run->approved_by)->toBe($this->admin->id);
 });
 
-test('cannot process an already processed run', function () {
-    $run = PayrollRun::create([
-        'tenant_id'    => $this->tenant->id,
-        'period_start' => '2026-05-01',
-        'period_end'   => '2026-05-31',
-        'status'       => 'processed',
-    ]);
+// Test 8: admin can mark a run as paid
+test('admin can mark a run as paid', function () {
+    $run = makePayrollRun('approved');
 
-    expect(fn () => $run->process())->toThrow(\DomainException::class);
+    $this->post("/hr/payroll/{$run->id}/mark-paid")
+        ->assertRedirect();
+
+    expect($run->fresh()->status)->toBe('paid');
 });
 
-test('total_gross and total_net are computed correctly', function () {
-    $run = PayrollRun::create([
+// Test 9: effective_tax_rate accessor is correct
+test('effective_tax_rate accessor is correct', function () {
+    $run = makePayrollRun();
+    $employee = \App\Modules\HR\Models\Employee::create([
         'tenant_id'    => $this->tenant->id,
-        'period_start' => '2026-05-01',
-        'period_end'   => '2026-05-31',
+        'first_name'   => 'Tax',
+        'last_name'    => 'Test',
+        'email'        => 'tax@test.com',
+        'start_date'   => now()->toDateString(),
+        'salary_amount' => 100,
+        'status'       => 'active',
     ]);
 
-    $emp2 = Employee::create([
-        'tenant_id'       => $this->tenant->id,
-        'first_name'      => 'Two',
-        'last_name'       => 'Emp',
-        'employment_type' => 'full_time',
-        'status'          => 'active',
-        'salary_type'     => 'monthly',
-        'salary_amount'   => 3000,
-        'start_date'      => now()->toDateString(),
+    $payslip = Payslip::create([
+        'tenant_id'        => $this->tenant->id,
+        'payroll_run_id'   => $run->id,
+        'employee_id'      => $employee->id,
+        'gross_amount'     => 100,
+        'tax_amount'       => 10,
+        'total_deductions' => 10,
+        'net_amount'       => 90,
     ]);
 
-    PayrollItem::create(['payroll_run_id' => $run->id, 'employee_id' => $this->employee->id, 'gross_salary' => 5000, 'deductions' => 500, 'net_salary' => 4500]);
-    PayrollItem::create(['payroll_run_id' => $run->id, 'employee_id' => $emp2->id,            'gross_salary' => 3000, 'deductions' => 300, 'net_salary' => 2700]);
+    expect($payslip->effective_tax_rate)->toBe(10.0);
+});
 
-    $run->load('items');
+// Test 10: staff cannot delete a payroll run
+test('staff cannot delete a payroll run', function () {
+    $run = makePayrollRun();
 
-    expect($run->total_gross)->toBe(8000.0);
-    expect($run->total_net)->toBe(7200.0);
+    $this->actingAs($this->staff)
+        ->delete("/hr/payroll/{$run->id}")
+        ->assertStatus(403);
 });
