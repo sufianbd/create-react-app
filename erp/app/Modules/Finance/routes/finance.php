@@ -184,5 +184,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('vendors/{contact}/evaluations',       [VendorEvaluationController::class, 'store'])->name('vendors.evaluations.store');
     Route::delete('vendors/{contact}/evaluations/{evaluation}', [VendorEvaluationController::class, 'destroy'])->name('vendors.evaluations.destroy');
 
+    // Customer Portal Token (admin generates token for a contact)
+    Route::post('contacts/{contact}/portal-token', [\App\Modules\Finance\Http\Controllers\CustomerPortalController::class, 'generateToken'])->name('contacts.portal-token');
 
 });

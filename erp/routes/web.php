@@ -44,6 +44,10 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__ . '/auth.php';
 
+// Public Customer Portal (no auth required)
+Route::get('/portal/{token}', [\App\Modules\Finance\Http\Controllers\CustomerPortalController::class, 'show'])->name('portal.show');
+Route::get('/portal/{token}/invoices/{invoice}', [\App\Modules\Finance\Http\Controllers\CustomerPortalController::class, 'invoice'])->name('portal.invoice');
+
 Route::post('/notifications/refresh', function (\Illuminate\Http\Request $request) {
     \App\Services\NotificationService::clearCache($request->user()->tenant_id);
     return back();

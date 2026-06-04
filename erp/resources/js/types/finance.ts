@@ -430,3 +430,13 @@ export interface VendorEvaluation {
     evaluator?: { id: number; name: string };
     created_at: string;
 }
+
+export interface CustomerPortalToken {
+    id: number;
+    contact_id: number;
+    email: string;
+    expires_at: string | null;
+    last_accessed_at: string | null;
+    is_expired: boolean;
+    portal_url?: string;
+}
