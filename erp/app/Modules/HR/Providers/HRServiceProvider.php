@@ -5,11 +5,13 @@ namespace App\Modules\HR\Providers;
 use App\Modules\HR\Models\Department;
 use App\Modules\HR\Models\Employee;
 use App\Modules\HR\Models\EmployeeOnboarding;
+use App\Modules\HR\Models\EmployeeTrainingRecord;
 use App\Modules\HR\Models\ExpenseClaim;
 use App\Modules\HR\Models\LeaveRequest;
 use App\Modules\HR\Models\OnboardingTemplate;
 use App\Modules\HR\Models\PayrollRun;
 use App\Modules\HR\Models\PerformanceReview;
+use App\Modules\HR\Models\TrainingCourse;
 use App\Modules\HR\Policies\DepartmentPolicy;
 use App\Modules\HR\Policies\EmployeeOnboardingPolicy;
 use App\Modules\HR\Policies\EmployeePolicy;
@@ -18,6 +20,7 @@ use App\Modules\HR\Policies\LeaveRequestPolicy;
 use App\Modules\HR\Policies\OnboardingTemplatePolicy;
 use App\Modules\HR\Policies\PayrollRunPolicy;
 use App\Modules\HR\Policies\PerformanceReviewPolicy;
+use App\Modules\HR\Policies\TrainingPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -37,5 +40,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(OnboardingTemplate::class,  OnboardingTemplatePolicy::class);
         Gate::policy(PayrollRun::class,          PayrollRunPolicy::class);
         Gate::policy(PerformanceReview::class,   PerformanceReviewPolicy::class);
+        Gate::policy(TrainingCourse::class,        TrainingPolicy::class);
+        Gate::policy(EmployeeTrainingRecord::class, TrainingPolicy::class);
     }
 }

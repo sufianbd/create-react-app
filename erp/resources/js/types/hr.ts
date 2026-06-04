@@ -171,3 +171,33 @@ export interface PerformanceReview {
     competencies?: PerformanceReviewCompetency[];
     created_at: string;
 }
+
+export interface TrainingCourse {
+    id: number;
+    title: string;
+    provider: string | null;
+    type: 'internal' | 'external' | 'online' | 'certification';
+    duration_hours: number | null;
+    description: string | null;
+    is_active: boolean;
+    training_records_count?: number;
+    created_at: string;
+}
+
+export interface EmployeeTrainingRecord {
+    id: number;
+    employee_id: number;
+    training_course_id: number | null;
+    course_title: string;
+    completed_date: string;
+    expiry_date: string | null;
+    score: number | null;
+    passed: boolean;
+    certificate_number: string | null;
+    notes: string | null;
+    is_expired: boolean;
+    is_expiring: boolean;
+    employee?: Employee;
+    training_course?: TrainingCourse | null;
+    created_at: string;
+}

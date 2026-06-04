@@ -3,12 +3,14 @@
 use App\Modules\HR\Http\Controllers\DepartmentController;
 use App\Modules\HR\Http\Controllers\EmployeeController;
 use App\Modules\HR\Http\Controllers\EmployeeOnboardingController;
+use App\Modules\HR\Http\Controllers\EmployeeTrainingRecordController;
 use App\Modules\HR\Http\Controllers\ExpenseClaimController;
 use App\Modules\HR\Http\Controllers\LeaveRequestController;
 use App\Modules\HR\Http\Controllers\OnboardingTemplateController;
 use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
 use App\Modules\HR\Http\Controllers\PerformanceReviewController;
+use App\Modules\HR\Http\Controllers\TrainingCourseController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
@@ -79,4 +81,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('expense-claims/{expenseClaim}/reject',    [ExpenseClaimController::class, 'reject'])->name('expense-claims.reject');
     Route::post('expense-claims/{expenseClaim}/reimburse', [ExpenseClaimController::class, 'reimburse'])->name('expense-claims.reimburse');
     Route::resource('expense-claims', ExpenseClaimController::class)->except(['edit', 'update']);
+
+    // Training
+    Route::resource('training-courses', TrainingCourseController::class)->except(['edit', 'update']);
+    Route::resource('training-records', EmployeeTrainingRecordController::class)->except(['edit', 'update']);
 });

@@ -114,6 +114,7 @@ const navItems: NavItem[] = [
             { label: 'Expense Claims',       href: '/hr/expense-claims',        icon: <span /> },
             { label: 'Onboarding',           href: '/hr/onboarding-templates',  icon: <span /> },
             { label: 'Performance Reviews',  href: '/hr/performance-reviews',   icon: <span /> },
+            { label: 'Training',             href: '/hr/training-courses',      icon: <span /> },
         ],
     },
     {
