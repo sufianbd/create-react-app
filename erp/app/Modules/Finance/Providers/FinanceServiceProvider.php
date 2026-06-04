@@ -22,9 +22,11 @@ use App\Modules\Finance\Models\DepreciationEntry;
 use App\Modules\Finance\Models\FixedAsset;
 use App\Modules\Finance\Models\Attachment;
 use App\Modules\Finance\Models\BatchPayment;
+use App\Modules\Finance\Models\DocumentTemplate;
 use App\Modules\Finance\Models\Project;
 use App\Modules\Finance\Policies\AttachmentPolicy;
 use App\Modules\Finance\Policies\BatchPaymentPolicy;
+use App\Modules\Finance\Policies\DocumentTemplatePolicy;
 use App\Modules\Finance\Policies\AccountPolicy;
 use App\Modules\Finance\Policies\DeliveryNotePolicy;
 use App\Modules\Finance\Policies\PriceListPolicy;
@@ -74,6 +76,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Attachment::class, AttachmentPolicy::class);
         Gate::policy(BatchPayment::class, BatchPaymentPolicy::class);
+        Gate::policy(DocumentTemplate::class, DocumentTemplatePolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);

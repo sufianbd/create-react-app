@@ -25,6 +25,7 @@ use App\Modules\Finance\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 use App\Modules\Finance\Http\Controllers\VendorProfileController;
 use App\Modules\Finance\Http\Controllers\VendorEvaluationController;
+use App\Modules\Finance\Http\Controllers\DocumentTemplateController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -189,6 +190,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('vendors/{contact}/evaluations',        [VendorEvaluationController::class, 'index'])->name('vendors.evaluations.index');
     Route::post('vendors/{contact}/evaluations',       [VendorEvaluationController::class, 'store'])->name('vendors.evaluations.store');
     Route::delete('vendors/{contact}/evaluations/{evaluation}', [VendorEvaluationController::class, 'destroy'])->name('vendors.evaluations.destroy');
+
+    // Document Templates
+    Route::get('document-templates/preview', [DocumentTemplateController::class, 'preview'])->name('document-templates.preview');
+    Route::resource('document-templates', DocumentTemplateController::class)->except(['show']);
+    Route::get('document-templates/{documentTemplate}', [DocumentTemplateController::class, 'show'])->name('document-templates.show');
 
     // Customer Portal Token (admin generates token for a contact)
     Route::post('contacts/{contact}/portal-token', [\App\Modules\Finance\Http\Controllers\CustomerPortalController::class, 'generateToken'])->name('contacts.portal-token');

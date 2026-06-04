@@ -467,3 +467,15 @@ export interface CustomerPortalToken {
     is_expired: boolean;
     portal_url?: string;
 }
+
+export interface DocumentTemplate {
+    id: number;
+    name: string;
+    type: 'invoice' | 'quote' | 'letter' | 'receipt' | 'purchase_order';
+    subject: string | null;
+    body: string;
+    variables: string[] | null;
+    is_default: boolean;
+    is_active: boolean;
+    created_at: string;
+}
