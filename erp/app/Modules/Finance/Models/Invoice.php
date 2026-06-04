@@ -23,7 +23,7 @@ class Invoice extends Model
     use HasStatusTransitions;
 
     protected $fillable = [
-        'tenant_id', 'recurring_invoice_id', 'sales_order_id', 'contact_id', 'number',
+        'tenant_id', 'recurring_invoice_id', 'sales_order_id', 'contact_id', 'assigned_to_user_id', 'number',
         'issue_date', 'due_date', 'status', 'notes', 'created_by',
         'currency_code', 'exchange_rate',
     ];
@@ -80,5 +80,10 @@ class Invoice extends Model
     public function salesOrder(): BelongsTo
     {
         return $this->belongsTo(SalesOrder::class);
+    }
+
+    public function assignedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to_user_id');
     }
 }

@@ -28,6 +28,8 @@ use App\Modules\Finance\Http\Controllers\VendorEvaluationController;
 use App\Modules\Finance\Http\Controllers\DocumentTemplateController;
 use App\Modules\Finance\Http\Controllers\SubscriptionController;
 use App\Modules\Finance\Http\Controllers\SubscriptionPlanController;
+use App\Modules\Finance\Http\Controllers\CommissionController;
+use App\Modules\Finance\Http\Controllers\CommissionRuleController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -210,5 +212,15 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
 
     // Customer Portal Token (admin generates token for a contact)
     Route::post('contacts/{contact}/portal-token', [\App\Modules\Finance\Http\Controllers\CustomerPortalController::class, 'generateToken'])->name('contacts.portal-token');
+
+
+    // Commission Rules
+    Route::resource('commission-rules', CommissionRuleController::class)->except(['edit', 'update']);
+
+    // Commissions
+    Route::post('commissions/{commission}/approve',  [CommissionController::class, 'approve'])->name('commissions.approve');
+    Route::post('commissions/{commission}/mark-paid',[CommissionController::class, 'markPaid'])->name('commissions.mark-paid');
+    Route::post('commissions/generate',             [CommissionController::class, 'generate'])->name('commissions.generate');
+    Route::resource('commissions', CommissionController::class)->except(['edit', 'update']);
 
 });

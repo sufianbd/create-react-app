@@ -114,6 +114,7 @@ const navItems: NavItem[] = [
             { label: 'Doc Templates',        href: '/finance/document-templates',               icon: <span /> },
             { label: 'Subscriptions', href: '/finance/subscriptions', icon: <span /> },
             { label: 'Sub Plans',     href: '/finance/subscription-plans', icon: <span /> },
+            { label: 'Commissions', href: '/finance/commissions', icon: <span /> },
         ],
     },
     {

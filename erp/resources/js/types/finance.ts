@@ -509,3 +509,31 @@ export interface Subscription {
     plan?: SubscriptionPlan;
     created_at: string;
 }
+export interface CommissionRule {
+    id: number;
+    user_id: number;
+    name: string;
+    rate: number;
+    type: 'percentage' | 'fixed';
+    fixed_amount: number | null;
+    is_active: boolean;
+    user?: { id: number; name: string };
+    created_at: string;
+}
+
+export interface Commission {
+    id: number;
+    commission_rule_id: number;
+    user_id: number;
+    invoice_id: number;
+    invoice_amount: number;
+    commission_amount: number;
+    status: 'pending' | 'approved' | 'paid';
+    approved_at: string | null;
+    paid_at: string | null;
+    notes: string | null;
+    rule?: CommissionRule;
+    user?: { id: number; name: string };
+    invoice?: Invoice;
+    created_at: string;
+}
