@@ -133,10 +133,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/comparative-profit-loss/export', [ReportController::class, 'exportComparativeProfitLoss'])->name('reports.comparative-profit-loss.export');
     Route::get('reports/cash-flow-forecast/export',       [ReportController::class, 'exportCashFlowForecast'])->name('reports.cash-flow-forecast.export');
 
-    // Exchange Rates
-    Route::get('/exchange-rates',              [ExchangeRateController::class, 'index'])->name('exchange-rates.index');
-    Route::post('/exchange-rates',             [ExchangeRateController::class, 'store'])->name('exchange-rates.store');
-    Route::delete('/exchange-rates/{exchangeRate}', [ExchangeRateController::class, 'destroy'])->name('exchange-rates.destroy');
+    // Exchange Rates — report must come before resource to avoid 'report' being treated as an ID
+    Route::get('exchange-rates/report', [ExchangeRateController::class, 'report'])->name('exchange-rates.report');
+    Route::resource('exchange-rates', ExchangeRateController::class)->only(['index', 'create', 'store', 'destroy']);
 
     // Budgets
     Route::post('budgets/{budget}/activate', [BudgetController::class, 'activate'])->name('budgets.activate');

@@ -7,9 +7,23 @@ use App\Modules\Finance\Models\ExchangeRate;
 
 class ExchangeRatePolicy
 {
-    public function viewAny(User $user): bool  { return $user->can('finance.view'); }
-    public function view(User $user, ExchangeRate $exchangeRate): bool { return $user->can('finance.view'); }
-    public function create(User $user): bool   { return $user->can('finance.create'); }
-    public function update(User $user, ExchangeRate $exchangeRate): bool { return $user->can('finance.create'); }
-    public function delete(User $user, ExchangeRate $exchangeRate): bool { return $user->can('finance.delete'); }
+    public function viewAny(User $user): bool
+    {
+        return $user->hasPermissionTo('finance.view');
+    }
+
+    public function view(User $user, ExchangeRate $model): bool
+    {
+        return $user->hasPermissionTo('finance.view');
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->hasPermissionTo('finance.create');
+    }
+
+    public function delete(User $user, ExchangeRate $model): bool
+    {
+        return $user->hasPermissionTo('finance.delete');
+    }
 }

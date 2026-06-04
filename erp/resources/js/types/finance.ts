@@ -276,12 +276,12 @@ export interface RecurringInvoice {
 
 export interface ExchangeRate {
     id: number;
-    tenant_id?: number;
-    currency_code: string;
-    rate: number | string;
-    date: string;
-    created_at?: string;
-    updated_at?: string;
+    base_currency: string;
+    quote_currency: string;
+    rate: number;
+    effective_date: string;
+    source: string | null;
+    created_at: string;
 }
 
 export interface BankAccount {
