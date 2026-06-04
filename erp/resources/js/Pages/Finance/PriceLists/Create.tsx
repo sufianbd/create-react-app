@@ -11,16 +11,9 @@ interface Product {
     sale_price: number;
 }
 
-interface ItemRow {
-    product_id: string | number;
-    unit_price: string | number;
-}
-
 interface Props extends PageProps {
     products: Product[];
 }
-
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'SGD'];
 
 export default function PriceListCreate({ products }: Props) {
     const { data, setData, post, processing, errors } = useForm<{
@@ -29,30 +22,19 @@ export default function PriceListCreate({ products }: Props) {
         currency_code: string;
         discount_percent: string | number;
         is_active: boolean;
-        items: ItemRow[];
+        is_default: boolean;
+        valid_from: string;
+        valid_to: string;
     }>({
         name: '',
         description: '',
         currency_code: 'USD',
         discount_percent: 0,
         is_active: true,
-        items: [],
+        is_default: false,
+        valid_from: '',
+        valid_to: '',
     });
-
-    function addItem() {
-        setData('items', [...data.items, { product_id: '', unit_price: '' }]);
-    }
-
-    function removeItem(index: number) {
-        setData('items', data.items.filter((_, i) => i !== index));
-    }
-
-    function updateItem(index: number, field: keyof ItemRow, value: string | number) {
-        const updated = data.items.map((item, i) =>
-            i === index ? { ...item, [field]: value } : item
-        );
-        setData('items', updated);
-    }
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -65,7 +47,6 @@ export default function PriceListCreate({ products }: Props) {
             <div className="mx-auto max-w-3xl space-y-6">
                 <h1 className="text-2xl font-semibold text-slate-900">New Price List</h1>
                 <form onSubmit={submit} className="space-y-6">
-                    {/* Header fields */}
                     <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -89,16 +70,17 @@ export default function PriceListCreate({ products }: Props) {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
-                                <select
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Currency Code <span className="text-red-500">*</span>
+                                </label>
+                                <input
                                     value={data.currency_code}
-                                    onChange={(e) => setData('currency_code', e.target.value)}
-                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                                >
-                                    {CURRENCIES.map((c) => (
-                                        <option key={c} value={c}>{c}</option>
-                                    ))}
-                                </select>
+                                    onChange={(e) => setData('currency_code', e.target.value.toUpperCase().slice(0, 3))}
+                                    maxLength={3}
+                                    placeholder="USD"
+                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                />
+                                {errors.currency_code && <p className="mt-1 text-xs text-red-500">{errors.currency_code}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -113,67 +95,48 @@ export default function PriceListCreate({ products }: Props) {
                                     onChange={(e) => setData('discount_percent', e.target.value)}
                                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                 />
-                                {errors.discount_percent && (
-                                    <p className="mt-1 text-xs text-red-500">{errors.discount_percent}</p>
-                                )}
                             </div>
                         </div>
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={data.is_active}
-                                onChange={(e) => setData('is_active', e.target.checked)}
-                                className="rounded border-slate-300 text-indigo-600"
-                            />
-                            <span className="text-slate-700">Active</span>
-                        </label>
-                    </div>
-
-                    {/* Product overrides */}
-                    <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-base font-semibold text-slate-900">Product Price Overrides</h2>
-                            <Button type="button" variant="secondary" onClick={addItem}>
-                                + Add Product Override
-                            </Button>
-                        </div>
-                        {data.items.length === 0 && (
-                            <p className="text-sm text-slate-400">
-                                No product overrides. The global discount (if any) will apply to all products.
-                            </p>
-                        )}
-                        {data.items.map((item, index) => (
-                            <div key={index} className="flex items-center gap-3">
-                                <select
-                                    value={item.product_id}
-                                    onChange={(e) => updateItem(index, 'product_id', e.target.value)}
-                                    className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                                >
-                                    <option value="">Select product...</option>
-                                    {products.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            [{p.sku}] {p.name} (default: {p.sale_price})
-                                        </option>
-                                    ))}
-                                </select>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Valid From</label>
                                 <input
-                                    type="number"
-                                    min={0}
-                                    step={0.0001}
-                                    placeholder="Unit price"
-                                    value={item.unit_price}
-                                    onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
-                                    className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    type="date"
+                                    value={data.valid_from}
+                                    onChange={(e) => setData('valid_from', e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => removeItem(index)}
-                                    className="text-red-500 hover:text-red-700 text-sm font-medium"
-                                >
-                                    Remove
-                                </button>
                             </div>
-                        ))}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Valid To</label>
+                                <input
+                                    type="date"
+                                    value={data.valid_to}
+                                    onChange={(e) => setData('valid_to', e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-6">
+                            <label className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={data.is_active}
+                                    onChange={(e) => setData('is_active', e.target.checked)}
+                                    className="rounded border-slate-300 text-indigo-600"
+                                />
+                                <span className="text-slate-700">Active</span>
+                            </label>
+                            <label className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={data.is_default}
+                                    onChange={(e) => setData('is_default', e.target.checked)}
+                                    className="rounded border-slate-300 text-indigo-600"
+                                />
+                                <span className="text-slate-700">Set as Default</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-3">

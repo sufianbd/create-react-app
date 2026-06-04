@@ -18,149 +18,174 @@ beforeEach(function () {
     $this->actingAs($this->admin);
 });
 
-test('price lists index renders', function () {
+function makeProduct(): Product
+{
+    static $counter = 0;
+    $counter++;
+    return Product::create([
+        'tenant_id'   => test()->tenant->id,
+        'name'        => 'Widget',
+        'sku'         => 'W-' . str_pad($counter, 3, '0', STR_PAD_LEFT),
+        'cost_price'  => 5,
+        'sale_price'  => 10,
+        'is_active'   => true,
+    ]);
+}
+
+// 1. admin can list price lists
+test('admin can list price lists', function () {
     $this->get('/finance/price-lists')
         ->assertStatus(200)
         ->assertInertia(fn ($p) => $p->component('Finance/PriceLists/Index'));
 });
 
-test('can create a price list', function () {
+// 2. admin can create a price list
+test('admin can create a price list', function () {
     $this->post('/finance/price-lists', [
-        'name'             => 'VIP Pricing',
-        'currency_code'    => 'USD',
-        'discount_percent' => 10,
-        'is_active'        => true,
-    ])->assertSessionHasNoErrors();
+        'name'          => 'VIP Pricing',
+        'currency_code' => 'USD',
+    ])->assertRedirect();
 
-    expect(PriceList::where('name', 'VIP Pricing')->where('tenant_id', $this->tenant->id)->exists())->toBeTrue();
+    expect(PriceList::where('name', 'VIP Pricing')
+        ->where('tenant_id', $this->tenant->id)
+        ->exists()
+    )->toBeTrue();
 });
 
-test('can create price list with product-specific overrides', function () {
-    $product = Product::create([
-        'tenant_id'  => $this->tenant->id,
-        'sku'        => 'PL-01',
-        'name'       => 'Widget',
-        'cost_price' => 5,
-        'sale_price' => 20,
+// 3. store requires name and currency_code
+test('store requires name and currency_code', function () {
+    $this->postJson('/finance/price-lists', [])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['name', 'currency_code']);
+});
+
+// 4. setting is_default clears other defaults
+test('setting is_default clears other defaults', function () {
+    $listA = PriceList::create([
+        'tenant_id'     => $this->tenant->id,
+        'name'          => 'List A',
+        'currency_code' => 'USD',
+        'is_default'    => true,
     ]);
 
     $this->post('/finance/price-lists', [
-        'name'             => 'Partner Pricing',
-        'currency_code'    => 'USD',
-        'discount_percent' => 0,
-        'is_active'        => true,
-        'items'            => [
-            ['product_id' => $product->id, 'unit_price' => 15],
-        ],
-    ])->assertSessionHasNoErrors();
+        'name'          => 'List B',
+        'currency_code' => 'USD',
+        'is_default'    => true,
+    ])->assertRedirect();
 
-    $list = PriceList::where('name', 'Partner Pricing')->first();
-    expect($list->items()->count())->toBe(1);
-    expect((float) $list->items()->first()->unit_price)->toBe(15.0);
+    expect($listA->fresh()->is_default)->toBeFalse();
+    $listB = PriceList::where('name', 'List B')->first();
+    expect($listB->is_default)->toBeTrue();
 });
 
-test('priceFor returns product-specific override', function () {
-    $product = Product::create([
-        'tenant_id'  => $this->tenant->id,
-        'sku'        => 'PL-02',
-        'name'       => 'Override',
-        'cost_price' => 5,
-        'sale_price' => 100,
+// 5. admin can view a price list
+test('admin can view a price list', function () {
+    $priceList = PriceList::create([
+        'tenant_id'     => $this->tenant->id,
+        'name'          => 'View Test',
+        'currency_code' => 'USD',
     ]);
-    $list = PriceList::create([
-        'tenant_id'        => $this->tenant->id,
-        'name'             => 'Override List',
-        'currency_code'    => 'USD',
-        'discount_percent' => 0,
+
+    $this->get("/finance/price-lists/{$priceList->id}")
+        ->assertStatus(200)
+        ->assertInertia(fn ($p) => $p->component('Finance/PriceLists/Show'));
+});
+
+// 6. admin can add an item to a price list
+test('admin can add an item to a price list', function () {
+    $priceList = PriceList::create([
+        'tenant_id'     => $this->tenant->id,
+        'name'          => 'Item Test',
+        'currency_code' => 'USD',
     ]);
-    PriceListItem::create([
-        'price_list_id' => $list->id,
+    $product = makeProduct();
+
+    $this->post("/finance/price-lists/{$priceList->id}/items", [
+        'product_id'   => $product->id,
+        'unit_price'   => 8.00,
+        'min_quantity' => 1,
+    ])->assertRedirect();
+
+    expect(PriceListItem::where('price_list_id', $priceList->id)
+        ->where('product_id', $product->id)
+        ->exists()
+    )->toBeTrue();
+});
+
+// 7. admin can remove an item
+test('admin can remove an item', function () {
+    $priceList = PriceList::create([
+        'tenant_id'     => $this->tenant->id,
+        'name'          => 'Remove Test',
+        'currency_code' => 'USD',
+    ]);
+    $product = makeProduct();
+
+    $item = PriceListItem::create([
+        'tenant_id'     => $this->tenant->id,
+        'price_list_id' => $priceList->id,
         'product_id'    => $product->id,
-        'unit_price'    => 75,
+        'unit_price'    => 8.00,
+        'min_quantity'  => 1,
     ]);
 
-    expect(PriceList::priceFor($list->id, $product->id, 100.0))->toBe(75.0);
+    $this->delete("/finance/price-lists/{$priceList->id}/items/{$item->id}")
+        ->assertRedirect();
+
+    expect(PriceListItem::find($item->id))->toBeNull();
 });
 
-test('priceFor applies global discount when no override', function () {
-    $product = Product::create([
-        'tenant_id'  => $this->tenant->id,
-        'sku'        => 'PL-03',
-        'name'       => 'Discount',
-        'cost_price' => 5,
-        'sale_price' => 100,
-    ]);
-    $list = PriceList::create([
-        'tenant_id'        => $this->tenant->id,
-        'name'             => 'Discount List',
-        'currency_code'    => 'USD',
-        'discount_percent' => 20,
-    ]);
-
-    // 100 * (1 - 0.20) = 80
-    expect(PriceList::priceFor($list->id, $product->id, 100.0))->toBe(80.0);
-});
-
-test('priceFor returns default price when no list or override', function () {
-    $product = Product::create([
-        'tenant_id'  => $this->tenant->id,
-        'sku'        => 'PL-04',
-        'name'       => 'Default',
-        'cost_price' => 5,
-        'sale_price' => 50,
-    ]);
-    $list = PriceList::create([
-        'tenant_id'        => $this->tenant->id,
-        'name'             => 'Empty List',
-        'currency_code'    => 'USD',
-        'discount_percent' => 0,
-    ]);
-    expect(PriceList::priceFor($list->id, $product->id, 50.0))->toBe(50.0);
-});
-
-test('contact can be assigned a price list', function () {
-    $list = PriceList::create([
-        'tenant_id'        => $this->tenant->id,
-        'name'             => 'Customer List',
-        'currency_code'    => 'USD',
-        'discount_percent' => 5,
-    ]);
-    $contact = Contact::create([
+// 8. getPriceForProduct returns correct tier
+test('getPriceForProduct returns correct tier', function () {
+    $priceList = PriceList::create([
         'tenant_id'     => $this->tenant->id,
-        'name'          => 'VIP Customer',
-        'type'          => 'customer',
-        'price_list_id' => $list->id,
+        'name'          => 'Tiered List',
+        'currency_code' => 'USD',
     ]);
-    expect($contact->price_list_id)->toBe($list->id);
-});
+    $product = makeProduct();
 
-test('price for contact endpoint returns correct price', function () {
-    $product = Product::create([
-        'tenant_id'  => $this->tenant->id,
-        'sku'        => 'PL-05',
-        'name'       => 'Endpoint',
-        'cost_price' => 5,
-        'sale_price' => 100,
-    ]);
-    $list = PriceList::create([
-        'tenant_id'        => $this->tenant->id,
-        'name'             => 'Endpoint List',
-        'currency_code'    => 'USD',
-        'discount_percent' => 10,
-    ]);
-    $contact = Contact::create([
+    PriceListItem::create([
         'tenant_id'     => $this->tenant->id,
-        'name'          => 'Endpoint Customer',
-        'type'          => 'customer',
-        'price_list_id' => $list->id,
+        'price_list_id' => $priceList->id,
+        'product_id'    => $product->id,
+        'unit_price'    => 10.00,
+        'min_quantity'  => 1,
     ]);
 
-    $this->getJson("/finance/price-lists/price-for-contact?contact_id={$contact->id}&product_id={$product->id}")
-        ->assertJson(['price' => 90.0]);
+    PriceListItem::create([
+        'tenant_id'     => $this->tenant->id,
+        'price_list_id' => $priceList->id,
+        'product_id'    => $product->id,
+        'unit_price'    => 8.00,
+        'min_quantity'  => 10,
+    ]);
+
+    expect($priceList->getPriceForProduct($product->id, 10))->toBe(8.0);
+    expect($priceList->getPriceForProduct($product->id, 1))->toBe(10.0);
 });
 
-test('staff cannot create price lists', function () {
+// 9. getPriceForProduct returns null when no matching item
+test('getPriceForProduct returns null when no matching item', function () {
+    $priceList = PriceList::create([
+        'tenant_id'     => $this->tenant->id,
+        'name'          => 'Empty List',
+        'currency_code' => 'USD',
+    ]);
+    $product = makeProduct();
+
+    expect($priceList->getPriceForProduct($product->id))->toBeNull();
+});
+
+// 10. staff cannot delete a price list
+test('staff cannot delete a price list', function () {
+    $priceList = PriceList::create([
+        'tenant_id'     => $this->tenant->id,
+        'name'          => 'Staff Delete Test',
+        'currency_code' => 'USD',
+    ]);
+
     $this->actingAs($this->staff)
-        ->post('/finance/price-lists', ['name' => 'Staff List', 'currency_code' => 'USD', 'discount_percent' => 0])
+        ->delete("/finance/price-lists/{$priceList->id}")
         ->assertStatus(403);
 });

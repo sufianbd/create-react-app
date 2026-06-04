@@ -51,6 +51,15 @@ export interface Contact {
     vendor_evaluations?: VendorEvaluation[];
 }
 
+export interface PriceListItem {
+    id: number;
+    price_list_id: number;
+    product_id: number;
+    unit_price: number;
+    min_quantity: number;
+    product?: { id: number; name: string; sku: string };
+}
+
 export interface PriceList {
     id: number;
     name: string;
@@ -58,18 +67,14 @@ export interface PriceList {
     currency_code: string;
     discount_percent: number;
     is_active: boolean;
+    is_default: boolean;
+    valid_from: string | null;
+    valid_to: string | null;
     items_count?: number;
     contacts_count?: number;
     items?: PriceListItem[];
     contacts?: Contact[];
-}
-
-export interface PriceListItem {
-    id: number;
-    price_list_id: number;
-    product_id: number;
-    product?: { id: number; name: string; sku: string; sale_price: number };
-    unit_price: number;
+    created_at: string;
 }
 
 export interface InvoiceItem {

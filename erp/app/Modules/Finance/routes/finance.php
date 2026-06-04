@@ -169,6 +169,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
 
     // Price Lists
     Route::get('price-lists/price-for-contact', [PriceListController::class, 'priceForContact'])->name('price-lists.price-for-contact');
+    Route::post('price-lists/{priceList}/items',          [PriceListController::class, 'addItem'])->name('price-lists.items.add');
+    Route::delete('price-lists/{priceList}/items/{item}', [PriceListController::class, 'removeItem'])->name('price-lists.items.remove');
     Route::resource('price-lists', PriceListController::class)->except(['edit']);
 
     // Projects

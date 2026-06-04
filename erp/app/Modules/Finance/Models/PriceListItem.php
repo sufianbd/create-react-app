@@ -2,17 +2,21 @@
 
 namespace App\Modules\Finance\Models;
 
+use App\Modules\Core\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PriceListItem extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
-        'price_list_id', 'product_id', 'unit_price',
+        'tenant_id', 'price_list_id', 'product_id', 'unit_price', 'min_quantity',
     ];
 
     protected $casts = [
-        'unit_price' => 'float',
+        'unit_price'   => 'decimal:4',
+        'min_quantity' => 'integer',
     ];
 
     public function priceList(): BelongsTo

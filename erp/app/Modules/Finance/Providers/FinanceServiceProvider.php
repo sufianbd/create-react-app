@@ -18,6 +18,7 @@ use App\Modules\Finance\Models\SalesOrder;
 use App\Modules\Finance\Models\Budget;
 use App\Modules\Finance\Models\BudgetLine;
 use App\Modules\Finance\Models\PriceList;
+use App\Modules\Finance\Models\PriceListItem;
 use App\Modules\Finance\Models\DepreciationEntry;
 use App\Modules\Finance\Models\FixedAsset;
 use App\Modules\Finance\Models\Attachment;
@@ -85,6 +86,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(FixedAsset::class, FixedAssetPolicy::class);
         Gate::policy(DepreciationEntry::class, FixedAssetPolicy::class);
         Gate::policy(PriceList::class, PriceListPolicy::class);
+        Gate::policy(PriceListItem::class, PriceListPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Attachment::class, AttachmentPolicy::class);
         Gate::policy(BatchPayment::class, BatchPaymentPolicy::class);
