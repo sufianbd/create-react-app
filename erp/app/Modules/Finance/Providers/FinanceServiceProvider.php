@@ -16,6 +16,7 @@ use App\Modules\Finance\Models\Quote;
 use App\Modules\Finance\Models\RecurringInvoice;
 use App\Modules\Finance\Models\SalesOrder;
 use App\Modules\Finance\Models\Budget;
+use App\Modules\Finance\Models\BudgetLine;
 use App\Modules\Finance\Models\PriceList;
 use App\Modules\Finance\Models\DepreciationEntry;
 use App\Modules\Finance\Models\FixedAsset;
@@ -53,7 +54,8 @@ class FinanceServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../routes/finance.php');
 
         Gate::policy(Account::class, AccountPolicy::class);
-        Gate::policy(Budget::class, BudgetPolicy::class);
+        Gate::policy(Budget::class,     BudgetPolicy::class);
+        Gate::policy(BudgetLine::class, BudgetPolicy::class);
         Gate::policy(Contact::class, ContactPolicy::class);
         Gate::policy(DeliveryNote::class, DeliveryNotePolicy::class);
         Gate::policy(JournalEntry::class, JournalEntryPolicy::class);

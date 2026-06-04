@@ -15,11 +15,12 @@ class Budget extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'tenant_id', 'name', 'year', 'period_type', 'notes', 'status', 'created_by',
+        'tenant_id', 'name', 'fiscal_year', 'year', 'period_type', 'notes', 'status', 'created_by',
     ];
 
     protected $casts = [
-        'year' => 'integer',
+        'fiscal_year' => 'integer',
+        'year'        => 'integer',
     ];
 
     public function lines(): HasMany
@@ -30,5 +31,22 @@ class Budget extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function activate(): void
+    {
+        $this->status = 'active';
+        $this->save();
+    }
+
+    public function close(): void
+    {
+        $this->status = 'closed';
+        $this->save();
+    }
+
+    public function getTotalBudgetedAttribute(): float
+    {
+        return (float) $this->lines->sum('amount');
     }
 }

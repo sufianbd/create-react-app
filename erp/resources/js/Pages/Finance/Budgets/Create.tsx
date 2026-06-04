@@ -23,20 +23,20 @@ interface Props extends PageProps {
 export default function Create({ accounts }: Props) {
     const { data, setData, post, processing, errors } = useForm<{
         name: string;
-        year: number;
+        fiscal_year: number;
         period_type: string;
         notes: string;
         lines: LineItem[];
     }>({
         name: '',
-        year: new Date().getFullYear(),
+        fiscal_year: new Date().getFullYear(),
         period_type: 'annual',
         notes: '',
-        lines: [{ account_id: '', period: 0, amount: '' }],
+        lines: [{ account_id: '', period: 1, amount: '' }],
     });
 
     function addLine() {
-        setData('lines', [...data.lines, { account_id: '', period: 0, amount: '' }]);
+        setData('lines', [...data.lines, { account_id: '', period: 1, amount: '' }]);
     }
 
     function removeLine(idx: number) {
@@ -82,22 +82,22 @@ export default function Create({ accounts }: Props) {
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
                                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                                    placeholder="e.g. FY2026 Annual Budget"
+                                    placeholder="e.g. FY2025 Annual Budget"
                                 />
                                 {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Year <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Fiscal Year <span className="text-red-500">*</span></label>
                                 <input
                                     type="number"
-                                    value={data.year}
-                                    onChange={(e) => setData('year', parseInt(e.target.value))}
+                                    value={data.fiscal_year}
+                                    onChange={(e) => setData('fiscal_year', parseInt(e.target.value))}
                                     min={2000}
                                     max={2100}
                                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                                 />
-                                {errors.year && <p className="mt-1 text-xs text-red-600">{errors.year}</p>}
+                                {errors.fiscal_year && <p className="mt-1 text-xs text-red-600">{errors.fiscal_year}</p>}
                             </div>
 
                             <div>
@@ -173,10 +173,10 @@ export default function Create({ accounts }: Props) {
                                                 type="number"
                                                 value={line.period}
                                                 onChange={(e) => updateLine(idx, 'period', parseInt(e.target.value))}
-                                                min={0}
+                                                min={1}
                                                 max={12}
                                                 className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
-                                                placeholder="0"
+                                                placeholder="1"
                                             />
                                         </td>
                                         <td className="px-4 py-2">

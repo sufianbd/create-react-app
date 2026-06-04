@@ -2,6 +2,7 @@
 
 use App\Modules\Finance\Http\Controllers\AccountController;
 use App\Modules\Finance\Http\Controllers\BudgetController;
+use App\Modules\Finance\Http\Controllers\BudgetLineController;
 use App\Modules\Finance\Http\Controllers\BankAccountController;
 use App\Modules\Finance\Http\Controllers\BankStatementController;
 use App\Modules\Finance\Http\Controllers\BillController;
@@ -138,7 +139,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::delete('/exchange-rates/{exchangeRate}', [ExchangeRateController::class, 'destroy'])->name('exchange-rates.destroy');
 
     // Budgets
+    Route::post('budgets/{budget}/activate', [BudgetController::class, 'activate'])->name('budgets.activate');
+    Route::post('budgets/{budget}/close',    [BudgetController::class, 'close'])->name('budgets.close');
     Route::resource('budgets', BudgetController::class)->except(['edit', 'update']);
+
+    // Budget Lines
+    Route::patch('budget-lines/{budgetLine}', [BudgetLineController::class, 'update'])->name('budget-lines.update');
+    Route::delete('budget-lines/{budgetLine}', [BudgetLineController::class, 'destroy'])->name('budget-lines.destroy');
 
     // Bank Accounts
     Route::resource('bank-accounts', BankAccountController::class);

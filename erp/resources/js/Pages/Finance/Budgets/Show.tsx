@@ -19,9 +19,10 @@ interface BudgetLine {
 interface Budget {
     id: number;
     name: string;
-    year: number;
+    fiscal_year: number;
+    year?: number;
     period_type: string;
-    status: 'draft' | 'active' | 'archived';
+    status: 'draft' | 'active' | 'closed';
     notes: string | null;
 }
 
@@ -39,6 +40,16 @@ export default function Show({ budget, lines, total_budget, total_actual, total_
         router.delete(`/finance/budgets/${budget.id}`);
     }
 
+    function handleActivate() {
+        if (!confirm(`Activate budget "${budget.name}"?`)) return;
+        router.post(`/finance/budgets/${budget.id}/activate`);
+    }
+
+    function handleClose() {
+        if (!confirm(`Close budget "${budget.name}"?`)) return;
+        router.post(`/finance/budgets/${budget.id}/close`);
+    }
+
     return (
         <AppLayout>
             <Head title={`Budget: ${budget.name}`} />
@@ -51,16 +62,32 @@ export default function Show({ budget, lines, total_budget, total_actual, total_
                             <BudgetStatusBadge status={budget.status} />
                         </div>
                         <p className="mt-1 text-sm text-slate-500">
-                            {budget.year} &mdash; <span className="capitalize">{budget.period_type}</span>
+                            {budget.fiscal_year ?? budget.year} &mdash; <span className="capitalize">{budget.period_type}</span>
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
                         {budget.status === 'draft' && (
+                            <>
+                                <button
+                                    onClick={handleActivate}
+                                    className="rounded-md border border-green-300 px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-50"
+                                >
+                                    Activate
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                                >
+                                    Delete
+                                </button>
+                            </>
+                        )}
+                        {budget.status === 'active' && (
                             <button
-                                onClick={handleDelete}
-                                className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                                onClick={handleClose}
+                                className="rounded-md border border-orange-300 px-3 py-1.5 text-sm font-medium text-orange-700 hover:bg-orange-50"
                             >
-                                Delete
+                                Close Budget
                             </button>
                         )}
                         <Link href="/finance/budgets" className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
@@ -73,8 +100,8 @@ export default function Show({ budget, lines, total_budget, total_actual, total_
                 <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                     <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <div>
-                            <dt className="text-xs font-medium text-slate-500 uppercase">Year</dt>
-                            <dd className="mt-1 text-sm font-semibold text-slate-900">{budget.year}</dd>
+                            <dt className="text-xs font-medium text-slate-500 uppercase">Fiscal Year</dt>
+                            <dd className="mt-1 text-sm font-semibold text-slate-900">{budget.fiscal_year ?? budget.year}</dd>
                         </div>
                         <div>
                             <dt className="text-xs font-medium text-slate-500 uppercase">Period Type</dt>
@@ -97,7 +124,9 @@ export default function Show({ budget, lines, total_budget, total_actual, total_
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
                     <div className="border-b border-slate-200 px-6 py-4">
                         <h2 className="text-base font-semibold text-slate-900">Budget vs Actuals</h2>
-                        <p className="mt-0.5 text-xs text-slate-500">Green = on track (variance &ge; 0), Red = over budget (variance &lt; 0)</p>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                            Green = under budget (variance &lt; 0), Red = over budget (variance &gt; 0)
+                        </p>
                     </div>
                     <table className="w-full text-sm">
                         <thead className="bg-slate-50 text-xs text-slate-500 uppercase border-b border-slate-200">
@@ -105,7 +134,7 @@ export default function Show({ budget, lines, total_budget, total_actual, total_
                                 <th className="px-4 py-3 text-left font-medium w-24">Code</th>
                                 <th className="px-4 py-3 text-left font-medium">Account</th>
                                 <th className="px-4 py-3 text-left font-medium w-20">Type</th>
-                                <th className="px-4 py-3 text-right font-medium w-28">Budget</th>
+                                <th className="px-4 py-3 text-right font-medium w-28">Budgeted</th>
                                 <th className="px-4 py-3 text-right font-medium w-28">Actual</th>
                                 <th className="px-4 py-3 text-right font-medium w-28">Variance</th>
                                 <th className="px-4 py-3 text-right font-medium w-20">Var %</th>
@@ -119,18 +148,19 @@ export default function Show({ budget, lines, total_budget, total_actual, total_
                                     </td>
                                 </tr>
                             ) : lines.map((line) => {
-                                const isOnTrack = line.variance >= 0;
+                                // Positive variance = over budget (bad), negative = under budget (good)
+                                const isOverBudget = line.variance > 0;
                                 return (
-                                    <tr key={line.id} className={isOnTrack ? 'bg-green-50 hover:bg-green-100' : 'bg-red-50 hover:bg-red-100'}>
+                                    <tr key={line.id} className={isOverBudget ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-slate-50'}>
                                         <td className="px-4 py-3 font-mono text-slate-600">{line.account_code}</td>
                                         <td className="px-4 py-3 text-slate-800">{line.account_name}</td>
                                         <td className="px-4 py-3 capitalize text-slate-600">{line.account_type}</td>
                                         <td className="px-4 py-3 text-right text-slate-700">{line.budget.toFixed(2)}</td>
                                         <td className="px-4 py-3 text-right text-slate-700">{line.actual.toFixed(2)}</td>
-                                        <td className={`px-4 py-3 text-right font-medium ${isOnTrack ? 'text-green-700' : 'text-red-700'}`}>
+                                        <td className={`px-4 py-3 text-right font-medium ${isOverBudget ? 'text-red-700' : 'text-green-700'}`}>
                                             {line.variance.toFixed(2)}
                                         </td>
-                                        <td className={`px-4 py-3 text-right ${isOnTrack ? 'text-green-700' : 'text-red-700'}`}>
+                                        <td className={`px-4 py-3 text-right ${isOverBudget ? 'text-red-700' : 'text-green-700'}`}>
                                             {line.variance_pct !== null ? `${line.variance_pct}%` : '—'}
                                         </td>
                                     </tr>
@@ -142,7 +172,7 @@ export default function Show({ budget, lines, total_budget, total_actual, total_
                                 <td colSpan={3} className="px-4 py-3 text-slate-900">Totals</td>
                                 <td className="px-4 py-3 text-right text-slate-900">{total_budget.toFixed(2)}</td>
                                 <td className="px-4 py-3 text-right text-slate-900">{total_actual.toFixed(2)}</td>
-                                <td className={`px-4 py-3 text-right ${total_variance >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                <td className={`px-4 py-3 text-right ${total_variance > 0 ? 'text-red-700' : 'text-green-700'}`}>
                                     {total_variance.toFixed(2)}
                                 </td>
                                 <td className="px-4 py-3"></td>

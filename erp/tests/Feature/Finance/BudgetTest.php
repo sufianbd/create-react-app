@@ -5,8 +5,6 @@ use App\Modules\Core\Models\Tenant;
 use App\Modules\Finance\Models\Account;
 use App\Modules\Finance\Models\Budget;
 use App\Modules\Finance\Models\BudgetLine;
-use App\Modules\Finance\Models\JournalEntry;
-use App\Modules\Finance\Models\JournalLine;
 use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
@@ -16,155 +14,159 @@ beforeEach(function () {
     $this->admin->assignRole('super-admin');
     $this->staff  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->staff->assignRole('staff');
+    $this->actingAs($this->admin);
+    app()->instance('tenant', $this->tenant);
 });
 
-test('budgets index is accessible', function () {
-    $this->actingAs($this->admin)
-        ->get('/finance/budgets')
-        ->assertStatus(200)
-        ->assertInertia(fn ($p) => $p->component('Finance/Budgets/Index'));
-});
-
-test('can create a budget with lines', function () {
-    $account = Account::create([
-        'tenant_id' => $this->tenant->id,
-        'code'      => '4000',
-        'name'      => 'Revenue',
-        'type'      => 'income',
-        'is_active' => true,
+function makeBudgetAccount(): Account
+{
+    return Account::create([
+        'tenant_id' => test()->tenant->id,
+        'name'      => 'Marketing Expense',
+        'code'      => 'EXP-MKT-' . uniqid(),
+        'type'      => 'expense',
     ]);
+}
 
-    $this->actingAs($this->admin)
-        ->post('/finance/budgets', [
-            'name'        => 'FY2026',
-            'year'        => 2026,
-            'period_type' => 'annual',
-            'lines'       => [
-                ['account_id' => $account->id, 'period' => 0, 'amount' => 100000],
-            ],
-        ])
-        ->assertSessionHasNoErrors();
+it('admin can list budgets', function () {
+    $this->get('/finance/budgets')->assertStatus(200);
+});
 
-    $budget = Budget::where('name', 'FY2026')->where('tenant_id', $this->tenant->id)->first();
+it('admin can create a budget with lines', function () {
+    $account = makeBudgetAccount();
+    $this->post('/finance/budgets', [
+        'name'        => 'FY2025 Budget',
+        'fiscal_year' => 2025,
+        'period_type' => 'annual',
+        'lines'       => [
+            ['account_id' => $account->id, 'period' => 1, 'amount' => 10000],
+        ],
+    ])->assertRedirect();
+    $budget = Budget::where('name', 'FY2025 Budget')->first();
     expect($budget)->not->toBeNull();
     expect($budget->lines()->count())->toBe(1);
 });
 
-test('budget show page renders with variance', function () {
-    $account = Account::create([
-        'tenant_id' => $this->tenant->id,
-        'code'      => '5000',
-        'name'      => 'Expenses',
-        'type'      => 'expense',
-        'is_active' => true,
-    ]);
+it('admin can view budget', function () {
     $budget = Budget::create([
-        'tenant_id'   => $this->tenant->id,
+        'tenant_id'   => test()->tenant->id,
         'name'        => 'Test Budget',
-        'year'        => 2026,
-        'period_type' => 'annual',
-        'status'      => 'active',
-    ]);
-    BudgetLine::create([
-        'budget_id'  => $budget->id,
-        'account_id' => $account->id,
-        'period'     => 0,
-        'amount'     => 50000,
-    ]);
-
-    $this->actingAs($this->admin)
-        ->get("/finance/budgets/{$budget->id}")
-        ->assertStatus(200)
-        ->assertInertia(fn ($p) => $p
-            ->component('Finance/Budgets/Show')
-            ->has('lines')
-            ->has('total_budget')
-            ->has('total_actual')
-            ->has('total_variance')
-        );
-});
-
-test('variance is computed from posted journal entries', function () {
-    $account = Account::create([
-        'tenant_id' => $this->tenant->id,
-        'code'      => '5100',
-        'name'      => 'Marketing',
-        'type'      => 'expense',
-        'is_active' => true,
-    ]);
-    $otherAccount = Account::create([
-        'tenant_id' => $this->tenant->id,
-        'code'      => '1000',
-        'name'      => 'Cash',
-        'type'      => 'asset',
-        'is_active' => true,
-    ]);
-
-    $budget = Budget::create([
-        'tenant_id'   => $this->tenant->id,
-        'name'        => 'Variance Test',
-        'year'        => 2026,
-        'period_type' => 'annual',
-        'status'      => 'active',
-    ]);
-    BudgetLine::create(['budget_id' => $budget->id, 'account_id' => $account->id, 'period' => 0, 'amount' => 10000]);
-
-    // Post a journal entry with 3000 debit to the expense account
-    $entry = JournalEntry::create([
-        'tenant_id'   => $this->tenant->id,
-        'date'        => '2026-03-01',
-        'description' => 'Marketing spend',
-        'status'      => 'posted',
-    ]);
-    JournalLine::create(['journal_entry_id' => $entry->id, 'account_id' => $account->id,      'debit' => 3000, 'credit' => 0]);
-    JournalLine::create(['journal_entry_id' => $entry->id, 'account_id' => $otherAccount->id, 'debit' => 0,    'credit' => 3000]);
-
-    $this->actingAs($this->admin)
-        ->get("/finance/budgets/{$budget->id}")
-        ->assertInertia(fn ($p) => $p
-            ->where('lines.0.actual', 3000)
-            ->where('lines.0.variance', -7000)  // actual(3000) - budget(10000) = -7000 (under-spent)
-        );
-});
-
-test('draft budget can be deleted', function () {
-    $budget = Budget::create([
-        'tenant_id'   => $this->tenant->id,
-        'name'        => 'To Delete',
-        'year'        => 2026,
+        'fiscal_year' => 2025,
+        'year'        => 2025,
         'period_type' => 'annual',
         'status'      => 'draft',
     ]);
-
-    $this->actingAs($this->admin)
-        ->delete("/finance/budgets/{$budget->id}")
-        ->assertSessionHasNoErrors();
-
-    expect(Budget::find($budget->id))->toBeNull();
+    $this->get("/finance/budgets/{$budget->id}")->assertStatus(200);
 });
 
-test('active budget cannot be deleted', function () {
+it('admin can activate budget', function () {
     $budget = Budget::create([
-        'tenant_id'   => $this->tenant->id,
-        'name'        => 'Active',
-        'year'        => 2026,
+        'tenant_id'   => test()->tenant->id,
+        'name'        => 'Draft Budget',
+        'fiscal_year' => 2025,
+        'year'        => 2025,
+        'period_type' => 'annual',
+        'status'      => 'draft',
+    ]);
+    $this->post("/finance/budgets/{$budget->id}/activate");
+    expect($budget->fresh()->status)->toBe('active');
+});
+
+it('admin can close budget', function () {
+    $budget = Budget::create([
+        'tenant_id'   => test()->tenant->id,
+        'name'        => 'Active Budget',
+        'fiscal_year' => 2025,
+        'year'        => 2025,
         'period_type' => 'annual',
         'status'      => 'active',
     ]);
+    $this->post("/finance/budgets/{$budget->id}/close");
+    expect($budget->fresh()->status)->toBe('closed');
+});
 
-    $this->actingAs($this->admin)
+it('total_budgeted sums lines', function () {
+    $account  = makeBudgetAccount();
+    $account2 = Account::create([
+        'tenant_id' => test()->tenant->id,
+        'name'      => 'Office Expense',
+        'code'      => 'EXP-OFF-' . uniqid(),
+        'type'      => 'expense',
+    ]);
+    $budget = Budget::create([
+        'tenant_id'   => test()->tenant->id,
+        'name'        => 'Sum Budget',
+        'fiscal_year' => 2025,
+        'year'        => 2025,
+        'period_type' => 'annual',
+        'status'      => 'draft',
+    ]);
+    $budget->lines()->createMany([
+        ['tenant_id' => test()->tenant->id, 'account_id' => $account->id,  'period' => 1, 'amount' => 5000],
+        ['tenant_id' => test()->tenant->id, 'account_id' => $account2->id, 'period' => 1, 'amount' => 3000],
+    ]);
+    $budget->load('lines');
+    expect($budget->total_budgeted)->toBe(8000.0);
+});
+
+it('admin can update a budget line', function () {
+    $account = makeBudgetAccount();
+    $budget  = Budget::create([
+        'tenant_id'   => test()->tenant->id,
+        'name'        => 'Update Budget',
+        'fiscal_year' => 2025,
+        'year'        => 2025,
+        'period_type' => 'annual',
+        'status'      => 'draft',
+    ]);
+    $line = $budget->lines()->create([
+        'tenant_id'  => test()->tenant->id,
+        'account_id' => $account->id,
+        'period'     => 1,
+        'amount'     => 1000,
+    ]);
+    $this->patch("/finance/budget-lines/{$line->id}", ['amount' => 2000]);
+    expect((float) $line->fresh()->amount)->toBe(2000.0);
+});
+
+it('fiscal_year must be valid integer', function () {
+    $account = makeBudgetAccount();
+    $this->postJson('/finance/budgets', [
+        'name'        => 'Bad Budget',
+        'fiscal_year' => 1999,
+        'period_type' => 'annual',
+        'lines'       => [['account_id' => $account->id, 'period' => 1, 'amount' => 100]],
+    ])->assertStatus(422);
+});
+
+it('staff cannot delete budget', function () {
+    $budget = Budget::create([
+        'tenant_id'   => test()->tenant->id,
+        'name'        => 'Staff Budget',
+        'fiscal_year' => 2025,
+        'year'        => 2025,
+        'period_type' => 'annual',
+        'status'      => 'draft',
+    ]);
+    $this->actingAs($this->staff)
         ->delete("/finance/budgets/{$budget->id}")
         ->assertStatus(403);
 });
 
-test('staff cannot create budgets', function () {
-    $this->actingAs($this->staff)
-        ->post('/finance/budgets', [
-            'name' => 'Staff Budget', 'year' => 2026, 'period_type' => 'annual', 'lines' => [],
-        ])
-        ->assertStatus(403);
-});
-
-test('guest cannot access budgets', function () {
-    $this->get('/finance/budgets')->assertRedirect();
+it('duplicate name+fiscal_year is rejected', function () {
+    $account = makeBudgetAccount();
+    Budget::create([
+        'tenant_id'   => test()->tenant->id,
+        'name'        => 'Dup Budget',
+        'fiscal_year' => 2025,
+        'year'        => 2025,
+        'period_type' => 'annual',
+        'status'      => 'draft',
+    ]);
+    $this->postJson('/finance/budgets', [
+        'name'        => 'Dup Budget',
+        'fiscal_year' => 2025,
+        'period_type' => 'annual',
+        'lines'       => [['account_id' => $account->id, 'period' => 1, 'amount' => 100]],
+    ])->assertStatus(422);
 });

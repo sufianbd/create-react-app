@@ -8,6 +8,7 @@ use App\Modules\Finance\Models\Budget;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,16 +19,18 @@ class BudgetController extends Controller
         $this->authorize('viewAny', Budget::class);
 
         $budgets = Budget::withCount('lines')
-            ->orderByDesc('year')
+            ->orderByDesc('fiscal_year')
             ->orderByDesc('id')
-            ->get()
-            ->map(fn ($b) => [
-                'id'          => $b->id,
-                'name'        => $b->name,
-                'year'        => $b->year,
-                'period_type' => $b->period_type,
-                'status'      => $b->status,
-                'lines_count' => $b->lines_count,
+            ->paginate(15)
+            ->through(fn ($b) => [
+                'id'             => $b->id,
+                'name'           => $b->name,
+                'fiscal_year'    => $b->fiscal_year ?? $b->year,
+                'year'           => $b->year,
+                'period_type'    => $b->period_type,
+                'status'         => $b->status,
+                'lines_count'    => $b->lines_count,
+                'total_budgeted' => null,
             ]);
 
         return Inertia::render('Finance/Budgets/Index', [
@@ -62,22 +65,37 @@ class BudgetController extends Controller
     {
         $this->authorize('create', Budget::class);
 
+        $tenantId   = app('tenant')->id;
+        $fiscalYear = $request->input('fiscal_year') ?? $request->input('year');
+
         $validated = $request->validate([
-            'name'               => 'required|string|max:191',
-            'year'               => 'required|integer|min:2000|max:2100',
-            'period_type'        => 'required|in:annual,monthly,quarterly',
-            'notes'              => 'nullable|string',
-            'lines'              => 'required|array|min:1',
-            'lines.*.account_id' => 'required|exists:accounts,id',
-            'lines.*.period'     => 'required|integer|min:0|max:12',
-            'lines.*.amount'     => 'required|numeric|min:0',
+            'name'        => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('budgets')->where(fn ($q) => $q
+                    ->where('fiscal_year', $fiscalYear)
+                    ->where('tenant_id', $tenantId)
+                    ->whereNull('deleted_at')
+                ),
+            ],
+            'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'period_type' => ['required', Rule::in(['annual', 'quarterly', 'monthly'])],
+            'notes'       => ['nullable', 'string'],
+            'lines'       => ['required', 'array', 'min:1'],
+            'lines.*.account_id' => ['required', Rule::exists('accounts', 'id')],
+            'lines.*.period'     => ['required', 'integer', 'min:0', 'max:12'],
+            'lines.*.amount'     => ['required', 'numeric', 'min:0'],
         ]);
 
-        DB::transaction(function () use ($validated, $request) {
+        $fy = $validated['fiscal_year'];
+
+        $budget = DB::transaction(function () use ($validated, $request, $tenantId, $fy) {
             $budget = Budget::create([
-                'tenant_id'   => $request->user()->tenant_id,
+                'tenant_id'   => $tenantId,
                 'name'        => $validated['name'],
-                'year'        => $validated['year'],
+                'fiscal_year' => $fy,
+                'year'        => $fy,
                 'period_type' => $validated['period_type'],
                 'notes'       => $validated['notes'] ?? null,
                 'status'      => 'draft',
@@ -86,15 +104,18 @@ class BudgetController extends Controller
 
             foreach ($validated['lines'] as $line) {
                 $budget->lines()->create([
+                    'tenant_id'  => $tenantId,
                     'account_id' => $line['account_id'],
                     'period'     => $line['period'],
                     'amount'     => $line['amount'],
                     'notes'      => $line['notes'] ?? null,
                 ]);
             }
+
+            return $budget;
         });
 
-        return redirect()->route('finance.budgets.index')
+        return redirect()->route('finance.budgets.show', $budget)
             ->with('success', 'Budget created successfully.');
     }
 
@@ -104,9 +125,9 @@ class BudgetController extends Controller
         $budget->load(['lines.account']);
 
         $tenantId = request()->user()->tenant_id;
-        $year     = $budget->year;
+        $year     = $budget->fiscal_year ?? $budget->year;
 
-        // Compute actuals from posted journal entries for this year
+        // Compute actuals from posted journal entries for this fiscal year
         $actuals = DB::table('journal_lines')
             ->join('journal_entries', 'journal_lines.journal_entry_id', '=', 'journal_entries.id')
             ->join('accounts', 'journal_lines.account_id', '=', 'accounts.id')
@@ -129,10 +150,10 @@ class BudgetController extends Controller
             $actualAmount = 0;
             if ($actual) {
                 $actualAmount = $actual->type === 'income'
-                    ? (float)$actual->total_credit - (float)$actual->total_debit
-                    : (float)$actual->total_debit - (float)$actual->total_credit;
+                    ? (float) $actual->total_credit - (float) $actual->total_debit
+                    : (float) $actual->total_debit - (float) $actual->total_credit;
             }
-            $variance    = $actualAmount - (float)$line->amount;
+            $variance    = $actualAmount - (float) $line->amount;
             $variancePct = $line->amount != 0 ? round($variance / $line->amount * 100, 1) : null;
 
             return [
@@ -142,7 +163,7 @@ class BudgetController extends Controller
                 'account_name' => $line->account->name,
                 'account_type' => $line->account->type,
                 'period'       => $line->period,
-                'budget'       => round((float)$line->amount, 2),
+                'budget'       => round((float) $line->amount, 2),
                 'actual'       => round($actualAmount, 2),
                 'variance'     => round($variance, 2),
                 'variance_pct' => $variancePct,
@@ -153,6 +174,7 @@ class BudgetController extends Controller
             'budget' => [
                 'id'          => $budget->id,
                 'name'        => $budget->name,
+                'fiscal_year' => $budget->fiscal_year ?? $budget->year,
                 'year'        => $budget->year,
                 'period_type' => $budget->period_type,
                 'status'      => $budget->status,
@@ -178,5 +200,23 @@ class BudgetController extends Controller
 
         return redirect()->route('finance.budgets.index')
             ->with('success', 'Budget deleted.');
+    }
+
+    public function activate(Budget $budget): RedirectResponse
+    {
+        $this->authorize('update', $budget);
+
+        $budget->activate();
+
+        return redirect()->back()->with('success', 'Budget activated.');
+    }
+
+    public function close(Budget $budget): RedirectResponse
+    {
+        $this->authorize('update', $budget);
+
+        $budget->close();
+
+        return redirect()->back()->with('success', 'Budget closed.');
     }
 }

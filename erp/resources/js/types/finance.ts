@@ -431,6 +431,33 @@ export interface VendorEvaluation {
     created_at: string;
 }
 
+export interface BudgetLine {
+    id: number;
+    budget_id: number;
+    account_id: number;
+    period: number;
+    amount: number;
+    notes: string | null;
+    actual_amount: number;
+    variance: number;
+    account?: Account;
+}
+
+export interface Budget {
+    id: number;
+    name: string;
+    fiscal_year: number;
+    year?: number;
+    period_type: 'annual' | 'quarterly' | 'monthly';
+    status: 'draft' | 'active' | 'closed';
+    notes: string | null;
+    total_budgeted: number;
+    lines_count?: number;
+    lines?: BudgetLine[];
+    created_at: string;
+}
+
+
 export interface CustomerPortalToken {
     id: number;
     contact_id: number;
