@@ -13,3 +13,5 @@ yarn-error.log*
 /.changelog
 .npm/
 .claude/
+.env.bak
+*.env.bak
