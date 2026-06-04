@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Inventory\Http\Controllers\AssetController;
+use App\Modules\Inventory\Http\Controllers\CostingController;
 use App\Modules\Inventory\Http\Controllers\AssetMaintenanceController;
 use App\Modules\Inventory\Http\Controllers\CategoryController;
 use App\Modules\Inventory\Http\Controllers\ProductBundleController;
@@ -113,4 +114,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::patch('qc-inspections/{qcInspection}/results/{result}', [QcInspectionController::class, 'updateResult'])->name('qc-inspections.results.update');
     Route::post('qc-inspections/{qcInspection}/complete', [QcInspectionController::class, 'complete'])->name('qc-inspections.complete');
     Route::resource('qc-inspections', QcInspectionController::class)->except(['edit', 'update']);
+
+    // Inventory Costing
+    Route::get('costing',                         [CostingController::class, 'index'])->name('costing.index');
+    Route::get('costing/report',                  [CostingController::class, 'report'])->name('costing.report');
+    Route::get('costing/{product}/layers',        [CostingController::class, 'layers'])->name('costing.layers');
+    Route::post('costing/add-layer',              [CostingController::class, 'addLayer'])->name('costing.add-layer');
+    Route::post('costing/snapshot',               [CostingController::class, 'snapshot'])->name('costing.snapshot');
 });

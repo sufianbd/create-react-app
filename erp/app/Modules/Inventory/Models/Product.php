@@ -120,4 +120,15 @@ class Product extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function costingLayers(): HasMany
+    {
+        return $this->hasMany(CostingLayer::class);
+    }
+
+    public function getAverageCostAttribute(): float
+    {
+        return CostingLayer::getAverageCost($this->tenant_id, $this->id);
+    }
+
 }

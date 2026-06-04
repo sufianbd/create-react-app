@@ -25,6 +25,9 @@ use App\Modules\Inventory\Policies\QcPolicy;
 use App\Modules\Inventory\Policies\StockAdjustmentPolicy;
 use App\Modules\Inventory\Policies\StockTransferPolicy;
 use App\Modules\Inventory\Policies\WarehouseTransferPolicy;
+use App\Modules\Inventory\Models\CostingLayer;
+use App\Modules\Inventory\Models\ProductCostSnapshot;
+use App\Modules\Inventory\Policies\CostingPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -51,5 +54,7 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(QcChecklistItem::class,    QcPolicy::class);
         Gate::policy(QcInspection::class,       QcPolicy::class);
         Gate::policy(QcInspectionResult::class, QcPolicy::class);
+        Gate::policy(CostingLayer::class, CostingPolicy::class);
+        Gate::policy(ProductCostSnapshot::class, CostingPolicy::class);
     }
 }

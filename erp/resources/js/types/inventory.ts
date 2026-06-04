@@ -251,3 +251,30 @@ export interface QcInspection {
     results?: QcInspectionResult[];
     created_at: string;
 }
+
+export interface CostingLayer {
+    id: number;
+    product_id: number;
+    warehouse_id: number | null;
+    costing_method: 'fifo' | 'avco';
+    quantity_received: number;
+    quantity_remaining: number;
+    unit_cost: number;
+    received_at: string;
+    reference_type: string | null;
+    reference_id: number | null;
+    product?: Product;
+    created_at: string;
+}
+
+export interface ProductCostSnapshot {
+    id: number;
+    product_id: number;
+    costing_method: 'fifo' | 'avco';
+    average_cost: number;
+    fifo_cost: number;
+    snapshot_date: string;
+    total_quantity: number;
+    total_value: number;
+    product?: Product;
+}
