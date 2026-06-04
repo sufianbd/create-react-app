@@ -74,6 +74,8 @@ const navItems: NavItem[] = [
             { label: 'QC Inspections',  href: '/inventory/qc-inspections',  icon: <span /> },
             { label: 'Costing',  href: '/inventory/costing',  icon: <span /> },
             { label: 'Demand Forecasts', href: '/inventory/demand-forecasts', icon: <span /> },
+            { label: 'Warehouse Zones', href: '/inventory/warehouse-zones', icon: <span /> },
+            { label: 'Bin Locations',   href: '/inventory/warehouse-bins',  icon: <span /> },
         ],
     },
     {

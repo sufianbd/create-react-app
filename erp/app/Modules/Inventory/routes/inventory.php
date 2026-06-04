@@ -15,9 +15,11 @@ use App\Modules\Inventory\Http\Controllers\ReorderController;
 use App\Modules\Inventory\Http\Controllers\StockAdjustmentController;
 use App\Modules\Inventory\Http\Controllers\StockMovementController;
 use App\Modules\Inventory\Http\Controllers\SupplierController;
+use App\Modules\Inventory\Http\Controllers\WarehouseBinController;
 use App\Modules\Inventory\Http\Controllers\WarehouseController;
 use App\Modules\Inventory\Http\Controllers\WarehouseTransferController;
 use App\Modules\Inventory\Http\Controllers\WarehouseStockController;
+use App\Modules\Inventory\Http\Controllers\WarehouseZoneController;
 use App\Modules\Inventory\Http\Controllers\DemandForecastController;
 use App\Modules\Inventory\Http\Controllers\StockTransferController;
 use Illuminate\Support\Facades\Route;
@@ -122,6 +124,16 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::get('costing/{product}/layers',        [CostingController::class, 'layers'])->name('costing.layers');
     Route::post('costing/add-layer',              [CostingController::class, 'addLayer'])->name('costing.add-layer');
     Route::post('costing/snapshot',               [CostingController::class, 'snapshot'])->name('costing.snapshot');
+
+    // Warehouse Zones
+    Route::get('warehouse-zones',                    [WarehouseZoneController::class, 'index'])->name('warehouse-zones.index');
+    Route::post('warehouse-zones',                   [WarehouseZoneController::class, 'store'])->name('warehouse-zones.store');
+    Route::delete('warehouse-zones/{warehouseZone}', [WarehouseZoneController::class, 'destroy'])->name('warehouse-zones.destroy');
+
+    // Warehouse Bins
+    Route::post('warehouse-bins/{warehouseBin}/stock',              [WarehouseBinController::class, 'addStock'])->name('warehouse-bins.stock.add');
+    Route::delete('warehouse-bins/{warehouseBin}/stock/{location}', [WarehouseBinController::class, 'removeStock'])->name('warehouse-bins.stock.remove');
+    Route::resource('warehouse-bins', WarehouseBinController::class)->except(['edit', 'update']);
 });
 
 // Demand Forecasting - custom actions BEFORE resource

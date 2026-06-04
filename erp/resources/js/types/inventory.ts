@@ -305,3 +305,42 @@ export interface ForecastAlert {
     product?: Product;
     created_at: string;
 }
+
+export interface WarehouseZone {
+    id: number;
+    warehouse_id: number;
+    name: string;
+    code: string;
+    description: string | null;
+    is_active: boolean;
+    bins_count?: number;
+    warehouse?: Warehouse;
+}
+
+export interface BinStockLocation {
+    id: number;
+    bin_id: number;
+    product_id: number;
+    quantity: number;
+    lot_number: string | null;
+    expiry_date: string | null;
+    is_expired: boolean;
+    product?: Product;
+}
+
+export interface WarehouseBin {
+    id: number;
+    warehouse_id: number;
+    zone_id: number | null;
+    code: string;
+    name: string | null;
+    bin_type: 'standard' | 'cold' | 'hazmat' | 'oversize';
+    capacity: number | null;
+    is_active: boolean;
+    used_capacity: number;
+    available_capacity: number | null;
+    zone?: WarehouseZone | null;
+    warehouse?: Warehouse;
+    stock_locations?: BinStockLocation[];
+    created_at: string;
+}

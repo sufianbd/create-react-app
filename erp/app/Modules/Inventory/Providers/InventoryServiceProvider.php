@@ -4,6 +4,7 @@ namespace App\Modules\Inventory\Providers;
 
 use App\Modules\Inventory\Models\Asset;
 use App\Modules\Inventory\Models\AssetMaintenance;
+use App\Modules\Inventory\Models\BinStockLocation;
 use App\Modules\Inventory\Models\DemandForecast;
 use App\Modules\Inventory\Models\ForecastAlert;
 use App\Modules\Inventory\Models\Product;
@@ -17,8 +18,10 @@ use App\Modules\Inventory\Models\QcInspectionResult;
 use App\Modules\Inventory\Models\StockAdjustment;
 use App\Modules\Inventory\Models\StockTransfer;
 use App\Modules\Inventory\Models\StockTransferItem;
+use App\Modules\Inventory\Models\WarehouseBin;
 use App\Modules\Inventory\Models\WarehouseStock;
 use App\Modules\Inventory\Models\WarehouseTransfer;
+use App\Modules\Inventory\Models\WarehouseZone;
 use App\Modules\Inventory\Policies\AssetPolicy;
 use App\Modules\Inventory\Policies\ForecastPolicy;
 use App\Modules\Inventory\Policies\ProductCategoryPolicy;
@@ -27,6 +30,7 @@ use App\Modules\Inventory\Policies\PurchaseRequisitionPolicy;
 use App\Modules\Inventory\Policies\QcPolicy;
 use App\Modules\Inventory\Policies\StockAdjustmentPolicy;
 use App\Modules\Inventory\Policies\StockTransferPolicy;
+use App\Modules\Inventory\Policies\WarehouseBinPolicy;
 use App\Modules\Inventory\Policies\WarehouseTransferPolicy;
 use App\Modules\Inventory\Models\CostingLayer;
 use App\Modules\Inventory\Models\ProductCostSnapshot;
@@ -61,5 +65,8 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(ProductCostSnapshot::class, CostingPolicy::class);
         Gate::policy(DemandForecast::class, ForecastPolicy::class);
         Gate::policy(ForecastAlert::class,    ForecastPolicy::class);
+        Gate::policy(WarehouseBin::class,         WarehouseBinPolicy::class);
+        Gate::policy(WarehouseZone::class,        WarehouseBinPolicy::class);
+        Gate::policy(BinStockLocation::class,     WarehouseBinPolicy::class);
     }
 }
