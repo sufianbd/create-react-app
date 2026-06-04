@@ -115,6 +115,8 @@ const navItems: NavItem[] = [
             { label: 'Onboarding',           href: '/hr/onboarding-templates',  icon: <span /> },
             { label: 'Performance Reviews',  href: '/hr/performance-reviews',   icon: <span /> },
             { label: 'Training',             href: '/hr/training-courses',      icon: <span /> },
+            { label: 'Job Positions',        href: '/hr/job-positions',         icon: <span /> },
+            { label: 'Applications',         href: '/hr/job-applications',      icon: <span /> },
         ],
     },
     {

@@ -201,3 +201,39 @@ export interface EmployeeTrainingRecord {
     training_course?: TrainingCourse | null;
     created_at: string;
 }
+
+export interface JobPosition {
+    id: number;
+    title: string;
+    department_id: number | null;
+    location: string | null;
+    employment_type: 'full_time' | 'part_time' | 'contract' | 'internship';
+    description: string | null;
+    requirements: string | null;
+    openings: number;
+    status: 'draft' | 'open' | 'closed' | 'on_hold';
+    posted_at: string | null;
+    closed_at: string | null;
+    open_applications_count: number;
+    applications_count?: number;
+    department?: Department;
+    applications?: JobApplication[];
+    created_at: string;
+}
+
+export interface JobApplication {
+    id: number;
+    job_position_id: number;
+    applicant_name: string;
+    applicant_email: string;
+    applicant_phone: string | null;
+    cover_letter: string | null;
+    source: string | null;
+    stage: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
+    notes: string | null;
+    rating: number | null;
+    rejected_at: string | null;
+    hired_at: string | null;
+    job_position?: JobPosition;
+    created_at: string;
+}

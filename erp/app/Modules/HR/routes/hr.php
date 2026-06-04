@@ -5,6 +5,8 @@ use App\Modules\HR\Http\Controllers\EmployeeController;
 use App\Modules\HR\Http\Controllers\EmployeeOnboardingController;
 use App\Modules\HR\Http\Controllers\EmployeeTrainingRecordController;
 use App\Modules\HR\Http\Controllers\ExpenseClaimController;
+use App\Modules\HR\Http\Controllers\JobApplicationController;
+use App\Modules\HR\Http\Controllers\JobPositionController;
 use App\Modules\HR\Http\Controllers\LeaveRequestController;
 use App\Modules\HR\Http\Controllers\OnboardingTemplateController;
 use App\Modules\HR\Http\Controllers\PayrollController;
@@ -85,4 +87,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     // Training
     Route::resource('training-courses', TrainingCourseController::class)->except(['edit', 'update']);
     Route::resource('training-records', EmployeeTrainingRecordController::class)->except(['edit', 'update']);
+
+    // Job Positions
+    Route::post('job-positions/{jobPosition}/publish', [JobPositionController::class, 'publish'])->name('job-positions.publish');
+    Route::post('job-positions/{jobPosition}/close',   [JobPositionController::class, 'close'])->name('job-positions.close');
+    Route::resource('job-positions', JobPositionController::class)->except(['edit', 'update']);
+
+    // Job Applications
+    Route::patch('job-applications/{jobApplication}/advance', [JobApplicationController::class, 'advance'])->name('job-applications.advance');
+    Route::post('job-applications/{jobApplication}/reject',   [JobApplicationController::class, 'reject'])->name('job-applications.reject');
+    Route::resource('job-applications', JobApplicationController::class)->except(['edit', 'update']);
 });
