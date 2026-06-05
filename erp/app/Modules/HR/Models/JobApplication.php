@@ -3,6 +3,7 @@
 namespace App\Modules\HR\Models;
 
 use App\Modules\Core\Traits\BelongsToTenant;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,44 +18,78 @@ class JobApplication extends Model
         'applicant_name',
         'applicant_email',
         'applicant_phone',
-        'resume_path',
-        'cover_letter',
-        'source',
+        'status',
         'stage',
-        'notes',
+        'cover_letter',
+        'resume_url',
+        'resume_path',
+        'source',
         'rating',
+        'notes',
+        'reviewed_by',
+        'reviewed_at',
         'rejected_at',
         'hired_at',
     ];
 
     protected $casts = [
+        'rating'      => 'integer',
+        'reviewed_at' => 'datetime',
         'rejected_at' => 'datetime',
         'hired_at'    => 'datetime',
     ];
+
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(JobPosition::class, 'job_position_id');
+    }
 
     public function jobPosition(): BelongsTo
     {
         return $this->belongsTo(JobPosition::class);
     }
 
-    public function advance(string $stage): void
+    public function reviewer(): BelongsTo
     {
-        $this->stage = $stage;
-        if ($stage === 'hired') {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function advance(string $newStatus): void
+    {
+        $this->status = $newStatus;
+        $this->stage  = $newStatus;
+        if ($newStatus === 'hired') {
             $this->hired_at = now();
         }
-        if ($stage === 'rejected') {
+        if ($newStatus === 'rejected') {
             $this->rejected_at = now();
         }
         $this->save();
     }
 
-    public function reject(?string $reason = null): void
+    public function hire(): void
     {
-        $this->advance('rejected');
-        if ($reason !== null) {
-            $this->notes = trim(($this->notes ? $this->notes . "\n" : '') . $reason);
-            $this->save();
+        $this->status    = 'hired';
+        $this->stage     = 'hired';
+        $this->hired_at  = now();
+        $this->save();
+    }
+
+    public function reject(string $notes = ''): void
+    {
+        $this->status      = 'rejected';
+        $this->stage       = 'rejected';
+        $this->rejected_at = now();
+        if ($notes !== '') {
+            $this->notes = $notes;
         }
+        $this->save();
+    }
+
+    public function getIsActiveAttribute(): bool
+    {
+        $terminal = ['hired', 'rejected'];
+        $s = $this->status ?? $this->stage ?? 'new';
+        return !in_array($s, $terminal);
     }
 }

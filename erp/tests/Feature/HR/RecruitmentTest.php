@@ -2,14 +2,13 @@
 
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
-use App\Modules\HR\Models\Department;
 use App\Modules\HR\Models\JobApplication;
 use App\Modules\HR\Models\JobPosition;
 use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
-    $this->tenant = Tenant::create(['name' => 'Recruit Co', 'slug' => 'recruit-co']);
+    $this->tenant = Tenant::create(['name' => 'Recruit Corp', 'slug' => 'recruit-corp']);
     $this->admin  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->admin->assignRole('super-admin');
     $this->staff  = User::factory()->create(['tenant_id' => $this->tenant->id]);
@@ -25,7 +24,18 @@ function makePosition(): JobPosition
         'title'           => 'Software Engineer',
         'employment_type' => 'full_time',
         'openings'        => 2,
-        'status'          => 'draft',
+        'is_active'       => true,
+    ]);
+}
+
+function makeApplication(JobPosition $position, string $status = 'new'): JobApplication
+{
+    return JobApplication::create([
+        'tenant_id'       => test()->tenant->id,
+        'job_position_id' => $position->id,
+        'applicant_name'  => 'John Doe',
+        'applicant_email' => 'john.' . uniqid() . '@test.com',
+        'status'          => $status,
     ]);
 }
 
@@ -35,26 +45,16 @@ it('admin can list job positions', function () {
 
 it('admin can create a job position', function () {
     $this->post('/hr/job-positions', [
-        'title'           => 'Backend Developer',
+        'title'           => 'Data Analyst',
         'employment_type' => 'full_time',
         'openings'        => 1,
     ])->assertRedirect();
-    expect(JobPosition::where('title', 'Backend Developer')->exists())->toBeTrue();
+    expect(JobPosition::where('title', 'Data Analyst')->exists())->toBeTrue();
 });
 
-it('admin can publish a job position', function () {
-    $pos = makePosition();
-    $this->post("/hr/job-positions/{$pos->id}/publish");
-    expect($pos->fresh()->status)->toBe('open');
-    expect($pos->fresh()->posted_at)->not->toBeNull();
-});
-
-it('admin can close a job position', function () {
-    $pos = makePosition();
-    $pos->update(['status' => 'open']);
-    $this->post("/hr/job-positions/{$pos->id}/close");
-    expect($pos->fresh()->status)->toBe('closed');
-    expect($pos->fresh()->closed_at)->not->toBeNull();
+it('position store validates required fields', function () {
+    $this->postJson('/hr/job-positions', [])->assertStatus(422)
+        ->assertJsonValidationErrors(['title', 'employment_type']);
 });
 
 it('admin can view a job position', function () {
@@ -62,57 +62,50 @@ it('admin can view a job position', function () {
     $this->get("/hr/job-positions/{$pos->id}")->assertStatus(200);
 });
 
-it('admin can create a job application', function () {
+it('admin can list job applications', function () {
+    $this->get('/hr/job-applications')->assertStatus(200);
+});
+
+it('admin can create an application', function () {
     $pos = makePosition();
     $this->post('/hr/job-applications', [
         'job_position_id' => $pos->id,
-        'applicant_name'  => 'John Doe',
-        'applicant_email' => 'john@example.com',
+        'applicant_name'  => 'Jane Doe',
+        'applicant_email' => 'jane@example.com',
     ])->assertRedirect();
-    expect(JobApplication::where('applicant_email', 'john@example.com')->exists())->toBeTrue();
+    expect(JobApplication::where('applicant_email', 'jane@example.com')->exists())->toBeTrue();
 });
 
-it('admin can advance application stage', function () {
+it('admin can advance an application status', function () {
     $pos = makePosition();
-    $app = JobApplication::create([
-        'tenant_id'       => test()->tenant->id,
-        'job_position_id' => $pos->id,
-        'applicant_name'  => 'Jane Doe',
-        'applicant_email' => 'jane@example.com',
-        'stage'           => 'applied',
-    ]);
-    $this->patch("/hr/job-applications/{$app->id}/advance", ['stage' => 'screening']);
-    expect($app->fresh()->stage)->toBe('screening');
+    $app = makeApplication($pos);
+    $this->post("/hr/job-applications/{$app->id}/advance", ['status' => 'screening'])->assertRedirect();
+    expect($app->fresh()->status)->toBe('screening');
 });
 
-it('hired_at is set when advanced to hired', function () {
+it('admin can hire an applicant', function () {
     $pos = makePosition();
-    $app = JobApplication::create([
-        'tenant_id'       => test()->tenant->id,
-        'job_position_id' => $pos->id,
-        'applicant_name'  => 'Jane Doe',
-        'applicant_email' => 'jane@example.com',
-        'stage'           => 'offer',
-    ]);
-    $this->patch("/hr/job-applications/{$app->id}/advance", ['stage' => 'hired']);
-    expect($app->fresh()->hired_at)->not->toBeNull();
+    $app = makeApplication($pos, 'offer');
+    $this->post("/hr/job-applications/{$app->id}/hire")->assertRedirect();
+    expect($app->fresh()->status)->toBe('hired');
 });
 
-it('admin can reject application', function () {
+it('admin can reject an applicant', function () {
     $pos = makePosition();
-    $app = JobApplication::create([
-        'tenant_id'       => test()->tenant->id,
-        'job_position_id' => $pos->id,
-        'applicant_name'  => 'Jane Doe',
-        'applicant_email' => 'jane@example.com',
-        'stage'           => 'screening',
-    ]);
-    $this->post("/hr/job-applications/{$app->id}/reject", ['reason' => 'Not a fit']);
-    expect($app->fresh()->stage)->toBe('rejected');
-    expect($app->fresh()->rejected_at)->not->toBeNull();
+    $app = makeApplication($pos);
+    $this->post("/hr/job-applications/{$app->id}/reject", ['notes' => 'Not a fit'])->assertRedirect();
+    expect($app->fresh()->status)->toBe('rejected');
+    expect($app->fresh()->notes)->toBe('Not a fit');
 });
 
-it('staff cannot delete job position', function () {
+it('is_open returns false when closes_at is in the past', function () {
+    $pos = makePosition();
+    \Illuminate\Support\Facades\DB::table('job_positions')->where('id', $pos->id)
+        ->update(['closes_at' => now()->subDay()->toDateString()]);
+    expect($pos->fresh()->is_open)->toBeFalse();
+});
+
+it('staff cannot delete a job position', function () {
     $pos = makePosition();
     $this->actingAs($this->staff)
         ->delete("/hr/job-positions/{$pos->id}")

@@ -209,18 +209,25 @@ export interface EmployeeTrainingRecord {
 export interface JobPosition {
     id: number;
     title: string;
+    department: string | null;
     department_id: number | null;
     location: string | null;
     employment_type: 'full_time' | 'part_time' | 'contract' | 'internship';
     description: string | null;
     requirements: string | null;
+    salary_min: number | null;
+    salary_max: number | null;
     openings: number;
+    is_active: boolean;
+    is_open: boolean;
     status: 'draft' | 'open' | 'closed' | 'on_hold';
-    posted_at: string | null;
-    closed_at: string | null;
+    application_count: number;
     open_applications_count: number;
     applications_count?: number;
-    department?: Department;
+    posted_at: string | null;
+    closes_at: string | null;
+    closed_at: string | null;
+    department_obj?: Department;
     applications?: JobApplication[];
     created_at: string;
 }
@@ -231,13 +238,19 @@ export interface JobApplication {
     applicant_name: string;
     applicant_email: string;
     applicant_phone: string | null;
-    cover_letter: string | null;
-    source: string | null;
+    status: 'new' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
     stage: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
+    cover_letter: string | null;
+    resume_url: string | null;
+    source: string | null;
     notes: string | null;
     rating: number | null;
+    is_active: boolean;
+    reviewed_by: number | null;
+    reviewed_at: string | null;
     rejected_at: string | null;
     hired_at: string | null;
+    position?: JobPosition;
     job_position?: JobPosition;
     created_at: string;
 }

@@ -13,14 +13,22 @@ use Inertia\Response;
 
 class JobPositionController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', JobPosition::class);
 
-        $positions = JobPosition::with('department')
+        $query = JobPosition::with('department')
             ->withCount('applications')
-            ->latest()
-            ->paginate(15);
+            ->latest();
+
+        if ($request->filled('department')) {
+            $query->where('department', $request->department);
+        }
+        if ($request->has('is_active') && $request->is_active !== null) {
+            $query->where('is_active', filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        $positions = $query->paginate(15);
 
         return Inertia::render('HR/JobPositions/Index', compact('positions'));
     }
@@ -40,21 +48,27 @@ class JobPositionController extends Controller
 
         $data = $request->validate([
             'title'           => ['required', 'string', 'max:255'],
+            'employment_type' => ['required', Rule::in(['full_time', 'part_time', 'contract', 'internship'])],
+            'department'      => ['nullable', 'string', 'max:255'],
             'department_id'   => ['nullable', Rule::exists('departments', 'id')],
             'location'        => ['nullable', 'string', 'max:255'],
-            'employment_type' => ['required', Rule::in(['full_time', 'part_time', 'contract', 'internship'])],
             'description'     => ['nullable', 'string'],
             'requirements'    => ['nullable', 'string'],
-            'openings'        => ['required', 'integer', 'min:1'],
+            'salary_min'      => ['nullable', 'numeric', 'min:0'],
+            'salary_max'      => ['nullable', 'numeric', 'min:0'],
+            'openings'        => ['integer', 'min:1'],
+            'is_active'       => ['boolean'],
+            'posted_at'       => ['nullable', 'date'],
+            'closes_at'       => ['nullable', 'date'],
         ]);
 
-        $position = JobPosition::create([
-            'tenant_id' => auth()->user()->tenant_id,
-            ...$data,
-        ]);
+        $data['tenant_id'] = auth()->user()->tenant_id;
+        $data['openings']  = $data['openings'] ?? 1;
+        $data['is_active'] = $data['is_active'] ?? true;
 
-        return redirect()->route('hr.job-positions.show', $position)
-            ->with('success', 'Job position created.');
+        $position = JobPosition::create($data);
+
+        return redirect()->back()->with('success', 'Job position created.');
     }
 
     public function show(JobPosition $jobPosition): Response
@@ -77,8 +91,7 @@ class JobPositionController extends Controller
 
         $jobPosition->delete();
 
-        return redirect()->route('hr.job-positions.index')
-            ->with('success', 'Job position deleted.');
+        return redirect()->back()->with('success', 'Job position deleted.');
     }
 
     public function publish(JobPosition $jobPosition): RedirectResponse

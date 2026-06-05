@@ -130,6 +130,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
 
     // Job Applications
     Route::patch('job-applications/{jobApplication}/advance', [JobApplicationController::class, 'advance'])->name('job-applications.advance');
+    Route::post('job-applications/{jobApplication}/advance',  [JobApplicationController::class, 'advance'])->name('job-applications.advance.post');
+    Route::post('job-applications/{jobApplication}/hire',     [JobApplicationController::class, 'hire'])->name('job-applications.hire');
     Route::post('job-applications/{jobApplication}/reject',   [JobApplicationController::class, 'reject'])->name('job-applications.reject');
     Route::resource('job-applications', JobApplicationController::class)->except(['edit', 'update']);
 
