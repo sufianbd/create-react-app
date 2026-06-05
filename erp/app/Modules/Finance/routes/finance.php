@@ -317,3 +317,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('expense-claims/{expenseClaim}/mark-paid',[ExpenseClaimController::class, 'markPaid'])->name('expense-claims.mark-paid');
     Route::resource('expense-claims', ExpenseClaimController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
 });
+
+// Vendor Bills — custom actions BEFORE resource
+use App\Modules\Finance\Http\Controllers\VendorBillController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('vendor-bills/{vendorBill}/submit',  [VendorBillController::class, 'submit'])->name('vendor-bills.submit');
+    Route::post('vendor-bills/{vendorBill}/approve', [VendorBillController::class, 'approve'])->name('vendor-bills.approve');
+    Route::post('vendor-bills/{vendorBill}/pay',     [VendorBillController::class, 'pay'])->name('vendor-bills.pay');
+    Route::post('vendor-bills/{vendorBill}/cancel',  [VendorBillController::class, 'cancel'])->name('vendor-bills.cancel');
+    Route::resource('vendor-bills', VendorBillController::class);
+});

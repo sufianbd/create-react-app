@@ -143,6 +143,7 @@ const navItems: NavItem[] = [
             { label: 'CRM / Leads',      href: '/finance/leads',           icon: <span /> },
             { label: 'Support Tickets',  href: '/finance/support-tickets', icon: <span /> },
             { label: 'Expense Claims',   href: '/finance/expense-claims',  icon: <span /> },
+            { label: 'Vendor Bills',     href: '/finance/vendor-bills',    icon: <span /> },
         ],
     },
     {

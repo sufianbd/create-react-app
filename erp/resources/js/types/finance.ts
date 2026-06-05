@@ -894,3 +894,27 @@ export interface ExpenseClaim {
     paid_at: string | null;
     items?: ExpenseItem[];
 }
+
+export interface VendorBillItem {
+    id: number;
+    vendor_bill_id: number;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    line_total: number;
+}
+
+export interface VendorBill {
+    id: number;
+    bill_number: string;
+    status: string;
+    bill_date: string;
+    due_date: string | null;
+    currency: string;
+    subtotal: number;
+    tax: number;
+    total: number;
+    is_overdue: boolean;
+    is_open: boolean;
+    items?: VendorBillItem[];
+}
