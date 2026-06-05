@@ -159,6 +159,8 @@ const navItems: NavItem[] = [
             { label: 'Shift Templates',   href: '/hr/shift-templates',   icon: <span /> },
             { label: 'Shift Assignments', href: '/hr/shift-assignments', icon: <span /> },
             { label: 'Loans & Advances', href: '/hr/employee-loans', icon: <span /> },
+            { label: 'Onboarding', href: '/hr/onboarding-checklists', icon: <span /> },
+            { label: 'Employee Onboarding', href: '/hr/employee-onboardings', icon: <span /> },
             { label: 'Payroll', href: '/hr/payroll', icon: <span /> },
         ],
     },

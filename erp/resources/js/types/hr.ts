@@ -420,3 +420,47 @@ export interface PayrollRunV2 {
     payslips?: Payslip[];
     created_at: string;
 }
+
+export interface OnboardingTask {
+    id: number;
+    onboarding_checklist_id: number;
+    title: string;
+    description: string | null;
+    category: string | null;
+    due_day_offset: number;
+    is_required: boolean;
+    sort_order: number;
+}
+
+export interface OnboardingChecklist {
+    id: number;
+    name: string;
+    department: string | null;
+    description: string | null;
+    is_active: boolean;
+    tasks_count?: number;
+    tasks?: OnboardingTask[];
+}
+
+export interface OnboardingProgress {
+    id: number;
+    employee_onboarding_id: number;
+    onboarding_task_id: number;
+    status: 'pending' | 'completed' | 'skipped';
+    notes: string | null;
+    completed_at: string | null;
+    task?: OnboardingTask;
+}
+
+export interface EmployeeOnboardingV2 {
+    id: number;
+    employee_id: number;
+    onboarding_checklist_id: number;
+    start_date: string;
+    status: 'in_progress' | 'completed' | 'cancelled';
+    completion_percent: number;
+    completed_at: string | null;
+    employee?: Employee;
+    checklist?: OnboardingChecklist;
+    progress?: OnboardingProgress[];
+}

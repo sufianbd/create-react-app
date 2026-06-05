@@ -5,11 +5,13 @@ use App\Modules\HR\Http\Controllers\DepartmentController;
 use App\Modules\HR\Http\Controllers\EmployeeController;
 use App\Modules\HR\Http\Controllers\EmployeeLoanController;
 use App\Modules\HR\Http\Controllers\EmployeeOnboardingController;
+use App\Modules\HR\Http\Controllers\EmployeeOnboardingTrackingController;
 use App\Modules\HR\Http\Controllers\EmployeeTrainingRecordController;
 use App\Modules\HR\Http\Controllers\ExpenseClaimController;
 use App\Modules\HR\Http\Controllers\JobApplicationController;
 use App\Modules\HR\Http\Controllers\JobPositionController;
 use App\Modules\HR\Http\Controllers\LeaveRequestController;
+use App\Modules\HR\Http\Controllers\OnboardingChecklistController;
 use App\Modules\HR\Http\Controllers\OnboardingTemplateController;
 use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
@@ -120,6 +122,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     // Shift Assignments — markStatus BEFORE resource
     Route::patch('shift-assignments/{shiftAssignment}/status', [ShiftAssignmentController::class, 'markStatus'])->name('shift-assignments.status');
     Route::resource('shift-assignments', ShiftAssignmentController::class)->except(['edit', 'update', 'show']);
+
+    // Onboarding Checklists
+    Route::resource('onboarding-checklists', OnboardingChecklistController::class)->except(['edit', 'update']);
+
+    // Employee Onboardings (checklist-based)
+    Route::post('employee-onboardings/{employeeOnboarding}/tasks/{progress}/complete', [EmployeeOnboardingTrackingController::class, 'completeTask'])->name('employee-onboardings.tasks.complete');
+    Route::post('employee-onboardings/{employeeOnboarding}/tasks/{progress}/skip',     [EmployeeOnboardingTrackingController::class, 'skipTask'])->name('employee-onboardings.tasks.skip');
+    Route::resource('employee-onboardings', EmployeeOnboardingTrackingController::class)->except(['edit', 'update']);
 
     // Employee Loans
     Route::post('employee-loans/{employeeLoan}/approve',    [EmployeeLoanController::class, 'approve'])->name('employee-loans.approve');
