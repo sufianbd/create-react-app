@@ -172,3 +172,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::resource('grievances', GrievanceController::class)->except(['edit', 'update']);
 });
 
+
+// Timesheet Management — custom actions BEFORE resource
+use App\Modules\HR\Http\Controllers\TimesheetController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('timesheets/{timesheet}/submit',  [TimesheetController::class, 'submit'])->name('timesheets.submit');
+    Route::post('timesheets/{timesheet}/approve', [TimesheetController::class, 'approve'])->name('timesheets.approve');
+    Route::post('timesheets/{timesheet}/reject',  [TimesheetController::class, 'reject'])->name('timesheets.reject');
+    Route::post('timesheets/{timesheet}/entries', [TimesheetController::class, 'addEntry'])->name('timesheets.entries.store');
+    Route::resource('timesheets', TimesheetController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+});

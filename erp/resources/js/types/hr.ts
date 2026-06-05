@@ -571,3 +571,28 @@ export interface Grievance {
     employee?: Employee;
     assigned_to_user?: { id: number; name: string } | null;
 }
+
+export interface TimesheetEntry {
+    id: number;
+    timesheet_id: number;
+    work_date: string;
+    hours: number;
+    project: string | null;
+    description: string | null;
+}
+
+export interface Timesheet {
+    id: number;
+    employee_id: number;
+    week_start: string;
+    week_end: string;
+    status: 'draft' | 'submitted' | 'approved' | 'rejected';
+    total_hours: number;
+    approved_by: number | null;
+    approved_at: string | null;
+    notes: string | null;
+    is_editable: boolean;
+    is_approved: boolean;
+    employee?: Employee;
+    entries?: TimesheetEntry[];
+}
