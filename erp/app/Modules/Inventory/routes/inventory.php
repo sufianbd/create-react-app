@@ -177,3 +177,18 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     // Supplier show
     Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
 });
+
+// Lot & Serial Number Tracking - custom actions BEFORE resource
+use App\Modules\Inventory\Http\Controllers\LotNumberController;
+use App\Modules\Inventory\Http\Controllers\SerialNumberController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    // Lot Numbers
+    Route::post('lot-numbers/{lotNumber}/quarantine', [LotNumberController::class, 'quarantine'])->name('lot-numbers.quarantine');
+    Route::post('lot-numbers/{lotNumber}/consume',    [LotNumberController::class, 'consume'])->name('lot-numbers.consume');
+    Route::resource('lot-numbers', LotNumberController::class)->only(['index', 'store', 'show']);
+
+    // Serial Numbers
+    Route::post('serial-numbers/{serialNumber}/sell',  [SerialNumberController::class, 'sell'])->name('serial-numbers.sell');
+    Route::post('serial-numbers/{serialNumber}/scrap', [SerialNumberController::class, 'scrap'])->name('serial-numbers.scrap');
+    Route::resource('serial-numbers', SerialNumberController::class)->only(['index', 'store', 'show']);
+});

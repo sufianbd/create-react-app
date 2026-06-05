@@ -444,3 +444,35 @@ export interface SupplierContract {
     days_remaining: number | null;
     supplier?: Supplier;
 }
+
+export interface LotNumber {
+    id: number;
+    product_id: number;
+    warehouse_id: number;
+    lot_number: string;
+    manufacture_date: string | null;
+    expiry_date: string | null;
+    quantity_received: number;
+    quantity_remaining: number;
+    status: 'active' | 'quarantine' | 'consumed' | 'expired';
+    is_expired: boolean;
+    is_expiring: boolean;
+    notes: string | null;
+    product?: Product;
+    warehouse?: Warehouse;
+}
+
+export interface SerialNumber {
+    id: number;
+    product_id: number;
+    warehouse_id: number;
+    serial_number: string;
+    status: 'in_stock' | 'sold' | 'returned' | 'scrapped';
+    received_date: string | null;
+    sold_date: string | null;
+    lot_number_id: number | null;
+    is_available: boolean;
+    notes: string | null;
+    product?: Product;
+    warehouse?: Warehouse;
+}
