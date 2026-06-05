@@ -2,25 +2,22 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import type { PageProps } from '@/types';
 import type { Paginator } from '@/types/inventory';
-import type { AuditLog } from '@/types/audit';
+import type { AuditLog } from '@/types/core';
 
 interface Props extends PageProps {
     logs: Paginator<AuditLog>;
     filters: {
-        event?: string;
+        action?: string;
+        module?: string;
         user_id?: string;
-        auditable_type?: string;
-        tenant_id?: string;
-        date_from?: string;
-        date_to?: string;
     };
 }
 
-const EVENT_COLORS: Record<string, string> = {
+const ACTION_COLORS: Record<string, string> = {
     created:  'bg-green-100 text-green-700',
     updated:  'bg-blue-100 text-blue-700',
     deleted:  'bg-red-100 text-red-700',
-    login:    'bg-slate-100 text-slate-700',
+    login:    'bg-purple-100 text-purple-700',
     logout:   'bg-slate-100 text-slate-700',
 };
 
@@ -31,15 +28,13 @@ function shortType(type: string | null): string {
 
 export default function AuditLogsIndex({ logs, filters }: Props) {
     const { data, setData, get } = useForm({
-        event:          filters.event ?? '',
-        auditable_type: filters.auditable_type ?? '',
-        date_from:      filters.date_from ?? '',
-        date_to:        filters.date_to ?? '',
+        action: filters.action ?? '',
+        module: filters.module ?? '',
     });
 
     function applyFilter(e: React.FormEvent) {
         e.preventDefault();
-        get('/audit-logs');
+        get('/core/audit-logs');
     }
 
     const hasFilters = Object.values(filters).some(Boolean);
@@ -55,10 +50,10 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
 
                 <form onSubmit={applyFilter} className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Event</label>
-                        <select value={data.event} onChange={(e) => setData('event', e.target.value)}
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Action</label>
+                        <select value={data.action} onChange={(e) => setData('action', e.target.value)}
                             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none">
-                            <option value="">All events</option>
+                            <option value="">All actions</option>
                             <option value="created">Created</option>
                             <option value="updated">Updated</option>
                             <option value="deleted">Deleted</option>
@@ -66,27 +61,17 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Model Type</label>
-                        <input type="text" placeholder="e.g. Invoice" value={data.auditable_type}
-                            onChange={(e) => setData('auditable_type', e.target.value)}
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Module</label>
+                        <input type="text" placeholder="e.g. Finance" value={data.module}
+                            onChange={(e) => setData('module', e.target.value)}
                             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none w-36" />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">From</label>
-                        <input type="date" value={data.date_from} onChange={(e) => setData('date_from', e.target.value)}
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none" />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">To</label>
-                        <input type="date" value={data.date_to} onChange={(e) => setData('date_to', e.target.value)}
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none" />
                     </div>
                     <button type="submit"
                         className="rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700">
                         Filter
                     </button>
                     {hasFilters && (
-                        <Link href="/audit-logs" className="text-sm text-slate-500 hover:text-slate-700">Clear</Link>
+                        <Link href="/core/audit-logs" className="text-sm text-slate-500 hover:text-slate-700">Clear</Link>
                     )}
                 </form>
 
@@ -94,46 +79,44 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                     <table className="w-full text-sm">
                         <thead className="bg-slate-50 text-xs text-slate-500 uppercase border-b border-slate-200">
                             <tr>
-                                <th className="px-4 py-2 text-left font-medium">Time</th>
-                                <th className="px-4 py-2 text-left font-medium">User</th>
-                                <th className="px-4 py-2 text-left font-medium">Event</th>
-                                <th className="px-4 py-2 text-left font-medium">Model</th>
                                 <th className="px-4 py-2 text-left font-medium">ID</th>
-                                <th className="px-4 py-2 text-left font-medium">Changes</th>
+                                <th className="px-4 py-2 text-left font-medium">User</th>
+                                <th className="px-4 py-2 text-left font-medium">Action</th>
+                                <th className="px-4 py-2 text-left font-medium">Module</th>
+                                <th className="px-4 py-2 text-left font-medium">Record</th>
                                 <th className="px-4 py-2 text-left font-medium">IP</th>
+                                <th className="px-4 py-2 text-left font-medium">Date</th>
+                                <th className="px-4 py-2 text-left font-medium"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {logs.data.length === 0 ? (
-                                <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">No audit entries found.</td></tr>
+                                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">No audit entries found.</td></tr>
                             ) : logs.data.map((entry) => (
                                 <tr key={entry.id} className="hover:bg-slate-50 align-top">
-                                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
-                                        {new Date(entry.created_at).toLocaleString()}
-                                    </td>
+                                    <td className="px-4 py-3 text-slate-400 text-xs">#{entry.id}</td>
                                     <td className="px-4 py-3 font-medium text-slate-800">
                                         {entry.user?.name ?? <span className="text-slate-400">System</span>}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${EVENT_COLORS[entry.event] ?? 'bg-slate-100 text-slate-600'}`}>
-                                            {entry.event}
+                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${ACTION_COLORS[entry.action] ?? 'bg-slate-100 text-slate-600'}`}>
+                                            {entry.action}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-slate-700">{shortType(entry.auditable_type)}</td>
-                                    <td className="px-4 py-3 text-slate-500">
-                                        {entry.auditable_id ? `#${entry.auditable_id}` : '—'}
-                                    </td>
-                                    <td className="px-4 py-3 max-w-xs">
-                                        {(entry.new_values && Object.keys(entry.new_values).length > 0) ? (
-                                            <details className="text-xs">
-                                                <summary className="cursor-pointer text-indigo-600 hover:underline">View changes</summary>
-                                                <pre className="mt-1 bg-slate-50 rounded p-2 text-slate-600 overflow-x-auto text-xs max-h-32">
-                                                    {JSON.stringify({ old: entry.old_values, new: entry.new_values }, null, 2)}
-                                                </pre>
-                                            </details>
-                                        ) : '—'}
+                                    <td className="px-4 py-3 text-slate-500 text-xs">{entry.module ?? '—'}</td>
+                                    <td className="px-4 py-3 text-slate-700">
+                                        {entry.auditable_label
+                                            ? <span>{entry.auditable_label} <span className="text-slate-400 text-xs">({shortType(entry.auditable_type)})</span></span>
+                                            : shortType(entry.auditable_type)
+                                        }
                                     </td>
                                     <td className="px-4 py-3 text-xs text-slate-400">{entry.ip_address ?? '—'}</td>
+                                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
+                                        {new Date(entry.created_at).toLocaleString()}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Link href={`/core/audit-logs/${entry.id}`} className="text-xs text-indigo-600 hover:underline">View</Link>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

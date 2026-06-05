@@ -16,12 +16,16 @@ class AuditLog extends Model
         'user_id',
         'tenant_id',
         'event',
+        'action',
         'auditable_type',
         'auditable_id',
+        'auditable_label',
         'old_values',
         'new_values',
         'ip_address',
         'user_agent',
+        'url',
+        'module',
         'created_at',
     ];
 
@@ -30,6 +34,8 @@ class AuditLog extends Model
         'new_values'  => 'array',
         'created_at'  => 'datetime',
     ];
+
+    protected $dates = ['created_at'];
 
     public function auditable(): MorphTo
     {
@@ -49,31 +55,73 @@ class AuditLog extends Model
     /**
      * Record an audit log entry.
      *
-     * @param  string       $event
-     * @param  Model|null   $auditable
-     * @param  array        $oldValues
-     * @param  array        $newValues
-     * @param  int|null     $tenantId
+     * Supports two call styles:
+     *   record(string $action, $model, array $old, array $new, string $module)   -- new style
+     *   record(string $event,  $model, array $old, array $new, int    $tenantId) -- legacy style
+     *
+     * @param  string            $action
+     * @param  Model|null        $model
+     * @param  array             $oldValues
+     * @param  array             $newValues
+     * @param  string|int|null   $moduleOrTenantId
      * @return static
      */
     public static function record(
-        string $event,
-        ?Model $auditable = null,
+        string $action,
+        $model = null,
         array $oldValues = [],
         array $newValues = [],
-        ?int $tenantId = null
+        $moduleOrTenantId = null
     ): static {
+        $tenantId = null;
+        $module   = '';
+
+        if (is_int($moduleOrTenantId)) {
+            $tenantId = $moduleOrTenantId;
+        } elseif (is_string($moduleOrTenantId)) {
+            $module = $moduleOrTenantId;
+        }
+
+        if ($tenantId === null) {
+            $tenantId = auth()->user()?->tenant_id ?? 0;
+        }
+
         return static::create([
-            'user_id'        => auth()->id(),
-            'tenant_id'      => $tenantId,
-            'event'          => $event,
-            'auditable_type' => $auditable ? get_class($auditable) : null,
-            'auditable_id'   => $auditable?->getKey(),
-            'old_values'     => $oldValues ?: null,
-            'new_values'     => $newValues ?: null,
-            'ip_address'     => request()->ip(),
-            'user_agent'     => request()->userAgent(),
-            'created_at'     => now(),
+            'tenant_id'       => $tenantId,
+            'user_id'         => auth()->id(),
+            'event'           => $action,
+            'action'          => $action,
+            'auditable_type'  => $model ? get_class($model) : null,
+            'auditable_id'    => $model?->getKey(),
+            'auditable_label' => $model?->name ?? $model?->title ?? $model?->subject ?? null,
+            'old_values'      => $oldValues ?: null,
+            'new_values'      => $newValues ?: null,
+            'ip_address'      => request()?->ip(),
+            'user_agent'      => request()?->userAgent(),
+            'url'             => request()?->fullUrl(),
+            'module'          => $module,
+            'created_at'      => now(),
         ]);
+    }
+
+    /**
+     * Get a human-readable summary of changes.
+     */
+    public function getChangeSummaryAttribute(): string
+    {
+        if ($this->old_values && $this->new_values) {
+            $changedKeys = array_keys(array_diff_assoc(
+                (array) $this->new_values,
+                (array) $this->old_values
+            ));
+
+            if (empty($changedKeys)) {
+                $changedKeys = array_keys((array) $this->new_values);
+            }
+
+            return implode(', ', $changedKeys) . ' changed';
+        }
+
+        return $this->action ?? $this->event ?? '';
     }
 }

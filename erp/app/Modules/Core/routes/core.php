@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\Admin\AuditLogController;
+use App\Modules\Core\Http\Controllers\AuditLogController;
+use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\DashboardController;
@@ -33,6 +34,10 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class)->names('users');
-        Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+        Route::get('audit-log', [AdminAuditLogController::class, 'index'])->name('audit-log.index');
+    });
+
+    Route::middleware(['web', 'auth', 'verified'])->prefix('core')->name('core.')->group(function () {
+        Route::resource('audit-logs', AuditLogController::class)->only(['index', 'show']);
     });
 });
