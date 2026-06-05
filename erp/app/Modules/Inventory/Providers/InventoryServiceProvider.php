@@ -6,6 +6,10 @@ use App\Modules\Inventory\Models\Asset;
 use App\Modules\Inventory\Models\AssetMaintenance;
 use App\Modules\Inventory\Models\BinStockLocation;
 use App\Modules\Inventory\Models\DemandForecast;
+use App\Modules\Inventory\Models\ProductAttribute;
+use App\Modules\Inventory\Models\ProductVariant;
+use App\Modules\Inventory\Models\ProductVariantValue;
+use App\Modules\Inventory\Policies\ProductVariantPolicy;
 use App\Modules\Inventory\Models\ForecastAlert;
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\ProductBundleItem;
@@ -68,5 +72,8 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(WarehouseBin::class,         WarehouseBinPolicy::class);
         Gate::policy(WarehouseZone::class,        WarehouseBinPolicy::class);
         Gate::policy(BinStockLocation::class,     WarehouseBinPolicy::class);
+        Gate::policy(ProductAttribute::class,     ProductVariantPolicy::class);
+        Gate::policy(ProductVariant::class,       ProductVariantPolicy::class);
+        Gate::policy(ProductVariantValue::class,  ProductVariantPolicy::class);
     }
 }

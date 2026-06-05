@@ -21,6 +21,8 @@ use App\Modules\Inventory\Http\Controllers\WarehouseTransferController;
 use App\Modules\Inventory\Http\Controllers\WarehouseStockController;
 use App\Modules\Inventory\Http\Controllers\WarehouseZoneController;
 use App\Modules\Inventory\Http\Controllers\DemandForecastController;
+use App\Modules\Inventory\Http\Controllers\ProductAttributeController;
+use App\Modules\Inventory\Http\Controllers\ProductVariantController;
 use App\Modules\Inventory\Http\Controllers\StockTransferController;
 use Illuminate\Support\Facades\Route;
 
@@ -134,6 +136,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('warehouse-bins/{warehouseBin}/stock',              [WarehouseBinController::class, 'addStock'])->name('warehouse-bins.stock.add');
     Route::delete('warehouse-bins/{warehouseBin}/stock/{location}', [WarehouseBinController::class, 'removeStock'])->name('warehouse-bins.stock.remove');
     Route::resource('warehouse-bins', WarehouseBinController::class)->except(['edit', 'update']);
+
+    // Product Attributes
+    Route::resource('product-attributes', ProductAttributeController::class)->except(['show', 'create', 'edit']);
+
+    // Product Variants
+    Route::patch('product-variants/{productVariant}/adjust-stock', [ProductVariantController::class, 'adjustStock'])->name('product-variants.adjust-stock');
+    Route::resource('product-variants', ProductVariantController::class)->except(['edit', 'update']);
 });
 
 // Demand Forecasting - custom actions BEFORE resource

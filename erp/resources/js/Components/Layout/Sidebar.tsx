@@ -75,7 +75,9 @@ const navItems: NavItem[] = [
             { label: 'Costing',  href: '/inventory/costing',  icon: <span /> },
             { label: 'Demand Forecasts', href: '/inventory/demand-forecasts', icon: <span /> },
             { label: 'Warehouse Zones', href: '/inventory/warehouse-zones', icon: <span /> },
-            { label: 'Bin Locations',   href: '/inventory/warehouse-bins',  icon: <span /> },
+            { label: 'Bin Locations',      href: '/inventory/warehouse-bins',       icon: <span /> },
+            { label: 'Prod. Attributes',   href: '/inventory/product-attributes',   icon: <span /> },
+            { label: 'Product Variants',   href: '/inventory/product-variants',     icon: <span /> },
         ],
     },
     {

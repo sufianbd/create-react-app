@@ -344,3 +344,31 @@ export interface WarehouseBin {
     stock_locations?: BinStockLocation[];
     created_at: string;
 }
+
+export interface ProductAttribute {
+    id: number;
+    name: string;
+    type: 'text' | 'select' | 'color' | 'number';
+    options: string[] | null;
+}
+
+export interface ProductVariantValue {
+    id: number;
+    variant_id: number;
+    attribute_id: number;
+    value: string;
+    attribute?: ProductAttribute;
+}
+
+export interface ProductVariant {
+    id: number;
+    product_id: number;
+    sku: string;
+    name: string;
+    price_adjustment: number;
+    stock_quantity: number;
+    is_active: boolean;
+    effective_price: number;
+    product?: Product;
+    values?: ProductVariantValue[];
+}
