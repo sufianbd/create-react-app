@@ -4,6 +4,8 @@ use App\Modules\Finance\Http\Controllers\AccountController;
 use App\Modules\Finance\Http\Controllers\BudgetController;
 use App\Modules\Finance\Http\Controllers\BudgetLineController;
 use App\Modules\Finance\Http\Controllers\BankAccountController;
+use App\Modules\Finance\Http\Controllers\BankTransactionController;
+use App\Modules\Finance\Http\Controllers\BankReconciliationController;
 use App\Modules\Finance\Http\Controllers\BankStatementController;
 use App\Modules\Finance\Http\Controllers\BillController;
 use App\Modules\Finance\Http\Controllers\ContactController;
@@ -167,6 +169,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reconciliation',                                 [ReconciliationController::class, 'index'])->name('reconciliation.index');
     Route::post('reconciliation/{bankTransaction}/match',        [ReconciliationController::class, 'match'])->name('reconciliation.match');
     Route::post('reconciliation/{bankTransaction}/unmatch',      [ReconciliationController::class, 'unmatch'])->name('reconciliation.unmatch');
+
+    // Bank Transactions
+    Route::patch('bank-transactions/{bankTransaction}/reconcile', [BankTransactionController::class, 'reconcile'])->name('bank-transactions.reconcile');
+    Route::resource('bank-transactions', BankTransactionController::class)->except(['show', 'edit', 'update']);
+
+    // Bank Reconciliations
+    Route::post('bank-reconciliations/{bankReconciliation}/complete', [BankReconciliationController::class, 'complete'])->name('bank-reconciliations.complete');
+    Route::resource('bank-reconciliations', BankReconciliationController::class)->except(['edit', 'update']);
 
     // Fixed Assets
     Route::post('fixed-assets/{fixedAsset}/depreciate', [FixedAssetController::class, 'depreciate'])->name('fixed-assets.depreciate');

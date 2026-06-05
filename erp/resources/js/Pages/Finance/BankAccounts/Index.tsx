@@ -5,12 +5,25 @@ import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
 import type { BankAccount } from '@/types/finance';
 
+interface PaginatedAccounts {
+    data: BankAccount[];
+    total: number;
+    current_page: number;
+    last_page: number;
+}
+
 interface Props extends PageProps {
-    accounts: BankAccount[];
+    accounts: PaginatedAccounts | BankAccount[];
+}
+
+function ispaginated(accounts: PaginatedAccounts | BankAccount[]): accounts is PaginatedAccounts {
+    return !Array.isArray(accounts);
 }
 
 export default function BankAccountsIndex({ accounts }: Props) {
     const { can } = usePermission();
+    const accountList = ispaginated(accounts) ? accounts.data : accounts;
+    const total = ispaginated(accounts) ? accounts.total : accounts.length;
 
     return (
         <AppLayout>
@@ -19,7 +32,7 @@ export default function BankAccountsIndex({ accounts }: Props) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold text-slate-900">Bank Accounts</h1>
-                        <p className="text-sm text-slate-500 mt-1">{accounts.length} accounts</p>
+                        <p className="text-sm text-slate-500 mt-1">{total} accounts</p>
                     </div>
                     {can('finance.create') && (
                         <Link href="/finance/bank-accounts/create">
@@ -42,14 +55,14 @@ export default function BankAccountsIndex({ accounts }: Props) {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
-                            {accounts.length === 0 && (
+                            {accountList.length === 0 && (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-8 text-center text-sm text-slate-500">
                                         No bank accounts found. Create one to get started.
                                     </td>
                                 </tr>
                             )}
-                            {accounts.map((account) => (
+                            {accountList.map((account) => (
                                 <tr key={account.id} className="hover:bg-slate-50">
                                     <td className="px-6 py-4 text-sm font-medium text-slate-900">
                                         <Link href={`/finance/bank-accounts/${account.id}`} className="text-indigo-600 hover:text-indigo-800">

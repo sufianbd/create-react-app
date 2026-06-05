@@ -17,13 +17,7 @@ class BankAccountController extends Controller
         $this->authorize('viewAny', BankAccount::class);
 
         $accounts = BankAccount::where('tenant_id', $request->user()->tenant_id)
-            ->get()
-            ->map(function (BankAccount $account) {
-                return array_merge($account->toArray(), [
-                    'balance'           => $account->balance,
-                    'unreconciled_count' => $account->unreconciledCount,
-                ]);
-            });
+            ->paginate(20);
 
         return Inertia::render('Finance/BankAccounts/Index', [
             'accounts' => $accounts,
@@ -43,18 +37,21 @@ class BankAccountController extends Controller
 
         $data = $request->validate([
             'name'            => 'required|string|max:255',
-            'bank_name'       => 'nullable|string|max:255',
+            'bank_name'       => 'required|string|max:255',
             'account_number'  => 'nullable|string|max:255',
-            'currency_code'   => 'required|string|size:3',
-            'opening_balance' => 'required|numeric',
+            'currency'        => 'nullable|string|max:10',
+            'opening_balance' => 'nullable|numeric',
         ]);
 
-        BankAccount::create([
+        $account = BankAccount::create([
             ...$data,
-            'tenant_id' => $request->user()->tenant_id,
+            'tenant_id'       => $request->user()->tenant_id,
+            'currency'        => $data['currency'] ?? 'USD',
+            'opening_balance' => $data['opening_balance'] ?? 0,
         ]);
+        $account->updateBalance();
 
-        return redirect()->route('finance.bank-accounts.index')
+        return redirect()->back()
             ->with('success', 'Bank account created.');
     }
 
@@ -90,15 +87,16 @@ class BankAccountController extends Controller
 
         $data = $request->validate([
             'name'            => 'required|string|max:255',
-            'bank_name'       => 'nullable|string|max:255',
+            'bank_name'       => 'required|string|max:255',
             'account_number'  => 'nullable|string|max:255',
-            'currency_code'   => 'required|string|size:3',
-            'opening_balance' => 'required|numeric',
+            'currency'        => 'nullable|string|max:10',
+            'opening_balance' => 'nullable|numeric',
         ]);
 
         $bankAccount->update($data);
+        $bankAccount->updateBalance();
 
-        return redirect()->route('finance.bank-accounts.index')
+        return redirect()->back()
             ->with('success', 'Bank account updated.');
     }
 
@@ -108,7 +106,7 @@ class BankAccountController extends Controller
 
         $bankAccount->delete();
 
-        return redirect()->route('finance.bank-accounts.index')
+        return redirect()->back()
             ->with('success', 'Bank account deleted.');
     }
 }

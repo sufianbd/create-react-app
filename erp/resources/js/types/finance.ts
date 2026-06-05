@@ -756,3 +756,42 @@ export interface Lead {
     activities?: LeadActivity[];
     created_at: string;
 }
+
+export interface BankAccountV2 {
+    id: number;
+    name: string;
+    bank_name: string;
+    account_number: string | null;
+    currency: string;
+    opening_balance: number;
+    current_balance: number;
+    is_active: boolean;
+}
+
+export interface BankTransactionV2 {
+    id: number;
+    bank_account_id: number;
+    transaction_date: string;
+    description: string;
+    amount: number;
+    reference: string | null;
+    type: 'credit' | 'debit';
+    is_reconciled: boolean;
+    reconciliation_id: number | null;
+    account?: BankAccountV2;
+}
+
+export interface BankReconciliation {
+    id: number;
+    bank_account_id: number;
+    statement_date: string;
+    statement_balance: number;
+    reconciled_balance: number;
+    status: 'draft' | 'completed';
+    notes: string | null;
+    difference: number;
+    is_balanced: boolean;
+    account?: BankAccountV2;
+    transactions?: BankTransactionV2[];
+    completed_at: string | null;
+}
