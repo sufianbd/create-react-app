@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\HR\Http\Requests\StoreLeaveRequestRequest;
 use App\Modules\HR\Http\Resources\LeaveRequestResource;
 use App\Modules\HR\Models\Employee;
+use App\Modules\HR\Models\LeaveBalance;
 use App\Modules\HR\Models\LeaveRequest;
 use App\Modules\HR\Models\LeaveType;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,7 @@ class LeaveRequestController extends Controller
             'employees'   => Employee::active()->orderBy('last_name')->get()->map(fn ($e) => [
                 'id' => $e->id, 'full_name' => $e->full_name,
             ]),
+            'leaveTypes'  => LeaveType::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'filters'     => $request->only(['status', 'employee_id']),
             'breadcrumbs' => [
                 ['label' => 'HR'],
@@ -99,7 +101,7 @@ class LeaveRequestController extends Controller
             'employees'   => Employee::active()->orderBy('last_name')->get()->map(fn ($e) => [
                 'id' => $e->id, 'full_name' => $e->full_name,
             ]),
-            'leaveTypes'  => LeaveType::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'leaveTypes'  => LeaveType::where('is_active', true)->orderBy('name')->get(['id', 'name', 'default_days']),
             'breadcrumbs' => [
                 ['label' => 'HR'],
                 ['label' => 'Leave Requests', 'href' => route('hr.leave-requests.index')],
@@ -108,16 +110,60 @@ class LeaveRequestController extends Controller
         ]);
     }
 
-    public function store(StoreLeaveRequestRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', LeaveRequest::class);
 
-        $data = $request->validated();
+        $data = $request->validate([
+            'employee_id'    => 'required|integer|exists:employees,id',
+            'leave_type_id'  => 'required|integer|exists:leave_types,id',
+            'start_date'     => 'required|date',
+            'end_date'       => 'required|date|after_or_equal:start_date',
+            'days_requested' => 'nullable|numeric|min:0.5',
+            'reason'         => 'nullable|string',
+        ]);
+
+        // Compute days_requested if not provided
+        if (empty($data['days_requested'])) {
+            $start = \Carbon\Carbon::parse($data['start_date']);
+            $end   = \Carbon\Carbon::parse($data['end_date']);
+            $data['days_requested'] = max(0.5, $start->diffInDays($end) + 1);
+        }
+
+        $daysRequested = (float) $data['days_requested'];
 
         $leaveRequest = LeaveRequest::create([
-            ...$data,
-            'tenant_id' => auth()->user()->tenant_id,
+            'tenant_id'      => auth()->user()->tenant_id,
+            'employee_id'    => $data['employee_id'],
+            'leave_type_id'  => $data['leave_type_id'],
+            'start_date'     => $data['start_date'],
+            'end_date'       => $data['end_date'],
+            'days_requested' => $daysRequested,
+            'days'           => (int) $daysRequested,
+            'reason'         => $data['reason'] ?? null,
+            'notes'          => $data['reason'] ?? null,
+            'status'         => 'pending',
         ]);
+
+        // Create or update LeaveBalance — increment pending_days
+        $leaveType = LeaveType::find($data['leave_type_id']);
+        $year      = \Carbon\Carbon::parse($data['start_date'])->year;
+
+        $balance = LeaveBalance::firstOrCreate(
+            [
+                'employee_id'   => $data['employee_id'],
+                'leave_type_id' => $data['leave_type_id'],
+                'year'          => $year,
+            ],
+            [
+                'tenant_id'      => auth()->user()->tenant_id,
+                'allocated_days' => $leaveType?->default_days ?: ($leaveType?->days_per_year ?: 0),
+                'used_days'      => 0,
+                'pending_days'   => 0,
+            ]
+        );
+
+        $balance->increment('pending_days', $daysRequested);
 
         return redirect()->route('hr.leave-requests.show', $leaveRequest)
             ->with('success', 'Leave request submitted.');
@@ -127,7 +173,7 @@ class LeaveRequestController extends Controller
     {
         $this->authorize('view', $leaveRequest);
 
-        $leaveRequest->load(['employee', 'leaveType', 'reviewer']);
+        $leaveRequest->load(['employee', 'leaveType', 'approver', 'reviewer']);
 
         return Inertia::render('HR/LeaveRequests/Show', [
             'leaveRequest' => new LeaveRequestResource($leaveRequest),
@@ -152,7 +198,7 @@ class LeaveRequestController extends Controller
             ->with('success', 'Leave request deleted.');
     }
 
-    public function approve(LeaveRequest $leaveRequest): RedirectResponse
+    public function approve(Request $request, LeaveRequest $leaveRequest): RedirectResponse
     {
         $this->authorize('update', $leaveRequest);
 
@@ -160,16 +206,12 @@ class LeaveRequestController extends Controller
             return back()->withErrors(['status' => 'Only pending leave requests can be approved.']);
         }
 
-        $leaveRequest->update([
-            'status'      => 'approved',
-            'reviewed_by' => Auth::id(),
-            'reviewed_at' => now(),
-        ]);
+        $leaveRequest->approve(auth()->user());
 
         return back()->with('success', 'Leave request approved.');
     }
 
-    public function reject(LeaveRequest $leaveRequest): RedirectResponse
+    public function reject(Request $request, LeaveRequest $leaveRequest): RedirectResponse
     {
         $this->authorize('update', $leaveRequest);
 
@@ -177,12 +219,21 @@ class LeaveRequestController extends Controller
             return back()->withErrors(['status' => 'Only pending leave requests can be rejected.']);
         }
 
-        $leaveRequest->update([
-            'status'      => 'rejected',
-            'reviewed_by' => Auth::id(),
-            'reviewed_at' => now(),
+        $data = $request->validate([
+            'rejection_reason' => 'nullable|string',
         ]);
 
+        $leaveRequest->reject(auth()->user(), $data['rejection_reason'] ?? '');
+
         return back()->with('success', 'Leave request rejected.');
+    }
+
+    public function cancel(Request $request, LeaveRequest $leaveRequest): RedirectResponse
+    {
+        $this->authorize('update', $leaveRequest);
+
+        $leaveRequest->cancel();
+
+        return back()->with('success', 'Leave request cancelled.');
     }
 }

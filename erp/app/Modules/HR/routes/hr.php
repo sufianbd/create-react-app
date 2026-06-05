@@ -10,7 +10,9 @@ use App\Modules\HR\Http\Controllers\EmployeeTrainingRecordController;
 use App\Modules\HR\Http\Controllers\ExpenseClaimController;
 use App\Modules\HR\Http\Controllers\JobApplicationController;
 use App\Modules\HR\Http\Controllers\JobPositionController;
+use App\Modules\HR\Http\Controllers\LeaveBalanceController;
 use App\Modules\HR\Http\Controllers\LeaveRequestController;
+use App\Modules\HR\Http\Controllers\LeaveTypeController;
 use App\Modules\HR\Http\Controllers\OnboardingChecklistController;
 use App\Modules\HR\Http\Controllers\OnboardingTemplateController;
 use App\Modules\HR\Http\Controllers\PayrollController;
@@ -41,12 +43,20 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
         'destroy' => 'employees.destroy',
     ]);
 
+    // Leave Types
+    Route::resource('leave-types', LeaveTypeController::class)->except(['show', 'create', 'edit']);
+
     // Leave Requests (new spec-compliant routes)
     Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])
         ->name('leave-requests.approve');
     Route::post('leave-requests/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])
         ->name('leave-requests.reject');
+    Route::post('leave-requests/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])
+        ->name('leave-requests.cancel');
     Route::resource('leave-requests', LeaveRequestController::class)->except(['edit', 'update']);
+
+    // Leave Balances
+    Route::resource('leave-balances', LeaveBalanceController::class)->only(['index', 'update']);
 
     // Legacy leave routes (for backward compat with existing tests)
     Route::get('leave', [LeaveRequestController::class, 'legacyIndex'])->name('leave.index');

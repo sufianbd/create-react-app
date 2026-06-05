@@ -17,7 +17,7 @@ class Employee extends Model
     protected $fillable = [
         'tenant_id', 'user_id', 'department_id', 'employee_number',
         'first_name', 'last_name', 'email', 'phone', 'position',
-        'employment_type', 'status', 'start_date', 'end_date',
+        'employment_type', 'status', 'start_date', 'hire_date', 'end_date',
         'salary_type', 'salary_amount',
     ];
 
@@ -66,10 +66,16 @@ class Employee extends Model
         return 'EMP-' . str_pad((string) $this->id, 5, '0', STR_PAD_LEFT);
     }
 
-    /** hire_date alias for start_date */
+    /** hire_date alias for start_date (getter) */
     public function getHireDateAttribute()
     {
         return $this->start_date;
+    }
+
+    /** hire_date alias for start_date (setter) */
+    public function setHireDateAttribute($value): void
+    {
+        $this->attributes['start_date'] = $value;
     }
 
     /** salary alias for salary_amount */

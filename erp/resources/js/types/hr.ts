@@ -464,3 +464,43 @@ export interface EmployeeOnboardingV2 {
     checklist?: OnboardingChecklist;
     progress?: OnboardingProgress[];
 }
+
+export interface LeaveTypeV2 {
+    id: number;
+    name: string;
+    code: string | null;
+    default_days: number;
+    is_paid: boolean;
+    is_active: boolean;
+    requires_approval: boolean;
+    description: string | null;
+}
+
+export interface LeaveRequestV2 {
+    id: number;
+    employee_id: number;
+    leave_type_id: number;
+    start_date: string;
+    end_date: string;
+    days_requested: number;
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+    reason: string | null;
+    rejection_reason: string | null;
+    approved_at: string | null;
+    employee?: Employee;
+    leave_type?: LeaveType;
+    approver?: { id: number; name: string } | null;
+}
+
+export interface LeaveBalance {
+    id: number;
+    employee_id: number;
+    leave_type_id: number;
+    year: number;
+    allocated_days: number;
+    used_days: number;
+    pending_days: number;
+    remaining_days: number;
+    employee?: Employee;
+    leave_type?: LeaveType;
+}

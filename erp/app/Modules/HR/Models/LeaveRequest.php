@@ -13,17 +13,30 @@ class LeaveRequest extends Model
 
     protected $fillable = [
         'tenant_id', 'employee_id', 'leave_type_id',
-        'start_date', 'end_date', 'days', 'status', 'notes',
-        'reviewed_by', 'reviewed_at',
+        'start_date', 'end_date',
+        'days',           // legacy column
+        'days_requested', // new column (phase 83)
+        'status',
+        'notes',          // legacy column
+        'reason',         // new column (phase 83)
+        'rejection_reason',
+        'reviewed_by',    // legacy column
+        'reviewed_at',    // legacy column
+        'approved_by',    // new column alias (phase 83)
+        'approved_at',    // new column alias (phase 83)
     ];
 
     protected $casts = [
-        'start_date'  => 'date',
-        'end_date'    => 'date',
-        'reviewed_at' => 'datetime',
+        'start_date'      => 'date',
+        'end_date'        => 'date',
+        'reviewed_at'     => 'datetime',
+        'approved_at'     => 'datetime',
+        'days_requested'  => 'float',
     ];
 
     protected $attributes = ['status' => 'pending'];
+
+    // ── Relationships ─────────────────────────────────────────────────────────
 
     public function employee(): BelongsTo
     {
@@ -32,7 +45,7 @@ class LeaveRequest extends Model
 
     public function leaveType(): BelongsTo
     {
-        return $this->belongsTo(LeaveType::class);
+        return $this->belongsTo(LeaveType::class, 'leave_type_id');
     }
 
     public function reviewer(): BelongsTo
@@ -40,25 +53,14 @@ class LeaveRequest extends Model
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
-    /** Alias for reviewer (spec: approver()) */
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewed_by');
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
-    /** approved_by accessor -> reviewed_by */
-    public function getApprovedByAttribute()
-    {
-        return $this->reviewed_by;
-    }
+    // ── Accessors ─────────────────────────────────────────────────────────────
 
-    /** approved_at accessor -> reviewed_at */
-    public function getApprovedAtAttribute()
-    {
-        return $this->reviewed_at;
-    }
-
-    /** days accessor */
+    /** days accessor — reads legacy 'days' column */
     public function getDaysAttribute(): int
     {
         if (isset($this->attributes['days']) && $this->attributes['days'] !== null) {
@@ -70,29 +72,96 @@ class LeaveRequest extends Model
         return 0;
     }
 
-    public function approve(User $reviewer): void
+    /** Alias for days_requested (phase 83 spec) */
+    public function getDaysCountAttribute(): float
+    {
+        return (float) ($this->attributes['days_requested'] ?? $this->attributes['days'] ?? 0);
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
+
+    public function approve(User $approver): void
     {
         if ($this->status !== 'pending') {
             throw new \DomainException("Leave request is already {$this->status}.");
         }
+
+        $daysRequested = (float) ($this->attributes['days_requested'] ?? $this->attributes['days'] ?? 0);
 
         $this->update([
             'status'      => 'approved',
-            'reviewed_by' => $reviewer->id,
+            'reviewed_by' => $approver->id,
             'reviewed_at' => now(),
+            'approved_by' => $approver->id,
+            'approved_at' => now(),
         ]);
+
+        // Update leave balance: pending → used
+        $year = $this->start_date ? $this->start_date->year : now()->year;
+        $balance = LeaveBalance::where('employee_id', $this->employee_id)
+            ->where('leave_type_id', $this->leave_type_id)
+            ->where('year', $year)
+            ->first();
+
+        if ($balance && $daysRequested > 0) {
+            LeaveBalance::where('employee_id', $this->employee_id)
+                ->where('leave_type_id', $this->leave_type_id)
+                ->where('year', $year)
+                ->decrement('pending_days', $daysRequested);
+
+            LeaveBalance::where('employee_id', $this->employee_id)
+                ->where('leave_type_id', $this->leave_type_id)
+                ->where('year', $year)
+                ->increment('used_days', $daysRequested);
+        }
     }
 
-    public function reject(User $reviewer): void
+    public function reject(User $approver, string $reason = ''): void
     {
         if ($this->status !== 'pending') {
             throw new \DomainException("Leave request is already {$this->status}.");
         }
 
+        $daysRequested = (float) ($this->attributes['days_requested'] ?? $this->attributes['days'] ?? 0);
+
         $this->update([
-            'status'      => 'rejected',
-            'reviewed_by' => $reviewer->id,
-            'reviewed_at' => now(),
+            'status'           => 'rejected',
+            'rejection_reason' => $reason ?: null,
+            'reviewed_by'      => $approver->id,
+            'reviewed_at'      => now(),
         ]);
+
+        // Decrement pending_days
+        if ($daysRequested > 0) {
+            $year = $this->start_date ? $this->start_date->year : now()->year;
+            LeaveBalance::where('employee_id', $this->employee_id)
+                ->where('leave_type_id', $this->leave_type_id)
+                ->where('year', $year)
+                ->decrement('pending_days', $daysRequested);
+        }
+    }
+
+    public function cancel(): void
+    {
+        $daysRequested = (float) ($this->attributes['days_requested'] ?? $this->attributes['days'] ?? 0);
+        $year          = $this->start_date ? $this->start_date->year : now()->year;
+        $wasPending    = $this->status === 'pending';
+        $wasApproved   = $this->status === 'approved';
+
+        $this->update(['status' => 'cancelled']);
+
+        if ($daysRequested > 0) {
+            if ($wasPending) {
+                LeaveBalance::where('employee_id', $this->employee_id)
+                    ->where('leave_type_id', $this->leave_type_id)
+                    ->where('year', $year)
+                    ->decrement('pending_days', $daysRequested);
+            } elseif ($wasApproved) {
+                LeaveBalance::where('employee_id', $this->employee_id)
+                    ->where('leave_type_id', $this->leave_type_id)
+                    ->where('year', $year)
+                    ->decrement('used_days', $daysRequested);
+            }
+        }
     }
 }
