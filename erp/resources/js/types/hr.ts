@@ -596,3 +596,28 @@ export interface Timesheet {
     employee?: Employee;
     entries?: TimesheetEntry[];
 }
+
+export interface BenefitPlan {
+    id: number;
+    name: string;
+    type: 'health' | 'dental' | 'vision' | 'life' | 'retirement' | 'other';
+    description: string | null;
+    employee_cost: number;
+    employer_cost: number;
+    total_cost: number;
+    is_active: boolean;
+}
+
+export interface EmployeeBenefit {
+    id: number;
+    employee_id: number;
+    benefit_plan_id: number;
+    enrolled_at: string;
+    ended_at: string | null;
+    status: 'active' | 'waived' | 'ended';
+    notes: string | null;
+    is_active: boolean;
+    monthly_cost: number;
+    employee?: Employee;
+    plan?: BenefitPlan;
+}

@@ -182,3 +182,15 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('timesheets/{timesheet}/entries', [TimesheetController::class, 'addEntry'])->name('timesheets.entries.store');
     Route::resource('timesheets', TimesheetController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
 });
+
+
+// Employee Benefits Administration — custom actions BEFORE resource
+use App\Modules\HR\Http\Controllers\BenefitPlanController;
+use App\Modules\HR\Http\Controllers\EmployeeBenefitController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::resource('benefit-plans', BenefitPlanController::class)->only(['index', 'store', 'show', 'destroy']);
+
+    Route::post('employee-benefits/{employeeBenefit}/waive', [EmployeeBenefitController::class, 'waive'])->name('employee-benefits.waive');
+    Route::post('employee-benefits/{employeeBenefit}/end',   [EmployeeBenefitController::class, 'end'])->name('employee-benefits.end');
+    Route::resource('employee-benefits', EmployeeBenefitController::class)->only(['index', 'store', 'destroy']);
+});

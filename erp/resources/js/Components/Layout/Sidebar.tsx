@@ -176,6 +176,8 @@ const navItems: NavItem[] = [
             { label: 'Disciplinary', href: '/hr/disciplinary-cases', icon: <span /> },
             { label: 'Grievances',   href: '/hr/grievances',          icon: <span /> },
             { label: 'Timesheets',    href: '/hr/timesheets',          icon: <span /> },
+            { label: 'Benefit Plans',    href: '/hr/benefit-plans',     icon: <span /> },
+            { label: 'Employee Benefits', href: '/hr/employee-benefits', icon: <span /> },
         ],
     },
     {

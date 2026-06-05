@@ -52,6 +52,9 @@ use App\Modules\HR\Policies\ShiftPolicy;
 use App\Modules\HR\Policies\TrainingPolicy;
 use App\Modules\HR\Policies\DisciplinaryPolicy;
 use App\Modules\HR\Policies\TimesheetPolicy;
+use App\Modules\HR\Models\BenefitPlan;
+use App\Modules\HR\Models\EmployeeBenefit;
+use App\Modules\HR\Policies\BenefitPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -95,5 +98,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(Grievance::class,               DisciplinaryPolicy::class);
         Gate::policy(Timesheet::class,               TimesheetPolicy::class);
         Gate::policy(TimesheetEntry::class,          TimesheetPolicy::class);
+        Gate::policy(BenefitPlan::class,     BenefitPolicy::class);
+        Gate::policy(EmployeeBenefit::class,  BenefitPolicy::class);
     }
 }
