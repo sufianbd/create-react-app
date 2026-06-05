@@ -537,3 +537,37 @@ export interface EmployeeCertification {
     is_expiring: boolean;
     employee?: Employee;
 }
+
+export interface DisciplinaryCase {
+    id: number;
+    employee_id: number;
+    reference: string | null;
+    incident_type: 'misconduct' | 'poor_performance' | 'attendance' | 'policy_violation' | 'other';
+    incident_date: string;
+    description: string;
+    severity: 'minor' | 'moderate' | 'major' | 'gross';
+    status: 'open' | 'under_investigation' | 'hearing_scheduled' | 'resolved' | 'closed';
+    outcome: string | null;
+    outcome_notes: string | null;
+    hearing_date: string | null;
+    resolved_date: string | null;
+    is_open: boolean;
+    employee?: Employee;
+    handled_by_user?: { id: number; name: string } | null;
+}
+
+export interface Grievance {
+    id: number;
+    employee_id: number;
+    reference: string | null;
+    category: 'harassment' | 'discrimination' | 'working_conditions' | 'pay' | 'management' | 'other';
+    description: string;
+    status: 'submitted' | 'under_review' | 'hearing_scheduled' | 'resolved' | 'closed';
+    resolution: string | null;
+    is_anonymous: boolean;
+    assigned_to: number | null;
+    submitted_date: string;
+    resolved_date: string | null;
+    employee?: Employee;
+    assigned_to_user?: { id: number; name: string } | null;
+}

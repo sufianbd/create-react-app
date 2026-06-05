@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\HR\Http\Controllers\AttendanceController;
+use App\Modules\HR\Http\Controllers\DisciplinaryCaseController;
+use App\Modules\HR\Http\Controllers\GrievanceController;
 use App\Modules\HR\Http\Controllers\DepartmentController;
 use App\Modules\HR\Http\Controllers\EmployeeController;
 use App\Modules\HR\Http\Controllers\EmployeeLoanController;
@@ -157,4 +159,16 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('employee-loans/{employeeLoan}/cancel',     [EmployeeLoanController::class, 'cancel'])->name('employee-loans.cancel');
     Route::post('employee-loans/{employeeLoan}/repayments', [EmployeeLoanController::class, 'addRepayment'])->name('employee-loans.repayments.add');
     Route::resource('employee-loans', EmployeeLoanController::class)->except(['edit', 'update']);
+    // Disciplinary Cases
+    Route::post('disciplinary-cases/{disciplinaryCase}/schedule-hearing', [DisciplinaryCaseController::class, 'scheduleHearing'])->name('disciplinary-cases.schedule-hearing');
+    Route::post('disciplinary-cases/{disciplinaryCase}/resolve',          [DisciplinaryCaseController::class, 'resolve'])->name('disciplinary-cases.resolve');
+    Route::post('disciplinary-cases/{disciplinaryCase}/close',            [DisciplinaryCaseController::class, 'close'])->name('disciplinary-cases.close');
+    Route::resource('disciplinary-cases', DisciplinaryCaseController::class)->except(['edit', 'update']);
+
+    // Grievances
+    Route::patch('grievances/{grievance}/assign',  [GrievanceController::class, 'assign'])->name('grievances.assign');
+    Route::post('grievances/{grievance}/resolve',  [GrievanceController::class, 'resolve'])->name('grievances.resolve');
+    Route::post('grievances/{grievance}/close',    [GrievanceController::class, 'close'])->name('grievances.close');
+    Route::resource('grievances', GrievanceController::class)->except(['edit', 'update']);
 });
+

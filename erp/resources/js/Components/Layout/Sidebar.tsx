@@ -171,6 +171,8 @@ const navItems: NavItem[] = [
             { label: 'Onboarding', href: '/hr/onboarding-checklists', icon: <span /> },
             { label: 'Employee Onboarding', href: '/hr/employee-onboardings', icon: <span /> },
             { label: 'Payroll', href: '/hr/payroll', icon: <span /> },
+            { label: 'Disciplinary', href: '/hr/disciplinary-cases', icon: <span /> },
+            { label: 'Grievances',   href: '/hr/grievances',          icon: <span /> },
         ],
     },
     {

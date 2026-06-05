@@ -30,6 +30,8 @@ use App\Modules\HR\Models\TrainingCourse;
 use App\Modules\HR\Models\TrainingEnrollment;
 use App\Modules\HR\Models\EmployeeCertification;
 use App\Modules\HR\Models\WorkSchedule;
+use App\Modules\HR\Models\DisciplinaryCase;
+use App\Modules\HR\Models\Grievance;
 use App\Modules\HR\Policies\AttendancePolicy;
 use App\Modules\HR\Policies\DepartmentPolicy;
 use App\Modules\HR\Policies\EmployeeOnboardingPolicy;
@@ -46,6 +48,7 @@ use App\Modules\HR\Policies\PerformanceReviewPolicy;
 use App\Modules\HR\Policies\RecruitmentPolicy;
 use App\Modules\HR\Policies\ShiftPolicy;
 use App\Modules\HR\Policies\TrainingPolicy;
+use App\Modules\HR\Policies\DisciplinaryPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -85,5 +88,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(EmployeeTrainingRecord::class,  TrainingPolicy::class);
         Gate::policy(ShiftTemplate::class,           ShiftPolicy::class);
         Gate::policy(ShiftAssignment::class,         ShiftPolicy::class);
+        Gate::policy(DisciplinaryCase::class,        DisciplinaryPolicy::class);
+        Gate::policy(Grievance::class,               DisciplinaryPolicy::class);
     }
 }
