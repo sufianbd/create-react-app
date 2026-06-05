@@ -4,6 +4,7 @@ namespace App\Modules\HR\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\HR\Models\WorkSchedule;
+use App\Modules\HR\Models\WorkScheduleShift;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,58 +12,78 @@ use Inertia\Response;
 
 class WorkScheduleController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', WorkSchedule::class);
 
-        $schedules = WorkSchedule::orderBy('name')->get();
+        $schedules = WorkSchedule::query()
+            ->when($request->has('is_active') && $request->is_active !== null, fn ($q) => $q->where('is_active', $request->boolean('is_active')))
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
 
-        return Inertia::render('HR/WorkSchedules/Index', compact('schedules'));
-    }
-
-    public function create(): Response
-    {
-        $this->authorize('create', WorkSchedule::class);
-
-        return Inertia::render('HR/WorkSchedules/Create');
+        return Inertia::render('HR/WorkSchedules/Index', [
+            'schedules' => $schedules,
+            'filters'   => $request->only(['is_active']),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', WorkSchedule::class);
 
-        $data = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
-            'is_default'       => ['boolean'],
-            'monday_start'     => ['nullable', 'date_format:H:i'],
-            'monday_end'       => ['nullable', 'date_format:H:i', 'after:monday_start'],
-            'tuesday_start'    => ['nullable', 'date_format:H:i'],
-            'tuesday_end'      => ['nullable', 'date_format:H:i', 'after:tuesday_start'],
-            'wednesday_start'  => ['nullable', 'date_format:H:i'],
-            'wednesday_end'    => ['nullable', 'date_format:H:i', 'after:wednesday_start'],
-            'thursday_start'   => ['nullable', 'date_format:H:i'],
-            'thursday_end'     => ['nullable', 'date_format:H:i', 'after:thursday_start'],
-            'friday_start'     => ['nullable', 'date_format:H:i'],
-            'friday_end'       => ['nullable', 'date_format:H:i', 'after:friday_start'],
-            'saturday_start'   => ['nullable', 'date_format:H:i'],
-            'saturday_end'     => ['nullable', 'date_format:H:i', 'after:saturday_start'],
-            'sunday_start'     => ['nullable', 'date_format:H:i'],
-            'sunday_end'       => ['nullable', 'date_format:H:i', 'after:sunday_start'],
+        $validated = $request->validate([
+            'name'          => 'required|string|max:255',
+            'timezone'      => 'nullable|string',
+            'hours_per_week' => 'nullable|integer|min:1|max:168',
+            'is_active'     => 'nullable|boolean',
+            'description'   => 'nullable|string',
         ]);
 
-        $schedule = WorkSchedule::create([
-            'tenant_id' => auth()->user()->tenant_id,
-            ...$data,
+        WorkSchedule::create([
+            'tenant_id'      => auth()->user()->tenant_id,
+            'name'           => $validated['name'],
+            'timezone'       => $validated['timezone'] ?? 'UTC',
+            'hours_per_week' => $validated['hours_per_week'] ?? 40,
+            'is_active'      => $validated['is_active'] ?? true,
+            'description'    => $validated['description'] ?? null,
         ]);
 
-        return redirect()->route('hr.work-schedules.show', $schedule)->with('success', 'Work schedule created.');
+        return redirect()->back();
     }
 
     public function show(WorkSchedule $workSchedule): Response
     {
         $this->authorize('view', $workSchedule);
 
-        return Inertia::render('HR/WorkSchedules/Show', compact('workSchedule'));
+        $workSchedule->load(['shifts', 'assignments.employee']);
+
+        return Inertia::render('HR/WorkSchedules/Show', [
+            'workSchedule' => $workSchedule,
+        ]);
+    }
+
+    public function addShift(Request $request, WorkSchedule $workSchedule): RedirectResponse
+    {
+        $this->authorize('update', $workSchedule);
+
+        $validated = $request->validate([
+            'day_of_week'   => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'start_time'    => 'required|date_format:H:i',
+            'end_time'      => 'required|date_format:H:i',
+            'break_minutes' => 'nullable|numeric|min:0',
+        ]);
+
+        WorkScheduleShift::create([
+            'tenant_id'        => auth()->user()->tenant_id,
+            'work_schedule_id' => $workSchedule->id,
+            'day_of_week'      => $validated['day_of_week'],
+            'start_time'       => $validated['start_time'],
+            'end_time'         => $validated['end_time'],
+            'break_minutes'    => $validated['break_minutes'] ?? 0,
+        ]);
+
+        return redirect()->back();
     }
 
     public function destroy(WorkSchedule $workSchedule): RedirectResponse
@@ -71,6 +92,6 @@ class WorkScheduleController extends Controller
 
         $workSchedule->delete();
 
-        return redirect()->route('hr.work-schedules.index')->with('success', 'Work schedule deleted.');
+        return redirect()->back();
     }
 }

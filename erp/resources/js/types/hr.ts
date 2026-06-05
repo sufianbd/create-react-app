@@ -273,22 +273,51 @@ export interface AttendanceRecord {
 export interface WorkSchedule {
     id: number;
     name: string;
-    is_default: boolean;
-    monday_start: string | null;
-    monday_end: string | null;
-    tuesday_start: string | null;
-    tuesday_end: string | null;
-    wednesday_start: string | null;
-    wednesday_end: string | null;
-    thursday_start: string | null;
-    thursday_end: string | null;
-    friday_start: string | null;
-    friday_end: string | null;
-    saturday_start: string | null;
-    saturday_end: string | null;
-    sunday_start: string | null;
-    sunday_end: string | null;
-    created_at: string;
+    timezone: string;
+    hours_per_week: number;
+    is_active: boolean;
+    description: string | null;
+    shift_count: number;
+    shifts?: WorkScheduleShift[];
+    // Legacy fields
+    is_default?: boolean;
+    monday_start?: string | null;
+    monday_end?: string | null;
+    tuesday_start?: string | null;
+    tuesday_end?: string | null;
+    wednesday_start?: string | null;
+    wednesday_end?: string | null;
+    thursday_start?: string | null;
+    thursday_end?: string | null;
+    friday_start?: string | null;
+    friday_end?: string | null;
+    saturday_start?: string | null;
+    saturday_end?: string | null;
+    sunday_start?: string | null;
+    sunday_end?: string | null;
+    created_at?: string;
+}
+
+export interface WorkScheduleShift {
+    id: number;
+    work_schedule_id: number;
+    day_of_week: string;
+    start_time: string;
+    end_time: string;
+    break_minutes: number;
+    hours: number;
+}
+
+export interface EmployeeSchedule {
+    id: number;
+    employee_id: number;
+    work_schedule_id: number;
+    effective_from: string;
+    effective_to: string | null;
+    is_active: boolean;
+    is_current: boolean;
+    employee?: Employee;
+    schedule?: WorkSchedule;
 }
 
 export interface LoanRepayment {

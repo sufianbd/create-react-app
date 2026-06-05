@@ -56,6 +56,9 @@ use App\Modules\HR\Policies\TimesheetPolicy;
 use App\Modules\HR\Models\BenefitPlan;
 use App\Modules\HR\Models\EmployeeBenefit;
 use App\Modules\HR\Policies\BenefitPolicy;
+use App\Modules\HR\Models\WorkScheduleShift;
+use App\Modules\HR\Models\EmployeeSchedule;
+use App\Modules\HR\Policies\WorkSchedulePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -68,7 +71,6 @@ class HRServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../routes/hr.php');
 
         Gate::policy(AttendanceRecord::class,       AttendancePolicy::class);
-        Gate::policy(WorkSchedule::class,            AttendancePolicy::class);
         Gate::policy(Department::class,              DepartmentPolicy::class);
         Gate::policy(Employee::class,                EmployeePolicy::class);
         Gate::policy(EmployeeLoan::class,            LoanPolicy::class);
@@ -102,5 +104,8 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(TimesheetEntry::class,          TimesheetPolicy::class);
         Gate::policy(BenefitPlan::class,     BenefitPolicy::class);
         Gate::policy(EmployeeBenefit::class,  BenefitPolicy::class);
+        Gate::policy(WorkSchedule::class,          WorkSchedulePolicy::class);
+        Gate::policy(WorkScheduleShift::class,     WorkSchedulePolicy::class);
+        Gate::policy(EmployeeSchedule::class,      WorkSchedulePolicy::class);
     }
 }

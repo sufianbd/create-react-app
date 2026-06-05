@@ -4,6 +4,7 @@ namespace App\Modules\HR\Models;
 
 use App\Modules\Core\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkSchedule extends Model
@@ -14,6 +15,11 @@ class WorkSchedule extends Model
     protected $fillable = [
         'tenant_id',
         'name',
+        'timezone',
+        'hours_per_week',
+        'is_active',
+        'description',
+        // Legacy fields kept for backward compatibility
         'monday_start',
         'monday_end',
         'tuesday_start',
@@ -32,8 +38,25 @@ class WorkSchedule extends Model
     ];
 
     protected $casts = [
-        'is_default' => 'boolean',
+        'hours_per_week' => 'integer',
+        'is_active'      => 'boolean',
+        'is_default'     => 'boolean',
     ];
+
+    public function shifts(): HasMany
+    {
+        return $this->hasMany(WorkScheduleShift::class);
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(EmployeeSchedule::class);
+    }
+
+    public function getShiftCountAttribute(): int
+    {
+        return $this->shifts()->count();
+    }
 
     public function scopeDefault($query)
     {

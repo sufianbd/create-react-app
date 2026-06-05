@@ -196,3 +196,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('employee-benefits/{employeeBenefit}/end',   [EmployeeBenefitController::class, 'end'])->name('employee-benefits.end');
     Route::resource('employee-benefits', EmployeeBenefitController::class)->only(['index', 'store', 'destroy']);
 });
+
+
+// Work Schedules & Shifts — custom actions BEFORE resource
+use App\Modules\HR\Http\Controllers\EmployeeScheduleController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('work-schedules/{workSchedule}/shifts', [WorkScheduleController::class, 'addShift'])->name('work-schedules.shifts.store');
+    Route::resource('employee-schedules', EmployeeScheduleController::class)->only(['index', 'store', 'destroy']);
+});
