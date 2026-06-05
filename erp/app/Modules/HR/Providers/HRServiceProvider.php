@@ -27,6 +27,8 @@ use App\Modules\HR\Models\PerformanceReview;
 use App\Modules\HR\Models\ShiftAssignment;
 use App\Modules\HR\Models\ShiftTemplate;
 use App\Modules\HR\Models\TrainingCourse;
+use App\Modules\HR\Models\TrainingEnrollment;
+use App\Modules\HR\Models\EmployeeCertification;
 use App\Modules\HR\Models\WorkSchedule;
 use App\Modules\HR\Policies\AttendancePolicy;
 use App\Modules\HR\Policies\DepartmentPolicy;
@@ -78,6 +80,8 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(PerformanceKpi::class,          PerformanceReviewPolicy::class);
         Gate::policy(PerformanceReview::class,       PerformanceReviewPolicy::class);
         Gate::policy(TrainingCourse::class,          TrainingPolicy::class);
+        Gate::policy(TrainingEnrollment::class,   TrainingPolicy::class);
+        Gate::policy(EmployeeCertification::class, TrainingPolicy::class);
         Gate::policy(EmployeeTrainingRecord::class,  TrainingPolicy::class);
         Gate::policy(ShiftTemplate::class,           ShiftPolicy::class);
         Gate::policy(ShiftAssignment::class,         ShiftPolicy::class);

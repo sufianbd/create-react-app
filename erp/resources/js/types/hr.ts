@@ -175,13 +175,17 @@ export interface PerformanceReview {
 export interface TrainingCourse {
     id: number;
     title: string;
-    provider: string | null;
-    type: 'internal' | 'external' | 'online' | 'certification';
-    duration_hours: number | null;
+    category: string | null;
     description: string | null;
+    provider: string | null;
+    type?: 'internal' | 'external' | 'online' | 'certification';
+    duration_hours: number | null;
+    cost: number | null;
+    is_mandatory: boolean;
     is_active: boolean;
+    enrollments_count?: number;
     training_records_count?: number;
-    created_at: string;
+    created_at?: string;
 }
 
 export interface EmployeeTrainingRecord {
@@ -503,4 +507,33 @@ export interface LeaveBalance {
     remaining_days: number;
     employee?: Employee;
     leave_type?: LeaveType;
+}
+
+export interface TrainingEnrollment {
+    id: number;
+    employee_id: number;
+    training_course_id: number;
+    enrolled_date: string;
+    scheduled_date: string | null;
+    completed_date: string | null;
+    status: 'enrolled' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
+    score: number | null;
+    notes: string | null;
+    is_completed: boolean;
+    employee?: Employee;
+    course?: TrainingCourse;
+}
+
+export interface EmployeeCertification {
+    id: number;
+    employee_id: number;
+    name: string;
+    issuing_body: string | null;
+    certificate_number: string | null;
+    issued_date: string;
+    expiry_date: string | null;
+    is_verified: boolean;
+    is_expired: boolean;
+    is_expiring: boolean;
+    employee?: Employee;
 }

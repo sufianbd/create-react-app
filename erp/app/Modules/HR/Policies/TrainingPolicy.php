@@ -8,21 +8,26 @@ class TrainingPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('hr.view');
+        return $user->hasPermissionTo('hr.view');
     }
 
-    public function view(User $user): bool
+    public function view(User $user, $model = null): bool
     {
-        return $user->can('hr.view');
+        return $user->hasPermissionTo('hr.view');
     }
 
     public function create(User $user): bool
     {
-        return $user->can('hr.create');
+        return $user->hasPermissionTo('hr.create');
     }
 
-    public function delete(User $user): bool
+    public function update(User $user, $model = null): bool
     {
-        return $user->can('hr.delete');
+        return $user->hasPermissionTo('hr.create');
+    }
+
+    public function delete(User $user, $model = null): bool
+    {
+        return $user->hasPermissionTo('hr.delete');
     }
 }

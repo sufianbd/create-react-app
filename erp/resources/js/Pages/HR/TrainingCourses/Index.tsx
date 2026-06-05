@@ -12,21 +12,6 @@ interface Props extends PageProps {
     courses: Paginator<TrainingCourse>;
 }
 
-const TYPE_COLORS: Record<string, string> = {
-    internal:      'bg-slate-100 text-slate-700',
-    external:      'bg-blue-100 text-blue-700',
-    online:        'bg-indigo-100 text-indigo-700',
-    certification: 'bg-green-100 text-green-700',
-};
-
-function TypeBadge({ type }: { type: string }) {
-    return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${TYPE_COLORS[type] ?? 'bg-slate-100 text-slate-700'}`}>
-            {type}
-        </span>
-    );
-}
-
 export default function TrainingCoursesIndex({ courses }: Props) {
     const { can } = usePermission();
 
@@ -59,16 +44,14 @@ export default function TrainingCoursesIndex({ courses }: Props) {
                                 ),
                             },
                             {
-                                key: 'provider',
-                                header: 'Provider',
-                                render: (c) => (
-                                    <span className="text-sm text-slate-700">{c.provider ?? '—'}</span>
-                                ),
+                                key: 'category',
+                                header: 'Category',
+                                render: (c) => <span className="text-sm text-slate-700">{c.category ?? '—'}</span>,
                             },
                             {
-                                key: 'type',
-                                header: 'Type',
-                                render: (c) => <TypeBadge type={c.type} />,
+                                key: 'provider',
+                                header: 'Provider',
+                                render: (c) => <span className="text-sm text-slate-700">{c.provider ?? '—'}</span>,
                             },
                             {
                                 key: 'duration_hours',
@@ -80,20 +63,25 @@ export default function TrainingCoursesIndex({ courses }: Props) {
                                 ),
                             },
                             {
-                                key: 'is_active',
-                                header: 'Active',
+                                key: 'cost',
+                                header: 'Cost',
                                 render: (c) => (
-                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                                        {c.is_active ? 'Yes' : 'No'}
+                                    <span className="text-sm text-slate-700">
+                                        {c.cost != null ? `$${Number(c.cost).toFixed(2)}` : '—'}
                                     </span>
                                 ),
                             },
                             {
-                                key: 'records_count',
-                                header: 'Records',
-                                render: (c) => (
-                                    <span className="text-sm text-slate-700">{c.training_records_count ?? 0}</span>
-                                ),
+                                key: 'is_mandatory',
+                                header: 'Mandatory',
+                                render: (c) => c.is_mandatory ? (
+                                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700">Required</span>
+                                ) : null,
+                            },
+                            {
+                                key: 'enrollments_count',
+                                header: 'Enrolled',
+                                render: (c) => <span className="text-sm text-slate-700">{c.enrollments_count ?? 0}</span>,
                             },
                             {
                                 key: 'actions',

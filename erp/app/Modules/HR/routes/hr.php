@@ -19,6 +19,8 @@ use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
 use App\Modules\HR\Http\Controllers\PerformanceReviewController;
 use App\Modules\HR\Http\Controllers\TrainingCourseController;
+use App\Modules\HR\Http\Controllers\TrainingEnrollmentController;
+use App\Modules\HR\Http\Controllers\EmployeeCertificationController;
 use App\Modules\HR\Http\Controllers\ShiftAssignmentController;
 use App\Modules\HR\Http\Controllers\ShiftTemplateController;
 use App\Modules\HR\Http\Controllers\WorkScheduleController;
@@ -106,9 +108,18 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::delete('expense-claims/{expenseClaim}/items/{item}', [ExpenseClaimController::class, 'removeItem'])->name('expense-claims.items.remove');
     Route::resource('expense-claims', ExpenseClaimController::class)->except(['edit', 'update']);
 
-    // Training
+    // Training Courses — enroll BEFORE resource
+    Route::post('training-courses/{trainingCourse}/enroll', [TrainingCourseController::class, 'enroll'])->name('training-courses.enroll');
     Route::resource('training-courses', TrainingCourseController::class)->except(['edit', 'update']);
     Route::resource('training-records', EmployeeTrainingRecordController::class)->except(['edit', 'update']);
+
+    // Training Enrollments — complete/fail BEFORE resource
+    Route::post('training-enrollments/{trainingEnrollment}/complete', [TrainingEnrollmentController::class, 'complete'])->name('training-enrollments.complete');
+    Route::post('training-enrollments/{trainingEnrollment}/fail',     [TrainingEnrollmentController::class, 'fail'])->name('training-enrollments.fail');
+    Route::resource('training-enrollments', TrainingEnrollmentController::class)->only(['index', 'show']);
+
+    // Employee Certifications
+    Route::resource('employee-certifications', EmployeeCertificationController::class)->only(['index', 'store', 'destroy']);
 
     // Job Positions
     Route::post('job-positions/{jobPosition}/publish', [JobPositionController::class, 'publish'])->name('job-positions.publish');
