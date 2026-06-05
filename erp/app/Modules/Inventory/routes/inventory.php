@@ -205,3 +205,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('sales-orders/{salesOrder}/cancel',  [SalesOrderController::class, 'cancel'])->name('sales-orders.cancel');
     Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
 });
+
+// Price Lists & Customer Discounts
+use App\Modules\Inventory\Http\Controllers\PriceListController;
+use App\Modules\Inventory\Http\Controllers\CustomerDiscountController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('price-lists/{priceList}/items',                    [PriceListController::class, 'addItem'])->name('price-lists.items.store');
+    Route::delete('price-lists/{priceList}/items/{priceListItem}',  [PriceListController::class, 'removeItem'])->name('price-lists.items.destroy');
+    Route::resource('price-lists', PriceListController::class)->only(['index', 'store', 'show', 'destroy']);
+    Route::resource('customer-discounts', CustomerDiscountController::class)->only(['index', 'store', 'destroy']);
+});

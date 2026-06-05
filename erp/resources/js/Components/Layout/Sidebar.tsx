@@ -84,6 +84,8 @@ const navItems: NavItem[] = [
             { label: 'Lot Numbers',        href: '/inventory/lot-numbers',          icon: <span /> },
             { label: 'Serial Numbers',     href: '/inventory/serial-numbers',       icon: <span /> },
             { label: 'Sales Orders',      href: '/inventory/sales-orders',          icon: <span /> },
+            { label: 'Price Lists',         href: '/inventory/price-lists',           icon: <span /> },
+            { label: 'Discounts',            href: '/inventory/customer-discounts',    icon: <span /> },
         ],
     },
     {

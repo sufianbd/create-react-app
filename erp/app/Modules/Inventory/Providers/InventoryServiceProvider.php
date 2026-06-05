@@ -54,6 +54,10 @@ use App\Modules\Inventory\Models\SalesOrder;
 use App\Modules\Inventory\Models\SalesOrderItem;
 use App\Modules\Inventory\Policies\SalesOrderPolicy;
 use App\Modules\Inventory\Policies\SupplierReviewPolicy;
+use App\Modules\Inventory\Models\PriceList;
+use App\Modules\Inventory\Models\PriceListItem;
+use App\Modules\Inventory\Models\CustomerDiscount;
+use App\Modules\Inventory\Policies\PriceListPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -100,5 +104,8 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(PurchaseOrderItem::class, PurchaseOrderPolicy::class);
         Gate::policy(SalesOrder::class,     SalesOrderPolicy::class);
         Gate::policy(SalesOrderItem::class, SalesOrderPolicy::class);
+        Gate::policy(PriceList::class,        PriceListPolicy::class);
+        Gate::policy(PriceListItem::class,    PriceListPolicy::class);
+        Gate::policy(CustomerDiscount::class, PriceListPolicy::class);
     }
 }

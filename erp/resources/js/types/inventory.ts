@@ -536,3 +536,39 @@ export interface SalesOrder {
     is_open: boolean;
     items?: SalesOrderItem[];
 }
+
+export interface PriceListItem {
+    id: number;
+    price_list_id: number;
+    product_id: number;
+    price: number;
+    min_quantity: number;
+    product?: Product;
+}
+
+export interface PriceList {
+    id: number;
+    name: string;
+    currency: string;
+    is_active: boolean;
+    is_default: boolean;
+    is_valid: boolean;
+    item_count: number;
+    valid_from: string | null;
+    valid_to: string | null;
+    notes: string | null;
+    items?: PriceListItem[];
+}
+
+export interface CustomerDiscount {
+    id: number;
+    customer_id: number | null;
+    discount_type: 'percentage' | 'fixed';
+    discount_value: number;
+    applies_to: 'all' | 'category' | 'product';
+    applies_to_id: number | null;
+    is_active: boolean;
+    is_valid: boolean;
+    valid_from: string | null;
+    valid_to: string | null;
+}
