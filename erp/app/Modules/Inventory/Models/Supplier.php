@@ -25,4 +25,32 @@ class Supplier extends Model
     {
         return $this->hasMany(PurchaseOrder::class);
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(SupplierReview::class);
+    }
+
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(SupplierContract::class);
+    }
+
+    public function getAverageRatingAttribute(): ?float
+    {
+        if ($this->reviews->isEmpty()) {
+            return null;
+        }
+
+        $avg = $this->reviews->map(fn ($r) =>
+            ($r->quality_score + $r->delivery_score + $r->communication_score + $r->price_score) / 4
+        )->avg();
+
+        return $avg !== null ? round($avg, 1) : null;
+    }
+
+    public function getActiveContractAttribute(): ?SupplierContract
+    {
+        return $this->contracts->firstWhere('status', 'active');
+    }
 }

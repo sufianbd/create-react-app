@@ -162,3 +162,18 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('vehicles/{vehicle}/logs',      [VehicleController::class, 'addLog'])->name('vehicles.logs.add');
     Route::resource('vehicles', VehicleController::class)->except(['edit', 'update']);
 });
+
+// Supplier Performance Tracking
+use App\Modules\Inventory\Http\Controllers\SupplierReviewController;
+use App\Modules\Inventory\Http\Controllers\SupplierContractController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    // Supplier Reviews
+    Route::resource('supplier-reviews', SupplierReviewController::class)->only(['index', 'store', 'destroy']);
+
+    // Supplier Contracts - terminate BEFORE resource
+    Route::post('supplier-contracts/{supplierContract}/terminate', [SupplierContractController::class, 'terminate'])->name('supplier-contracts.terminate');
+    Route::resource('supplier-contracts', SupplierContractController::class)->only(['index', 'store', 'destroy']);
+
+    // Supplier show
+    Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
+});

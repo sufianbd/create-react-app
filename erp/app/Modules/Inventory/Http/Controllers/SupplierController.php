@@ -52,6 +52,22 @@ class SupplierController extends Controller
             ->with('success', 'Supplier created successfully.');
     }
 
+    public function show(Supplier $supplier): Response
+    {
+        $supplier->load(['reviews', 'contracts']);
+
+        return Inertia::render('Inventory/Suppliers/Show', [
+            'supplier'      => array_merge($supplier->toArray(), [
+                'average_rating' => $supplier->average_rating,
+            ]),
+            'breadcrumbs'   => [
+                ['label' => 'Inventory'],
+                ['label' => 'Suppliers', 'href' => route('inventory.suppliers.index')],
+                ['label' => $supplier->name],
+            ],
+        ]);
+    }
+
     public function edit(Supplier $supplier): Response
     {
         return Inertia::render('Inventory/Suppliers/Edit', [

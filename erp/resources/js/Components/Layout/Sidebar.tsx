@@ -79,6 +79,8 @@ const navItems: NavItem[] = [
             { label: 'Prod. Attributes',   href: '/inventory/product-attributes',   icon: <span /> },
             { label: 'Product Variants',   href: '/inventory/product-variants',     icon: <span /> },
             { label: 'Vehicles',           href: '/inventory/vehicles',             icon: <span /> },
+            { label: 'Supplier Reviews',   href: '/inventory/supplier-reviews',     icon: <span /> },
+            { label: 'Supplier Contracts', href: '/inventory/supplier-contracts',   icon: <span /> },
         ],
     },
     {

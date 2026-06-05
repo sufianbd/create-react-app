@@ -42,6 +42,9 @@ use App\Modules\Inventory\Models\VehicleLog;
 use App\Modules\Inventory\Policies\VehiclePolicy;
 use App\Modules\Inventory\Models\ProductCostSnapshot;
 use App\Modules\Inventory\Policies\CostingPolicy;
+use App\Modules\Inventory\Models\SupplierReview;
+use App\Modules\Inventory\Models\SupplierContract;
+use App\Modules\Inventory\Policies\SupplierReviewPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -80,5 +83,7 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(VehicleLog::class, VehiclePolicy::class);
         Gate::policy(ProductVariant::class,       ProductVariantPolicy::class);
         Gate::policy(ProductVariantValue::class,  ProductVariantPolicy::class);
+        Gate::policy(SupplierReview::class,   SupplierReviewPolicy::class);
+        Gate::policy(SupplierContract::class, SupplierReviewPolicy::class);
     }
 }

@@ -15,6 +15,7 @@ export interface UnitOfMeasure { id: number; name: string; abbreviation: string;
 export interface Supplier {
     id: number; name: string; contact_person?: string; email?: string;
     phone?: string; address?: string; is_active: boolean; created_at?: string;
+    average_rating?: number | null;
 }
 export interface Warehouse { id: number; name: string; location?: string; is_active: boolean; stock_levels_count?: number; }
 export interface StockLevelInfo {
@@ -410,4 +411,36 @@ export interface Vehicle {
     total_distance: number;
     assigned_employee?: { id: number; first_name: string; last_name: string } | null;
     logs?: VehicleLog[];
+}
+
+export interface SupplierReview {
+    id: number;
+    supplier_id: number;
+    purchase_order_id: number | null;
+    review_date: string;
+    quality_score: number;
+    delivery_score: number;
+    communication_score: number;
+    price_score: number;
+    overall_score: number;
+    notes: string | null;
+    reviewed_by?: number;
+    supplier?: Supplier;
+}
+
+export interface SupplierContract {
+    id: number;
+    supplier_id: number;
+    contract_number: string | null;
+    title: string;
+    start_date: string;
+    end_date: string | null;
+    value: number | null;
+    status: 'active' | 'expired' | 'terminated';
+    payment_terms: string | null;
+    is_active: boolean;
+    is_expired: boolean;
+    is_expiring: boolean;
+    days_remaining: number | null;
+    supplier?: Supplier;
 }
