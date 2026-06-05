@@ -152,3 +152,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('demand-forecasts/alerts/{alert}/resolve',     [DemandForecastController::class, 'resolveAlert'])->name('demand-forecasts.alerts.resolve');
     Route::resource('demand-forecasts', DemandForecastController::class)->except(['edit']);
 });
+
+// Fleet/Vehicle Management - custom actions BEFORE resource
+use App\Modules\Inventory\Http\Controllers\VehicleController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::patch('vehicles/{vehicle}/assign',   [VehicleController::class, 'assign'])->name('vehicles.assign');
+    Route::patch('vehicles/{vehicle}/unassign', [VehicleController::class, 'unassign'])->name('vehicles.unassign');
+    Route::post('vehicles/{vehicle}/retire',    [VehicleController::class, 'retire'])->name('vehicles.retire');
+    Route::post('vehicles/{vehicle}/logs',      [VehicleController::class, 'addLog'])->name('vehicles.logs.add');
+    Route::resource('vehicles', VehicleController::class)->except(['edit', 'update']);
+});

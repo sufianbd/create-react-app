@@ -37,6 +37,9 @@ use App\Modules\Inventory\Policies\StockTransferPolicy;
 use App\Modules\Inventory\Policies\WarehouseBinPolicy;
 use App\Modules\Inventory\Policies\WarehouseTransferPolicy;
 use App\Modules\Inventory\Models\CostingLayer;
+use App\Modules\Inventory\Models\Vehicle;
+use App\Modules\Inventory\Models\VehicleLog;
+use App\Modules\Inventory\Policies\VehiclePolicy;
 use App\Modules\Inventory\Models\ProductCostSnapshot;
 use App\Modules\Inventory\Policies\CostingPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -73,6 +76,8 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(WarehouseZone::class,        WarehouseBinPolicy::class);
         Gate::policy(BinStockLocation::class,     WarehouseBinPolicy::class);
         Gate::policy(ProductAttribute::class,     ProductVariantPolicy::class);
+        Gate::policy(Vehicle::class,    VehiclePolicy::class);
+        Gate::policy(VehicleLog::class, VehiclePolicy::class);
         Gate::policy(ProductVariant::class,       ProductVariantPolicy::class);
         Gate::policy(ProductVariantValue::class,  ProductVariantPolicy::class);
     }

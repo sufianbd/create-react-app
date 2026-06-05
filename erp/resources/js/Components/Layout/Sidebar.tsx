@@ -78,6 +78,7 @@ const navItems: NavItem[] = [
             { label: 'Bin Locations',      href: '/inventory/warehouse-bins',       icon: <span /> },
             { label: 'Prod. Attributes',   href: '/inventory/product-attributes',   icon: <span /> },
             { label: 'Product Variants',   href: '/inventory/product-variants',     icon: <span /> },
+            { label: 'Vehicles',           href: '/inventory/vehicles',             icon: <span /> },
         ],
     },
     {

@@ -372,3 +372,42 @@ export interface ProductVariant {
     product?: Product;
     values?: ProductVariantValue[];
 }
+
+export interface VehicleLog {
+    id: number;
+    vehicle_id: number;
+    log_type: 'trip' | 'refuel' | 'maintenance' | 'inspection';
+    log_date: string;
+    odometer_start: number | null;
+    odometer_end: number | null;
+    distance_km: number | null;
+    fuel_litres: number | null;
+    cost: number | null;
+    driver_name: string | null;
+    destination: string | null;
+    purpose: string | null;
+    notes: string | null;
+    fuel_efficiency: number | null;
+}
+
+export interface Vehicle {
+    id: number;
+    registration: string;
+    make: string;
+    model: string;
+    year: number | null;
+    vin: string | null;
+    colour: string | null;
+    fuel_type: 'petrol' | 'diesel' | 'electric' | 'hybrid';
+    odometer_km: number;
+    status: 'available' | 'in_use' | 'maintenance' | 'retired';
+    assigned_to_employee_id: number | null;
+    insurance_expiry: string | null;
+    registration_expiry: string | null;
+    notes: string | null;
+    is_insurance_expiring: boolean;
+    is_registration_expiring: boolean;
+    total_distance: number;
+    assigned_employee?: { id: number; first_name: string; last_name: string } | null;
+    logs?: VehicleLog[];
+}
