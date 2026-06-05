@@ -283,8 +283,11 @@ export interface ExchangeRate {
     id: number;
     base_currency: string;
     quote_currency: string;
+    from_currency: string;
+    to_currency: string;
     rate: number;
     effective_date: string;
+    is_active: boolean;
     source: string | null;
     created_at: string;
 }
@@ -797,4 +800,23 @@ export interface BankReconciliation {
     account?: BankAccountV2;
     transactions?: BankTransactionV2[];
     completed_at: string | null;
+}
+
+export interface Currency {
+    id: number;
+    code: string;
+    name: string;
+    symbol: string;
+    decimal_places: number;
+    is_base: boolean;
+    is_active: boolean;
+}
+
+export interface CurrencyExchangeRate {
+    id: number;
+    from_currency: string;
+    to_currency: string;
+    rate: number;
+    effective_date: string;
+    is_active: boolean;
 }

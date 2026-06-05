@@ -1,8 +1,8 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
 import type { PageProps } from '@/types';
-import type { ExchangeRate } from '@/types/finance';
+import type { Currency, ExchangeRate } from '@/types/finance';
 
 interface Paginated<T> {
     data: T[];
@@ -13,13 +13,31 @@ interface Paginated<T> {
 
 interface Props extends PageProps {
     rates: Paginated<ExchangeRate>;
+    currencies: Currency[];
 }
 
-export default function ExchangeRatesIndex({ rates }: Props) {
+export default function ExchangeRatesIndex({ rates, currencies }: Props) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        from_currency: '',
+        to_currency: '',
+        rate: '',
+        effective_date: new Date().toISOString().split('T')[0],
+    });
+
+    function handleCreate(e: React.FormEvent) {
+        e.preventDefault();
+        router.post('/finance/exchange-rates', data as Record<string, string>, {
+            onSuccess: () => reset(),
+        });
+    }
+
     function handleDelete(id: number) {
         if (!confirm('Delete this exchange rate?')) return;
         router.delete(`/finance/exchange-rates/${id}`);
     }
+
+    const fromCurrency = (rate: ExchangeRate) => rate.from_currency || rate.base_currency;
+    const toCurrency = (rate: ExchangeRate) => rate.to_currency || rate.quote_currency;
 
     return (
         <AppLayout>
@@ -29,6 +47,9 @@ export default function ExchangeRatesIndex({ rates }: Props) {
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold text-slate-900">Exchange Rates</h1>
                     <div className="flex items-center gap-3">
+                        <Link href="/finance/exchange-rates/convert">
+                            <Button variant="secondary">Currency Converter</Button>
+                        </Link>
                         <Link href="/finance/exchange-rates/report">
                             <Button variant="secondary">Revaluation Report</Button>
                         </Link>
@@ -36,6 +57,65 @@ export default function ExchangeRatesIndex({ rates }: Props) {
                             <Button>Add Rate</Button>
                         </Link>
                     </div>
+                </div>
+
+                {/* Inline Create Form */}
+                <div className="rounded-lg border border-slate-200 bg-white shadow-sm p-6">
+                    <h2 className="text-sm font-semibold text-slate-700 mb-4">Add Exchange Rate</h2>
+                    <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-5">
+                        <div>
+                            <label className="block text-xs text-slate-600 mb-1">From</label>
+                            <input
+                                type="text"
+                                maxLength={3}
+                                value={data.from_currency}
+                                onChange={e => setData('from_currency', e.target.value.toUpperCase())}
+                                placeholder="EUR"
+                                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            {errors.from_currency && <p className="text-xs text-red-600 mt-0.5">{errors.from_currency}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs text-slate-600 mb-1">To</label>
+                            <input
+                                type="text"
+                                maxLength={3}
+                                value={data.to_currency}
+                                onChange={e => setData('to_currency', e.target.value.toUpperCase())}
+                                placeholder="USD"
+                                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            {errors.to_currency && <p className="text-xs text-red-600 mt-0.5">{errors.to_currency}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs text-slate-600 mb-1">Rate</label>
+                            <input
+                                type="number"
+                                step="0.000001"
+                                min="0.000001"
+                                value={data.rate}
+                                onChange={e => setData('rate', e.target.value)}
+                                placeholder="1.0856"
+                                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            {errors.rate && <p className="text-xs text-red-600 mt-0.5">{errors.rate}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs text-slate-600 mb-1">Effective Date</label>
+                            <input
+                                type="date"
+                                value={data.effective_date}
+                                onChange={e => setData('effective_date', e.target.value)}
+                                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            {errors.effective_date && <p className="text-xs text-red-600 mt-0.5">{errors.effective_date}</p>}
+                        </div>
+                        <div className="flex items-end">
+                            <Button type="submit" disabled={processing} className="w-full">
+                                Add
+                            </Button>
+                        </div>
+                    </form>
                 </div>
 
                 {/* Rates Table */}
@@ -46,27 +126,33 @@ export default function ExchangeRatesIndex({ rates }: Props) {
                         </h2>
                     </div>
                     {rates.data.length === 0 ? (
-                        <p className="px-4 py-8 text-center text-sm text-slate-500">No exchange rates yet. Add one to get started.</p>
+                        <p className="px-4 py-8 text-center text-sm text-slate-500">No exchange rates yet. Add one above.</p>
                     ) : (
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs text-slate-500 uppercase border-b border-slate-200">
                                 <tr>
-                                    <th className="px-4 py-2 text-left font-medium">Base</th>
-                                    <th className="px-4 py-2 text-left font-medium">Quote</th>
+                                    <th className="px-4 py-2 text-left font-medium">From</th>
+                                    <th className="px-4 py-2 text-left font-medium">To</th>
                                     <th className="px-4 py-2 text-right font-medium">Rate</th>
                                     <th className="px-4 py-2 text-left font-medium">Effective Date</th>
-                                    <th className="px-4 py-2 text-left font-medium">Source</th>
+                                    <th className="px-4 py-2 text-center font-medium">Active</th>
                                     <th className="px-4 py-2 w-16"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {rates.data.map((rate) => (
                                     <tr key={rate.id} className="hover:bg-slate-50">
-                                        <td className="px-4 py-3 font-medium">{rate.base_currency}</td>
-                                        <td className="px-4 py-3 font-medium">{rate.quote_currency}</td>
+                                        <td className="px-4 py-3 font-medium">{fromCurrency(rate)}</td>
+                                        <td className="px-4 py-3 font-medium">{toCurrency(rate)}</td>
                                         <td className="px-4 py-3 text-right font-mono">{Number(rate.rate).toFixed(6)}</td>
                                         <td className="px-4 py-3 text-slate-600">{rate.effective_date}</td>
-                                        <td className="px-4 py-3 text-slate-500">{rate.source ?? '—'}</td>
+                                        <td className="px-4 py-3 text-center">
+                                            {rate.is_active ? (
+                                                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Yes</span>
+                                            ) : (
+                                                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">No</span>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3 text-right">
                                             <button
                                                 type="button"

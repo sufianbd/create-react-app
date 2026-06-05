@@ -40,6 +40,7 @@ use App\Modules\Finance\Http\Controllers\TaxGroupController;
 use App\Modules\Finance\Http\Controllers\ServiceAgreementController;
 use App\Modules\Finance\Http\Controllers\LoyaltyProgramController;
 use App\Modules\Finance\Http\Controllers\LeadController;
+use App\Modules\Finance\Http\Controllers\CurrencyController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -148,7 +149,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('reports/comparative-profit-loss/export', [ReportController::class, 'exportComparativeProfitLoss'])->name('reports.comparative-profit-loss.export');
     Route::get('reports/cash-flow-forecast/export',       [ReportController::class, 'exportCashFlowForecast'])->name('reports.cash-flow-forecast.export');
 
-    // Exchange Rates — report must come before resource to avoid 'report' being treated as an ID
+    // Currencies — set-base BEFORE resource
+    Route::post('currencies/{currency}/set-base', [CurrencyController::class, 'setBase'])->name('currencies.set-base');
+    Route::resource('currencies', CurrencyController::class)->except(['show', 'create', 'edit']);
+
+    // Exchange Rates — convert and report BEFORE resource to avoid them being treated as IDs
+    Route::get('exchange-rates/convert', [ExchangeRateController::class, 'convert'])->name('exchange-rates.convert');
     Route::get('exchange-rates/report', [ExchangeRateController::class, 'report'])->name('exchange-rates.report');
     Route::resource('exchange-rates', ExchangeRateController::class)->only(['index', 'create', 'store', 'destroy']);
 
