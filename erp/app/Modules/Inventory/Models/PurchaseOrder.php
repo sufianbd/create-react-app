@@ -2,37 +2,31 @@
 
 namespace App\Modules\Inventory\Models;
 
-use App\Modules\Core\Traits\BelongsToTenant;
-use App\Modules\Core\Traits\HasAuditLog;
 use App\Models\User;
+use App\Modules\Core\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
 class PurchaseOrder extends Model
 {
-    use BelongsToTenant;
-    use HasAuditLog;
-    use SoftDeletes;
+    use BelongsToTenant, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id', 'supplier_id', 'warehouse_id',
-        'status', 'expected_date', 'notes', 'created_by',
+        'tenant_id', 'po_number', 'supplier_id', 'warehouse_id', 'requisition_id', 'status',
+        'order_date', 'expected_date', 'subtotal', 'tax', 'total', 'currency',
+        'notes', 'created_by', 'sent_at', 'received_at',
     ];
 
-    protected $attributes = ['status' => 'draft'];
-
-    protected $casts = ['expected_date' => 'date'];
-
-    /** Allowed status transitions */
-    private const TRANSITIONS = [
-        'draft'     => ['submitted', 'cancelled'],
-        'submitted' => ['approved', 'cancelled'],
-        'approved'  => ['received', 'cancelled'],
-        'received'  => [],
-        'cancelled' => [],
+    protected $casts = [
+        'order_date'    => 'date',
+        'expected_date' => 'date',
+        'subtotal'      => 'float',
+        'tax'           => 'float',
+        'total'         => 'float',
+        'sent_at'       => 'datetime',
+        'received_at'   => 'datetime',
     ];
 
     public function supplier(): BelongsTo
@@ -40,82 +34,61 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Supplier::class);
     }
 
-    public function warehouse(): BelongsTo
-    {
-        return $this->belongsTo(Warehouse::class);
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseOrderItem::class);
     }
 
-    public function getTotalAttribute(): float
+    public function createdBy(): BelongsTo
     {
-        return $this->items->sum(fn ($item) => (float) $item->quantity * (float) $item->unit_cost);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function canTransitionTo(string $status): bool
+    public static function generatePoNumber(): string
     {
-        return in_array($status, self::TRANSITIONS[$this->status] ?? [], true);
+        return 'PO-' . strtoupper(uniqid());
     }
 
-    /** @return string[] */
-    public function availableTransitions(): array
+    public function send(): void
     {
-        return self::TRANSITIONS[$this->status] ?? [];
+        $this->status  = 'sent';
+        $this->sent_at = now();
+        $this->save();
     }
 
-    public function transitionTo(string $status): void
+    public function cancel(): void
     {
-        if (! $this->canTransitionTo($status)) {
-            throw new \DomainException(
-                "Cannot transition PO from '{$this->status}' to '{$status}'."
-            );
+        $this->status = 'cancelled';
+        $this->save();
+    }
+
+    public function markReceived(): void
+    {
+        $this->status      = 'received';
+        $this->received_at = now();
+        $this->save();
+    }
+
+    public function recalculateTotals(): void
+    {
+        $subtotal       = $this->items()->get()->sum(fn ($i) => $i->quantity * $i->unit_price);
+        $this->subtotal = $subtotal;
+        $this->total    = $subtotal + $this->tax;
+        $this->save();
+    }
+
+    public function getIsOpenAttribute(): bool
+    {
+        return in_array($this->status, ['draft', 'sent', 'partial']);
+    }
+
+    public function getReceivingProgressAttribute(): float
+    {
+        $items = $this->items()->get();
+        $totalQty = $items->sum('quantity');
+        if ($totalQty == 0) {
+            return 0.0;
         }
-
-        $this->update(['status' => $status]);
-    }
-
-    /**
-     * Receive items: create StockMovements and mark PO as received.
-     *
-     * @param array<int, array{id:int, received_quantity:float}> $lines
-     */
-    public function receive(array $lines): void
-    {
-        if (! $this->canTransitionTo('received')) {
-            throw new \DomainException("PO cannot be received in status '{$this->status}'.");
-        }
-
-        DB::transaction(function () use ($lines) {
-            foreach ($lines as $line) {
-                /** @var PurchaseOrderItem $item */
-                $item = $this->items()->findOrFail($line['id']);
-                $qty  = (float) $line['received_quantity'];
-
-                if ($qty <= 0) {
-                    continue;
-                }
-
-                $item->update(['received_quantity' => $item->received_quantity + $qty]);
-
-                StockMovement::record([
-                    'product_id'   => $item->product_id,
-                    'warehouse_id' => $this->warehouse_id,
-                    'type'         => 'in',
-                    'quantity'     => $qty,
-                    'reference'    => "PO-{$this->id}",
-                    'notes'        => "Received from PO #{$this->id}",
-                ]);
-            }
-
-            $this->update(['status' => 'received']);
-        });
+        return round(($items->sum('received_qty') / $totalQty) * 100, 1);
     }
 }

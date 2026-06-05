@@ -476,3 +476,35 @@ export interface SerialNumber {
     product?: Product;
     warehouse?: Warehouse;
 }
+
+export interface PurchaseOrderItem {
+    id: number;
+    purchase_order_id: number;
+    product_id: number | null;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    received_qty: number;
+    line_total: number;
+    is_fully_received: boolean;
+    product?: Product;
+}
+
+export interface PurchaseOrder {
+    id: number;
+    po_number: string;
+    supplier_id: number | null;
+    requisition_id: number | null;
+    status: 'draft' | 'sent' | 'partial' | 'received' | 'cancelled';
+    order_date: string;
+    expected_date: string | null;
+    subtotal: number;
+    tax: number;
+    total: number;
+    currency: string;
+    notes: string | null;
+    is_open: boolean;
+    receiving_progress: number;
+    supplier?: Supplier;
+    items?: PurchaseOrderItem[];
+}

@@ -3,13 +3,11 @@
 namespace App\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Inventory\Http\Requests\ReceivePurchaseOrderRequest;
-use App\Modules\Inventory\Http\Requests\StorePurchaseOrderRequest;
-use App\Modules\Inventory\Http\Resources\PurchaseOrderResource;
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\PurchaseOrder;
+use App\Modules\Inventory\Models\PurchaseOrderItem;
+use App\Modules\Inventory\Models\StockMovement;
 use App\Modules\Inventory\Models\Supplier;
-use App\Modules\Inventory\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,162 +17,187 @@ class PurchaseOrderController extends Controller
 {
     public function index(Request $request): Response
     {
-        $orders = PurchaseOrder::with(['supplier', 'warehouse'])
-            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+        $this->authorize('viewAny', PurchaseOrder::class);
+
+        $orders = PurchaseOrder::with('supplier')
+            ->when($request->status,      fn ($q) => $q->where('status', $request->status))
             ->when($request->supplier_id, fn ($q) => $q->where('supplier_id', $request->supplier_id))
             ->latest()
-            ->paginate(25)
+            ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('Inventory/PurchaseOrders/Index', [
-            'orders'      => PurchaseOrderResource::collection($orders),
-            'suppliers'   => Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            'filters'     => $request->only(['status', 'supplier_id']),
-            'breadcrumbs' => [
-                ['label' => 'Inventory'],
-                ['label' => 'Purchase Orders', 'href' => route('inventory.purchase-orders.index')],
-            ],
+            'orders'    => $orders,
+            'filters'   => $request->only(['status', 'supplier_id']),
         ]);
     }
 
     public function create(): Response
     {
+        $this->authorize('create', PurchaseOrder::class);
+
         return Inertia::render('Inventory/PurchaseOrders/Create', [
-            'suppliers'   => Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            'warehouses'  => Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            'products'    => Product::active()->with('uom')->orderBy('name')
-                ->get(['id', 'name', 'sku', 'cost_price', 'uom_id']),
-            'breadcrumbs' => [
-                ['label' => 'Inventory'],
-                ['label' => 'Purchase Orders', 'href' => route('inventory.purchase-orders.index')],
-                ['label' => 'New Order'],
-            ],
+            'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+            'products'  => Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'sku']),
         ]);
     }
 
-    public function store(StorePurchaseOrderRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $data = $request->validated();
+        $this->authorize('create', PurchaseOrder::class);
 
-        $po = PurchaseOrder::create([
-            'tenant_id'     => auth()->user()->tenant_id,
-            'supplier_id'   => $data['supplier_id'],
-            'warehouse_id'  => $data['warehouse_id'],
-            'expected_date' => $data['expected_date'] ?? null,
-            'notes'         => $data['notes'] ?? null,
-            'created_by'    => auth()->id(),
+        $validated = $request->validate([
+            'supplier_id'          => 'nullable|exists:suppliers,id',
+            'order_date'           => 'required|date',
+            'expected_date'        => 'nullable|date',
+            'currency'             => 'nullable|string|max:3',
+            'notes'                => 'nullable|string',
+            'items'                => 'required|array|min:1',
+            'items.*.description'  => 'required|string|max:255',
+            'items.*.quantity'     => 'required|numeric|min:0.01',
+            'items.*.unit_price'   => 'required|numeric|min:0',
+            'items.*.product_id'   => 'nullable|exists:products,id',
         ]);
 
-        foreach ($data['items'] as $item) {
-            $po->items()->create([
-                'product_id' => $item['product_id'],
-                'quantity'   => $item['quantity'],
-                'unit_cost'  => $item['unit_cost'],
+        $po = PurchaseOrder::create([
+            'tenant_id'   => auth()->user()->tenant_id,
+            'po_number'   => PurchaseOrder::generatePoNumber(),
+            'supplier_id' => $validated['supplier_id'] ?? null,
+            'order_date'  => $validated['order_date'],
+            'expected_date' => $validated['expected_date'] ?? null,
+            'currency'    => $validated['currency'] ?? 'USD',
+            'notes'       => $validated['notes'] ?? null,
+            'created_by'  => auth()->id(),
+            'subtotal'    => 0,
+            'tax'         => 0,
+            'total'       => 0,
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            PurchaseOrderItem::create([
+                'tenant_id'         => auth()->user()->tenant_id,
+                'purchase_order_id' => $po->id,
+                'product_id'        => $item['product_id'] ?? null,
+                'description'       => $item['description'],
+                'quantity'          => $item['quantity'],
+                'unit_price'        => $item['unit_price'],
+                'received_qty'      => 0,
             ]);
         }
 
-        return redirect()->route('inventory.purchase-orders.show', $po)
-            ->with('success', 'Purchase order created.');
+        $po->recalculateTotals();
+
+        return redirect()->route('inventory.purchase-orders.show', $po);
     }
 
     public function show(PurchaseOrder $purchaseOrder): Response
     {
-        $purchaseOrder->load(['supplier', 'warehouse', 'items.product', 'creator']);
+        $this->authorize('view', $purchaseOrder);
+        $purchaseOrder->load(['supplier', 'items.product', 'createdBy']);
 
         return Inertia::render('Inventory/PurchaseOrders/Show', [
-            'order'       => new PurchaseOrderResource($purchaseOrder),
-            'transitions' => $purchaseOrder->availableTransitions(),
-            'breadcrumbs' => [
-                ['label' => 'Inventory'],
-                ['label' => 'Purchase Orders', 'href' => route('inventory.purchase-orders.index')],
-                ['label' => "PO #{$purchaseOrder->id}"],
-            ],
+            'order' => $purchaseOrder,
         ]);
+    }
+
+    public function send(PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        $this->authorize('update', $purchaseOrder);
+        $purchaseOrder->send();
+
+        return back()->with('success', 'Purchase order sent.');
+    }
+
+    public function cancel(PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        $this->authorize('update', $purchaseOrder);
+        $purchaseOrder->cancel();
+
+        return back()->with('success', 'Purchase order cancelled.');
+    }
+
+    public function receive(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        $this->authorize('update', $purchaseOrder);
+
+        // Accept both 'items' and 'lines' key; both 'received_qty' and 'received_quantity'
+        $lines = $request->input('items') ?? $request->input('lines') ?? [];
+
+        foreach ($lines as $data) {
+            $item = PurchaseOrderItem::find($data['id'] ?? null);
+            if (!$item || $item->purchase_order_id !== $purchaseOrder->id) {
+                continue;
+            }
+            $qty = (float) ($data['received_qty'] ?? $data['received_quantity'] ?? 0);
+            $prevQty = (float) $item->received_qty;
+            $item->received_qty = $qty;
+            $item->save();
+
+            // Create stock movement for the delta if warehouse is set
+            $delta = $qty - $prevQty;
+            if ($delta > 0 && $purchaseOrder->warehouse_id && $item->product_id) {
+                StockMovement::record([
+                    'product_id'   => $item->product_id,
+                    'warehouse_id' => $purchaseOrder->warehouse_id,
+                    'type'         => 'in',
+                    'quantity'     => $delta,
+                    'reference'    => $purchaseOrder->po_number ?? ('PO-' . $purchaseOrder->id),
+                    'notes'        => 'PO receiving',
+                ]);
+            }
+        }
+
+        $allReceived = $purchaseOrder->items()->get()->every(fn ($i) => (float)$i->received_qty >= (float)$i->quantity);
+        $anyReceived = $purchaseOrder->items()->where('received_qty', '>', 0)->exists();
+
+        if ($allReceived) {
+            $purchaseOrder->markReceived();
+        } elseif ($anyReceived) {
+            $purchaseOrder->status = 'partial';
+            $purchaseOrder->save();
+        }
+
+        return back()->with('success', 'Receiving updated.');
     }
 
     public function receiveForm(PurchaseOrder $purchaseOrder): Response
     {
-        if (! $purchaseOrder->canTransitionTo('received')) {
-            return redirect()->route('inventory.purchase-orders.show', $purchaseOrder)
-                ->withErrors(['status' => 'This purchase order cannot be received in its current status.']);
-        }
-
-        $purchaseOrder->load(['supplier', 'warehouse', 'items.product']);
-
-        return Inertia::render('Inventory/PurchaseOrders/Receive', [
-            'order'       => new PurchaseOrderResource($purchaseOrder),
-            'breadcrumbs' => [
-                ['label' => 'Inventory'],
-                ['label' => 'Purchase Orders', 'href' => route('inventory.purchase-orders.index')],
-                ['label' => "PO-" . str_pad($purchaseOrder->id, 4, '0', STR_PAD_LEFT), 'href' => route('inventory.purchase-orders.show', $purchaseOrder)],
-                ['label' => 'Receive Items'],
-            ],
-        ]);
+        $this->authorize('view', $purchaseOrder);
+        $purchaseOrder->load(['supplier', 'items.product']);
+        return Inertia::render('Inventory/PurchaseOrders/Receive', ['order' => $purchaseOrder]);
     }
 
     public function transition(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
     {
-        $status = $request->validate(['status' => ['required', 'string']])['status'];
-
-        try {
-            if ($status === 'received') {
-                $lines = $purchaseOrder->items->map(fn ($i) => [
-                    'id'                => $i->id,
-                    'received_quantity' => $i->quantity,
-                ])->all();
-                $purchaseOrder->receive($lines);
-            } else {
-                $purchaseOrder->transitionTo($status);
-            }
-        } catch (\DomainException $e) {
-            return back()->withErrors(['status' => $e->getMessage()]);
+        $this->authorize('update', $purchaseOrder);
+        $status = $request->input('status');
+        if ($status) {
+            $purchaseOrder->status = $status;
+            $purchaseOrder->save();
         }
-
-        return back()->with('success', "Order {$status}.");
+        return back()->with('success', 'Status updated.');
     }
 
     public function submit(PurchaseOrder $purchaseOrder): RedirectResponse
     {
-        try {
-            $purchaseOrder->transitionTo('submitted');
-        } catch (\DomainException $e) {
-            return back()->withErrors(['status' => $e->getMessage()]);
-        }
-
+        $this->authorize('update', $purchaseOrder);
+        $purchaseOrder->send();
         return back()->with('success', 'Purchase order submitted.');
     }
 
     public function approve(PurchaseOrder $purchaseOrder): RedirectResponse
     {
-        try {
-            $purchaseOrder->transitionTo('approved');
-        } catch (\DomainException $e) {
-            return back()->withErrors(['status' => $e->getMessage()]);
-        }
-
+        $this->authorize('update', $purchaseOrder);
+        $purchaseOrder->status = 'sent';
+        $purchaseOrder->save();
         return back()->with('success', 'Purchase order approved.');
     }
 
-    public function receive(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    public function destroy(PurchaseOrder $purchaseOrder): RedirectResponse
     {
-        try {
-            $purchaseOrder->receive($request->validated()['lines']);
-        } catch (\DomainException $e) {
-            return back()->withErrors(['status' => $e->getMessage()]);
-        }
+        $this->authorize('delete', $purchaseOrder);
+        $purchaseOrder->delete();
 
-        return redirect()->route('inventory.purchase-orders.show', $purchaseOrder)
-            ->with('success', 'Items received and stock updated.');
-    }
-
-    public function cancel(PurchaseOrder $purchaseOrder): RedirectResponse
-    {
-        try {
-            $purchaseOrder->transitionTo('cancelled');
-        } catch (\DomainException $e) {
-            return back()->withErrors(['status' => $e->getMessage()]);
-        }
-
-        return back()->with('success', 'Purchase order cancelled.');
+        return redirect()->route('inventory.purchase-orders.index');
     }
 }

@@ -69,6 +69,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('purchase-orders/{purchaseOrder}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
     Route::post('purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
     Route::post('purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+    Route::post('purchase-orders/{purchaseOrder}/send',   [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
+    Route::delete('purchase-orders/{purchaseOrder}',       [PurchaseOrderController::class, 'destroy'])->name('purchase-orders.destroy');
 
     // Reorder Suggestions
     Route::get('reorder', [ReorderController::class, 'index'])->name('reorder.index');
@@ -192,3 +194,4 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('serial-numbers/{serialNumber}/scrap', [SerialNumberController::class, 'scrap'])->name('serial-numbers.scrap');
     Route::resource('serial-numbers', SerialNumberController::class)->only(['index', 'store', 'show']);
 });
+

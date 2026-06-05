@@ -3,97 +3,130 @@
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
 use App\Modules\Inventory\Models\Product;
+use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\PurchaseOrder;
-use App\Modules\Inventory\Models\StockLevel;
-use App\Modules\Inventory\Models\Supplier;
-use App\Modules\Inventory\Models\Warehouse;
+use App\Modules\Inventory\Models\PurchaseOrderItem;
 use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
-    $this->tenant    = Tenant::create(['name' => 'PO Co', 'slug' => 'po-co']);
-    $this->admin     = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->tenant = Tenant::create(['name' => 'PO Corp', 'slug' => 'po-corp']);
+    $this->admin  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->admin->assignRole('super-admin');
+    $this->staff  = User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->staff->assignRole('staff');
     $this->actingAs($this->admin);
     app()->instance('tenant', $this->tenant);
-
-    $this->supplier  = Supplier::create(['tenant_id' => $this->tenant->id, 'name' => 'ACME Supplies']);
-    $this->warehouse = Warehouse::create(['tenant_id' => $this->tenant->id, 'name' => 'Main WH']);
-    $this->product   = Product::create(['tenant_id' => $this->tenant->id, 'sku' => 'PO-SKU-01', 'name' => 'PO Product', 'cost_price' => 15, 'sale_price' => 30]);
 });
 
-function makePO($test): PurchaseOrder
+function makePoProduct(): Product
 {
-    return PurchaseOrder::create(['tenant_id' => $test->tenant->id, 'supplier_id' => $test->supplier->id, 'warehouse_id' => $test->warehouse->id, 'created_by' => $test->admin->id]);
+    $cat = ProductCategory::create(['tenant_id' => test()->tenant->id, 'name' => 'PO Cat', 'colour' => '#000']);
+    return Product::create([
+        'tenant_id'     => test()->tenant->id,
+        'sku'           => 'POSKU-' . uniqid(),
+        'name'          => 'PO Product',
+        'cost_price'    => 10,
+        'sale_price'    => 20,
+        'reorder_point' => 5,
+        'category_id'   => $cat->id,
+        'is_active'     => true,
+    ]);
 }
 
-test('purchase order can be created via http', function () {
+function makePurchaseOrder(string $status = 'draft'): PurchaseOrder
+{
+    $po = PurchaseOrder::create([
+        'tenant_id'  => test()->tenant->id,
+        'po_number'  => 'PO-' . uniqid(),
+        'status'     => $status,
+        'order_date' => now()->toDateString(),
+        'subtotal'   => 100,
+        'tax'        => 0,
+        'total'      => 100,
+        'created_by' => test()->admin->id,
+    ]);
+    PurchaseOrderItem::create([
+        'tenant_id'         => test()->tenant->id,
+        'purchase_order_id' => $po->id,
+        'description'       => 'Widget',
+        'quantity'          => 10,
+        'unit_price'        => 10,
+        'received_qty'      => 0,
+    ]);
+    return $po;
+}
+
+it('admin can list purchase orders', function () {
+    $this->get('/inventory/purchase-orders')->assertStatus(200);
+});
+
+it('admin can create a purchase order with items', function () {
     $this->post('/inventory/purchase-orders', [
-        'supplier_id'  => $this->supplier->id,
-        'warehouse_id' => $this->warehouse->id,
-        'items'        => [['product_id' => $this->product->id, 'quantity' => 10, 'unit_cost' => 15.00]],
+        'order_date' => now()->toDateString(),
+        'currency'   => 'USD',
+        'items'      => [
+            ['description' => 'Widget A', 'quantity' => 5, 'unit_price' => 20],
+            ['description' => 'Widget B', 'quantity' => 2, 'unit_price' => 50],
+        ],
     ])->assertRedirect();
-
-    expect(PurchaseOrder::count())->toBe(1);
-    expect(PurchaseOrder::first()->items()->count())->toBe(1);
+    $po = PurchaseOrder::latest()->first();
+    expect($po)->not->toBeNull();
+    expect($po->items()->count())->toBe(2);
 });
 
-test('purchase order starts in draft status', function () {
-    $po = makePO($this);
-    expect($po->status)->toBe('draft');
+it('purchase order store requires items', function () {
+    $this->postJson('/inventory/purchase-orders', [
+        'order_date' => now()->toDateString(),
+        'items'      => [],
+    ])->assertStatus(422)->assertJsonValidationErrors(['items']);
 });
 
-test('draft transitions to submitted', function () {
-    $po = makePO($this);
-    $po->transitionTo('submitted');
-    expect($po->fresh()->status)->toBe('submitted');
+it('admin can view a purchase order', function () {
+    $po = makePurchaseOrder();
+    $this->get("/inventory/purchase-orders/{$po->id}")->assertStatus(200);
 });
 
-test('submitted transitions to approved', function () {
-    $po = makePO($this);
-    $po->transitionTo('submitted');
-    $po->transitionTo('approved');
-    expect($po->fresh()->status)->toBe('approved');
+it('admin can send a purchase order', function () {
+    $po = makePurchaseOrder('draft');
+    $this->post("/inventory/purchase-orders/{$po->id}/send")->assertRedirect();
+    expect($po->fresh()->status)->toBe('sent');
+    expect($po->fresh()->sent_at)->not->toBeNull();
 });
 
-test('invalid transition throws domain exception', function () {
-    $po = makePO($this);
-    expect(fn () => $po->transitionTo('received'))->toThrow(\DomainException::class);
-});
-
-test('receiving creates stock movements and sets received status', function () {
-    $po   = makePO($this);
-    $item = $po->items()->create(['product_id' => $this->product->id, 'quantity' => 20, 'unit_cost' => 15]);
-    $po->transitionTo('submitted');
-    $po->transitionTo('approved');
-    $po->receive([['id' => $item->id, 'received_quantity' => 20]]);
-
-    expect($po->fresh()->status)->toBe('received');
-
-    $level = StockLevel::where('product_id', $this->product->id)->where('warehouse_id', $this->warehouse->id)->first();
-    expect((float) $level->quantity)->toBe(20.0);
-});
-
-test('po can be cancelled from draft', function () {
-    $po = makePO($this);
-    $po->transitionTo('cancelled');
+it('admin can cancel a purchase order', function () {
+    $po = makePurchaseOrder('draft');
+    $this->post("/inventory/purchase-orders/{$po->id}/cancel")->assertRedirect();
     expect($po->fresh()->status)->toBe('cancelled');
 });
 
-test('received po cannot be cancelled', function () {
-    $po   = makePO($this);
-    $item = $po->items()->create(['product_id' => $this->product->id, 'quantity' => 5, 'unit_cost' => 15]);
-    $po->transitionTo('submitted');
-    $po->transitionTo('approved');
-    $po->receive([['id' => $item->id, 'received_quantity' => 5]]);
-
-    expect(fn () => $po->transitionTo('cancelled'))->toThrow(\DomainException::class);
+it('admin can receive items on a purchase order', function () {
+    $po   = makePurchaseOrder('sent');
+    $item = $po->items()->first();
+    $this->post("/inventory/purchase-orders/{$po->id}/receive", [
+        'items' => [['id' => $item->id, 'received_qty' => 10]],
+    ])->assertRedirect();
+    expect($item->fresh()->received_qty)->toBe(10.0);
+    expect($po->fresh()->status)->toBe('received');
 });
 
-test('po total is calculated from items', function () {
-    $po = makePO($this);
-    $po->items()->create(['product_id' => $this->product->id, 'quantity' => 4, 'unit_cost' => 25]);
-    $po->load('items');
+it('recalculateTotals sums item line totals', function () {
+    $po = makePurchaseOrder();
+    $po->recalculateTotals();
+    expect($po->fresh()->subtotal)->toBe(100.0);
+    expect($po->fresh()->total)->toBe(100.0);
+});
 
-    expect($po->total)->toBe(100.0);
+it('is_open returns true for draft and sent status', function () {
+    $po = makePurchaseOrder('draft');
+    expect($po->is_open)->toBeTrue();
+    $po->cancel();
+    expect($po->fresh()->is_open)->toBeFalse();
+});
+
+it('staff cannot delete a purchase order', function () {
+    $po = makePurchaseOrder();
+    $this->actingAs($this->staff)
+        ->delete("/inventory/purchase-orders/{$po->id}")
+        ->assertStatus(403);
 });

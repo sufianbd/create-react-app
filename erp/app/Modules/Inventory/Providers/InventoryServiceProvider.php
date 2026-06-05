@@ -45,8 +45,11 @@ use App\Modules\Inventory\Policies\CostingPolicy;
 use App\Modules\Inventory\Models\SupplierReview;
 use App\Modules\Inventory\Models\SupplierContract;
 use App\Modules\Inventory\Models\LotNumber;
+use App\Modules\Inventory\Models\PurchaseOrder;
+use App\Modules\Inventory\Models\PurchaseOrderItem;
 use App\Modules\Inventory\Models\SerialNumber;
 use App\Modules\Inventory\Policies\LotSerialPolicy;
+use App\Modules\Inventory\Policies\PurchaseOrderPolicy;
 use App\Modules\Inventory\Policies\SupplierReviewPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -90,5 +93,7 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(SupplierContract::class, SupplierReviewPolicy::class);
         Gate::policy(LotNumber::class,    LotSerialPolicy::class);
         Gate::policy(SerialNumber::class, LotSerialPolicy::class);
+        Gate::policy(PurchaseOrder::class,     PurchaseOrderPolicy::class);
+        Gate::policy(PurchaseOrderItem::class, PurchaseOrderPolicy::class);
     }
 }

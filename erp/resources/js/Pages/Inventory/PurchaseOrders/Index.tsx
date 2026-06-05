@@ -1,76 +1,75 @@
+import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Table } from '@/Components/Common/Table';
-import { Button } from '@/Components/Common/Button';
-import { PurchaseOrderStatusBadge } from '@/Components/Inventory/PurchaseOrderStatusBadge';
-import { Pagination } from '@/Components/Inventory/Pagination';
-import { usePermission } from '@/Hooks/usePermission';
-import type { PageProps } from '@/types';
-import type { PurchaseOrder, Paginator } from '@/types/inventory';
+import { Button } from '@/Components/ui/button';
+import { PurchaseOrder } from '@/types/inventory';
 
-interface Props extends PageProps {
-    orders: Paginator<PurchaseOrder>;
-    filters: { status?: string };
+const STATUS_COLORS: Record<string, string> = {
+    draft:     'bg-gray-100 text-gray-800',
+    sent:      'bg-blue-100 text-blue-800',
+    partial:   'bg-yellow-100 text-yellow-800',
+    received:  'bg-green-100 text-green-800',
+    cancelled: 'bg-red-100 text-red-800',
+};
+
+interface Props {
+    orders: { data: PurchaseOrder[]; links: unknown[] };
+    filters: { status?: string; supplier_id?: string };
 }
 
-export default function PurchaseOrdersIndex({ orders, filters }: Props) {
-    const { can } = usePermission();
-
-    function handleFilter(status: string) {
-        router.get('/inventory/purchase-orders', { status: status || undefined }, { preserveState: true, replace: true });
-    }
-
+export default function Index({ orders, filters }: Props) {
     return (
         <AppLayout>
             <Head title="Purchase Orders" />
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold text-slate-900">Purchase Orders</h1>
-                        <p className="text-sm text-slate-500 mt-1">{orders.total} orders</p>
-                    </div>
-                    {can('inventory.create') && (
-                        <Link href="/inventory/purchase-orders/create">
-                            <Button>New Order</Button>
-                        </Link>
-                    )}
+            <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-2xl font-bold">Purchase Orders</h1>
+                    <Link href="/inventory/purchase-orders/create">
+                        <Button>New Purchase Order</Button>
+                    </Link>
                 </div>
-
-                <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-200 px-4 py-3 flex gap-2">
-                        {['', 'draft', 'submitted', 'approved', 'received', 'cancelled'].map((s) => (
-                            <button
-                                key={s}
-                                onClick={() => handleFilter(s)}
-                                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${(filters.status ?? '') === s ? 'bg-indigo-100 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}`}
-                            >
-                                {s === '' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-                            </button>
-                        ))}
-                    </div>
-                    <Table
-                        columns={[
-                            { key: 'id', header: '#', render: (o) => (
-                                <Link href={`/inventory/purchase-orders/${o.id}`} className="font-mono text-indigo-600 hover:text-indigo-800">
-                                    PO-{String(o.id).padStart(4, '0')}
-                                </Link>
-                            )},
-                            { key: 'supplier', header: 'Supplier', render: (o) => o.supplier?.name ?? '—' },
-                            { key: 'warehouse', header: 'Warehouse', render: (o) => o.warehouse?.name ?? '—' },
-                            { key: 'status', header: 'Status', render: (o) => <PurchaseOrderStatusBadge status={o.status} /> },
-                            { key: 'total', header: 'Total', render: (o) => o.total != null ? `$${Number(o.total).toFixed(2)}` : '—' },
-                            { key: 'expected_date', header: 'Expected', render: (o) => o.expected_date ? new Date(o.expected_date).toLocaleDateString() : '—' },
-                            { key: 'created_at', header: 'Created', render: (o) => o.created_at ? new Date(o.created_at).toLocaleDateString() : '—' },
-                            { key: 'actions', header: '', render: (o) => (
-                                <Link href={`/inventory/purchase-orders/${o.id}`} className="text-sm text-indigo-600 hover:text-indigo-800">
-                                    View
-                                </Link>
-                            )},
-                        ]}
-                        data={orders.data}
-                        emptyMessage="No purchase orders found."
-                    />
-                    <Pagination paginator={orders} />
+                <div className="flex gap-2 mb-4">
+                    {['draft','sent','partial','received','cancelled'].map(s => (
+                        <button key={s}
+                            onClick={() => router.get('/inventory/purchase-orders', { ...filters, status: s === filters.status ? '' : s }, { preserveState: true })}
+                            className={`px-3 py-1 rounded text-sm border ${filters.status === s ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+                            {s}
+                        </button>
+                    ))}
+                </div>
+                <div className="bg-white rounded shadow overflow-hidden">
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-4 py-2 text-left">PO #</th>
+                                <th className="px-4 py-2 text-left">Supplier</th>
+                                <th className="px-4 py-2 text-left">Order Date</th>
+                                <th className="px-4 py-2 text-left">Expected</th>
+                                <th className="px-4 py-2 text-left">Status</th>
+                                <th className="px-4 py-2 text-right">Total</th>
+                                <th className="px-4 py-2"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {orders.data.map(o => (
+                                <tr key={o.id} className="border-t">
+                                    <td className="px-4 py-2 font-mono">{o.po_number}</td>
+                                    <td className="px-4 py-2">{o.supplier?.name ?? '—'}</td>
+                                    <td className="px-4 py-2">{o.order_date}</td>
+                                    <td className="px-4 py-2">{o.expected_date ?? '—'}</td>
+                                    <td className="px-4 py-2">
+                                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[o.status]}`}>
+                                            {o.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-2 text-right">{o.currency} {o.total.toFixed(2)}</td>
+                                    <td className="px-4 py-2">
+                                        <Link href={`/inventory/purchase-orders/${o.id}`} className="text-blue-600 hover:underline text-xs">View</Link>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </AppLayout>

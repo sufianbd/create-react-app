@@ -1,155 +1,92 @@
-import { Head, Link, router } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Button } from '@/Components/Common/Button';
-import { PurchaseOrderStatusBadge } from '@/Components/Inventory/PurchaseOrderStatusBadge';
-import { usePermission } from '@/Hooks/usePermission';
-import type { PageProps } from '@/types';
-import type { PurchaseOrder } from '@/types/inventory';
+import { Button } from '@/Components/ui/button';
+import { PurchaseOrder } from '@/types/inventory';
 
-interface Props extends PageProps {
-    order: PurchaseOrder;
-    transitions: string[];
-}
-
-const transitionLabels: Record<string, string> = {
-    submitted:  'Submit',
-    approved:   'Approve',
-    received:   'Mark Received',
-    cancelled:  'Cancel',
+const STATUS_COLORS: Record<string, string> = {
+    draft: 'bg-gray-100 text-gray-800', sent: 'bg-blue-100 text-blue-800',
+    partial: 'bg-yellow-100 text-yellow-800', received: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800',
 };
 
-export default function PurchaseOrderShow({ order, transitions }: Props) {
-    const { can } = usePermission();
+interface Props { order: PurchaseOrder; }
 
-    function handleTransition(status: string) {
-        if (status === 'cancelled' && !confirm('Cancel this purchase order?')) return;
-        if (status === 'received' && !confirm('Mark as received? This will update stock levels.')) return;
-        router.patch(`/inventory/purchase-orders/${order.id}/transition`, { status });
-    }
+export default function Show({ order }: Props) {
+    const sendForm  = useForm({});
+    const cancelForm = useForm({});
+    const receiveForm = useForm<{ items: { id: number; received_qty: string }[] }>({
+        items: (order.items ?? []).map(i => ({ id: i.id, received_qty: String(i.received_qty) })),
+    });
 
     return (
         <AppLayout>
-            <Head title={`PO-${String(order.id).padStart(4, '0')}`} />
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link href="/inventory/purchase-orders" className="text-sm text-slate-500 hover:text-slate-700">
-                            ← Purchase Orders
-                        </Link>
-                        <h1 className="text-2xl font-semibold text-slate-900">PO-{String(order.id).padStart(4, '0')}</h1>
-                        <PurchaseOrderStatusBadge status={order.status} />
+            <Head title={`PO ${order.po_number}`} />
+            <div className="p-6 max-w-4xl">
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold">{order.po_number}</h1>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[order.status]}`}>{order.status}</span>
                     </div>
-                    {can('inventory.update') && (transitions.length > 0 || order.status === 'approved') && (
-                        <div className="flex gap-2">
-                            {order.status === 'approved' ? (
-                                <>
-                                    <Link href={`/inventory/purchase-orders/${order.id}/receive`}>
-                                        <Button variant="primary" size="sm">Receive Items</Button>
-                                    </Link>
-                                    {transitions.filter((t) => t !== 'received').map((t) => (
-                                        <Button key={t} variant={t === 'cancelled' ? 'danger' : 'secondary'} size="sm" onClick={() => handleTransition(t)}>
-                                            {transitionLabels[t] ?? t}
-                                        </Button>
-                                    ))}
-                                </>
-                            ) : (
-                                transitions.map((t) => (
-                                    <Button
-                                        key={t}
-                                        variant={t === 'cancelled' ? 'danger' : t === 'received' ? 'primary' : 'secondary'}
-                                        size="sm"
-                                        onClick={() => handleTransition(t)}
-                                    >
-                                        {transitionLabels[t] ?? t}
-                                    </Button>
-                                ))
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2 rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                        <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-2">Line Items</h2>
-                        {order.items && order.items.length > 0 ? (
-                            <>
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full text-sm">
-                                        <thead>
-                                            <tr className="border-b border-slate-200">
-                                                <th className="pb-2 text-left font-medium text-slate-500">Product</th>
-                                                <th className="pb-2 text-right font-medium text-slate-500">Ordered</th>
-                                                <th className="pb-2 text-right font-medium text-slate-500">Received</th>
-                                                <th className="pb-2 text-right font-medium text-slate-500">Unit Cost</th>
-                                                <th className="pb-2 text-right font-medium text-slate-500">Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {order.items.map((item) => (
-                                                <tr key={item.id}>
-                                                    <td className="py-2">
-                                                        <div className="font-medium text-slate-900">{item.product_name}</div>
-                                                        <div className="text-xs text-slate-400 font-mono">{item.product_sku}</div>
-                                                    </td>
-                                                    <td className="py-2 text-right text-slate-700">{Number(item.quantity).toLocaleString()}</td>
-                                                    <td className="py-2 text-right text-slate-700">{Number(item.received_quantity).toLocaleString()}</td>
-                                                    <td className="py-2 text-right text-slate-700">${Number(item.unit_cost).toFixed(2)}</td>
-                                                    <td className="py-2 text-right font-medium text-slate-900">
-                                                        ${(item.line_total ?? Number(item.quantity) * Number(item.unit_cost)).toFixed(2)}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr className="border-t-2 border-slate-200">
-                                                <td colSpan={4} className="pt-3 text-right font-semibold text-slate-700">Total</td>
-                                                <td className="pt-3 text-right font-bold text-slate-900">${Number(order.total ?? 0).toFixed(2)}</td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </>
-                        ) : (
-                            <p className="text-sm text-slate-400">No line items.</p>
+                    <div className="flex gap-2">
+                        {order.status === 'draft' && (
+                            <Button onClick={() => sendForm.post(`/inventory/purchase-orders/${order.id}/send`)} disabled={sendForm.processing}>Send</Button>
                         )}
-                    </div>
-
-                    <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                        <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-2">Details</h2>
-                        <dl className="space-y-3 text-sm">
-                            <div>
-                                <dt className="text-slate-500">Supplier</dt>
-                                <dd className="font-medium text-slate-900">{order.supplier?.name ?? '—'}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-slate-500">Warehouse</dt>
-                                <dd className="font-medium text-slate-900">{order.warehouse?.name ?? '—'}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-slate-500">Status</dt>
-                                <dd><PurchaseOrderStatusBadge status={order.status} /></dd>
-                            </div>
-                            <div>
-                                <dt className="text-slate-500">Expected Date</dt>
-                                <dd className="font-medium text-slate-900">{order.expected_date ? new Date(order.expected_date).toLocaleDateString() : '—'}</dd>
-                            </div>
-                            {order.notes && (
-                                <div>
-                                    <dt className="text-slate-500">Notes</dt>
-                                    <dd className="text-slate-900">{order.notes}</dd>
-                                </div>
-                            )}
-                            <div>
-                                <dt className="text-slate-500">Created By</dt>
-                                <dd className="font-medium text-slate-900">{order.created_by ?? '—'}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-slate-500">Created</dt>
-                                <dd className="font-medium text-slate-900">{order.created_at ? new Date(order.created_at).toLocaleDateString() : '—'}</dd>
-                            </div>
-                        </dl>
+                        {['draft','sent'].includes(order.status) && (
+                            <Button variant="outline" onClick={() => cancelForm.post(`/inventory/purchase-orders/${order.id}/cancel`)} disabled={cancelForm.processing}>Cancel</Button>
+                        )}
+                        <Link href="/inventory/purchase-orders"><Button variant="ghost">Back</Button></Link>
                     </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6 bg-white rounded shadow p-4">
+                    <div><span className="text-gray-500 text-sm">Supplier</span><p>{order.supplier?.name ?? '—'}</p></div>
+                    <div><span className="text-gray-500 text-sm">Order Date</span><p>{order.order_date}</p></div>
+                    <div><span className="text-gray-500 text-sm">Expected</span><p>{order.expected_date ?? '—'}</p></div>
+                    <div><span className="text-gray-500 text-sm">Currency</span><p>{order.currency}</p></div>
+                    <div><span className="text-gray-500 text-sm">Total</span><p className="font-semibold">{order.currency} {order.total.toFixed(2)}</p></div>
+                    <div><span className="text-gray-500 text-sm">Receiving Progress</span><p>{order.receiving_progress}%</p></div>
+                </div>
+
+                <h2 className="font-semibold mb-2">Line Items</h2>
+                <div className="bg-white rounded shadow overflow-hidden mb-6">
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50"><tr>
+                            <th className="px-4 py-2 text-left">Description</th>
+                            <th className="px-4 py-2 text-right">Qty</th>
+                            <th className="px-4 py-2 text-right">Unit Price</th>
+                            <th className="px-4 py-2 text-right">Line Total</th>
+                            <th className="px-4 py-2 text-right">Received</th>
+                        </tr></thead>
+                        <tbody>
+                            {(order.items ?? []).map((item, idx) => (
+                                <tr key={item.id} className="border-t">
+                                    <td className="px-4 py-2">{item.description}</td>
+                                    <td className="px-4 py-2 text-right">{item.quantity}</td>
+                                    <td className="px-4 py-2 text-right">{item.unit_price.toFixed(2)}</td>
+                                    <td className="px-4 py-2 text-right">{item.line_total.toFixed(2)}</td>
+                                    <td className="px-4 py-2 text-right">
+                                        {['sent','partial'].includes(order.status) ? (
+                                            <input type="number" step="0.01" min="0"
+                                                value={receiveForm.data.items[idx]?.received_qty ?? '0'}
+                                                onChange={e => {
+                                                    const items = [...receiveForm.data.items];
+                                                    items[idx] = { ...items[idx], received_qty: e.target.value };
+                                                    receiveForm.setData('items', items);
+                                                }}
+                                                className="w-20 border rounded px-2 py-1 text-right" />
+                                        ) : item.received_qty}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {['sent','partial'].includes(order.status) && (
+                    <Button onClick={() => receiveForm.post(`/inventory/purchase-orders/${order.id}/receive`)} disabled={receiveForm.processing}>
+                        Save Receiving
+                    </Button>
+                )}
             </div>
         </AppLayout>
     );
