@@ -78,6 +78,9 @@ use App\Modules\Finance\Policies\LeadPolicy;
 use App\Modules\Finance\Models\LoyaltyEnrollment;
 use App\Modules\Finance\Models\LoyaltyTransaction;
 use App\Modules\Finance\Policies\LoyaltyPolicy;
+use App\Modules\Finance\Models\SupportTicket;
+use App\Modules\Finance\Models\TicketComment;
+use App\Modules\Finance\Policies\SupportTicketPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -139,6 +142,9 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(LeadActivity::class, LeadPolicy::class);
         Gate::policy(LoyaltyEnrollment::class,  LoyaltyPolicy::class);
         Gate::policy(LoyaltyTransaction::class, LoyaltyPolicy::class);
+
+        Gate::policy(SupportTicket::class,  SupportTicketPolicy::class);
+        Gate::policy(TicketComment::class,  SupportTicketPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);

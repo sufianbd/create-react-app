@@ -820,3 +820,33 @@ export interface CurrencyExchangeRate {
     effective_date: string;
     is_active: boolean;
 }
+
+export interface TicketComment {
+    id: number;
+    support_ticket_id: number;
+    created_by: number;
+    body: string;
+    is_internal: boolean;
+    created_at: string;
+    created_by_user?: { id: number; name: string };
+}
+
+export interface SupportTicket {
+    id: number;
+    reference: string;
+    subject: string;
+    description: string;
+    status: 'open' | 'in_progress' | 'resolved' | 'closed';
+    priority: 'low' | 'normal' | 'high' | 'urgent';
+    category: string | null;
+    contact_id: number | null;
+    assigned_to: number | null;
+    created_by: number;
+    resolved_at: string | null;
+    closed_at: string | null;
+    is_open: boolean;
+    response_time_hours: number | null;
+    assigned_to_user?: { id: number; name: string } | null;
+    created_by_user?: { id: number; name: string };
+    comments?: TicketComment[];
+}

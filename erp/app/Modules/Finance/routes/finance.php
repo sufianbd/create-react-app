@@ -40,6 +40,7 @@ use App\Modules\Finance\Http\Controllers\TaxGroupController;
 use App\Modules\Finance\Http\Controllers\ServiceAgreementController;
 use App\Modules\Finance\Http\Controllers\LoyaltyProgramController;
 use App\Modules\Finance\Http\Controllers\LeadController;
+use App\Modules\Finance\Http\Controllers\SupportTicketController;
 use App\Modules\Finance\Http\Controllers\CurrencyController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
@@ -296,4 +297,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('leads/{lead}/activities',  [LeadController::class, 'addActivity'])->name('leads.activities.add');
     Route::resource('leads', LeadController::class)->except(['edit']);
 
+    // Support Tickets
+    Route::post('support-tickets/{supportTicket}/resolve',    [SupportTicketController::class, 'resolve'])->name('support-tickets.resolve');
+    Route::post('support-tickets/{supportTicket}/close',      [SupportTicketController::class, 'close'])->name('support-tickets.close');
+    Route::post('support-tickets/{supportTicket}/reopen',     [SupportTicketController::class, 'reopen'])->name('support-tickets.reopen');
+    Route::patch('support-tickets/{supportTicket}/assign',    [SupportTicketController::class, 'assign'])->name('support-tickets.assign');
+    Route::post('support-tickets/{supportTicket}/comments',   [SupportTicketController::class, 'addComment'])->name('support-tickets.comments.add');
+    Route::resource('support-tickets', SupportTicketController::class)->except(['edit', 'update']);
+
 });
+
