@@ -621,3 +621,31 @@ export interface EmployeeBenefit {
     employee?: Employee;
     plan?: BenefitPlan;
 }
+
+export interface ReviewRating {
+    id: number;
+    performance_review_id: number;
+    competency: string;
+    rating: number;
+    notes: string | null;
+}
+
+export interface PerformanceReviewPhase96 {
+    id: number;
+    employee_id: number;
+    reviewer_id: number;
+    period: string;
+    review_date: string;
+    status: 'draft' | 'submitted' | 'acknowledged';
+    overall_rating: number | null;
+    strengths: string | null;
+    improvements: string | null;
+    goals: string | null;
+    employee_comments: string | null;
+    is_complete: boolean;
+    average_rating: number;
+    submitted_at: string | null;
+    acknowledged_at: string | null;
+    employee?: Employee;
+    ratings?: ReviewRating[];
+}

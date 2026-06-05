@@ -19,6 +19,7 @@ class PerformanceReview extends Model
         'tenant_id',
         'employee_id',
         'reviewer_id',
+        'period',
         'review_period',
         'review_date',
         'status',
@@ -27,12 +28,17 @@ class PerformanceReview extends Model
         'improvements',
         'goals',
         'reviewer_notes',
+        'employee_comments',
+        'submitted_at',
+        'acknowledged_at',
     ];
 
     protected $casts = [
-        'review_date'    => 'date',
-        'overall_rating' => 'decimal:1',
-        'status'         => 'string',
+        'review_date'      => 'date',
+        'submitted_at'     => 'datetime',
+        'acknowledged_at'  => 'datetime',
+        'overall_rating'   => 'integer',
+        'status'           => 'string',
     ];
 
     public function employee(): BelongsTo
@@ -50,16 +56,39 @@ class PerformanceReview extends Model
         return $this->hasMany(PerformanceKpi::class);
     }
 
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(ReviewRating::class);
+    }
+
     public function submit(): void
     {
-        $this->status = 'submitted';
+        $this->status       = 'submitted';
+        $this->submitted_at = now();
         $this->save();
     }
 
-    public function acknowledge(): void
+    public function acknowledge(string $comments = ''): void
     {
-        $this->status = 'acknowledged';
+        $this->status          = 'acknowledged';
+        $this->acknowledged_at = now();
+        if ($comments !== '') {
+            $this->employee_comments = $comments;
+        }
         $this->save();
+    }
+
+    public function getIsCompleteAttribute(): bool
+    {
+        return $this->status === 'acknowledged';
+    }
+
+    public function getAverageRatingAttribute(): float
+    {
+        if ($this->ratings()->count() > 0) {
+            return round((float) $this->ratings()->avg('rating'), 1);
+        }
+        return (float) ($this->overall_rating ?? 0);
     }
 
     public function getAverageKpiScoreAttribute(): ?float

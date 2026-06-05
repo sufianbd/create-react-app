@@ -24,6 +24,7 @@ use App\Modules\HR\Models\PayrollRun;
 use App\Modules\HR\Models\Payslip;
 use App\Modules\HR\Models\PerformanceKpi;
 use App\Modules\HR\Models\PerformanceReview;
+use App\Modules\HR\Models\ReviewRating;
 use App\Modules\HR\Models\ShiftAssignment;
 use App\Modules\HR\Models\ShiftTemplate;
 use App\Modules\HR\Models\TrainingCourse;
@@ -87,6 +88,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(PayrollRun::class,              PayrollRunPolicy::class);
         Gate::policy(Payslip::class,                 PayrollPolicy::class);
         Gate::policy(PerformanceKpi::class,          PerformanceReviewPolicy::class);
+        Gate::policy(ReviewRating::class,            PerformanceReviewPolicy::class);
         Gate::policy(PerformanceReview::class,       PerformanceReviewPolicy::class);
         Gate::policy(TrainingCourse::class,          TrainingPolicy::class);
         Gate::policy(TrainingEnrollment::class,   TrainingPolicy::class);

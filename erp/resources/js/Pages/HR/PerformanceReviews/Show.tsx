@@ -3,10 +3,42 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/Common/Button';
 import { usePermission } from '@/Hooks/usePermission';
 import type { PageProps } from '@/types';
-import type { PerformanceReviewV2, PerformanceKpi } from '@/types/hr';
+import type { PerformanceKpi } from '@/types/hr';
+
+interface ReviewRatingData {
+    id: number;
+    competency: string;
+    rating: number;
+    notes: string | null;
+}
+
+interface ReviewData {
+    id: number;
+    employee_id: number;
+    reviewer_id: number | null;
+    period: string | null;
+    review_period: string | null;
+    review_date: string;
+    status: 'draft' | 'submitted' | 'acknowledged';
+    overall_rating: number | null;
+    strengths: string | null;
+    improvements: string | null;
+    goals: string | null;
+    reviewer_notes: string | null;
+    employee_comments: string | null;
+    is_complete: boolean;
+    average_rating: number;
+    average_kpi_score: number | null;
+    submitted_at: string | null;
+    acknowledged_at: string | null;
+    employee?: { id: number; first_name: string; last_name: string } | null;
+    reviewer?: { id: number; name: string } | null;
+    kpis?: PerformanceKpi[];
+    ratings?: ReviewRatingData[];
+}
 
 interface Props extends PageProps {
-    review: PerformanceReviewV2;
+    review: ReviewData;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -138,6 +170,33 @@ function KpiRow({ kpi, reviewId }: { kpi: PerformanceKpi; reviewId: number }) {
     );
 }
 
+function AcknowledgeForm({ reviewId }: { reviewId: number }) {
+    const { data, setData, post, processing } = useForm({ comments: '' });
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        post(`/hr/performance-reviews/${reviewId}/acknowledge`);
+    }
+
+    return (
+        <form onSubmit={submit} className="space-y-3">
+            <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Employee Comments (optional)</label>
+                <textarea
+                    value={data.comments}
+                    onChange={(e) => setData('comments', e.target.value)}
+                    rows={3}
+                    className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    placeholder="Add your comments…"
+                />
+            </div>
+            <Button type="submit" disabled={processing} className="bg-green-600 hover:bg-green-700">
+                {processing ? 'Acknowledging…' : 'Acknowledge Review'}
+            </Button>
+        </form>
+    );
+}
+
 export default function ShowPerformanceReview({ review }: Props) {
     const { can } = usePermission();
 
@@ -145,12 +204,10 @@ export default function ShowPerformanceReview({ review }: Props) {
         ? `${review.employee.first_name} ${review.employee.last_name}`
         : '—';
 
+    const displayPeriod = review.period ?? review.review_period ?? '—';
+
     function submitReview() {
         router.post(`/hr/performance-reviews/${review.id}/submit`);
-    }
-
-    function acknowledgeReview() {
-        router.post(`/hr/performance-reviews/${review.id}/acknowledge`);
     }
 
     function deleteReview() {
@@ -171,11 +228,11 @@ export default function ShowPerformanceReview({ review }: Props) {
                             <StatusBadge status={review.status} />
                         </div>
                         <p className="text-sm text-slate-500 mt-1">
-                            {employeeName} · {review.review_period}
+                            {employeeName} · {displayPeriod}
                         </p>
                     </div>
                     <a href="/hr/performance-reviews" className="text-sm text-slate-600 hover:text-slate-900">
-                        ← Back to Reviews
+                        Back to Reviews
                     </a>
                 </div>
 
@@ -192,7 +249,7 @@ export default function ShowPerformanceReview({ review }: Props) {
                         </div>
                         <div>
                             <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Period</dt>
-                            <dd className="mt-1 text-sm text-slate-900">{review.review_period}</dd>
+                            <dd className="mt-1 text-sm text-slate-900">{displayPeriod}</dd>
                         </div>
                         <div>
                             <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Review Date</dt>
@@ -204,10 +261,22 @@ export default function ShowPerformanceReview({ review }: Props) {
                                 {review.overall_rating != null ? `${review.overall_rating} / 5` : '—'}
                             </dd>
                         </div>
-                        {review.average_kpi_score != null && (
+                        <div>
+                            <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Avg Rating</dt>
+                            <dd className="mt-1 text-sm font-medium text-slate-900">
+                                {review.average_rating > 0 ? `${review.average_rating} / 5` : '—'}
+                            </dd>
+                        </div>
+                        {review.submitted_at && (
                             <div>
-                                <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Avg KPI Score</dt>
-                                <dd className="mt-1 text-sm font-medium text-slate-900">{review.average_kpi_score}%</dd>
+                                <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Submitted</dt>
+                                <dd className="mt-1 text-sm text-slate-900">{review.submitted_at}</dd>
+                            </div>
+                        )}
+                        {review.acknowledged_at && (
+                            <div>
+                                <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Acknowledged</dt>
+                                <dd className="mt-1 text-sm text-slate-900">{review.acknowledged_at}</dd>
                             </div>
                         )}
                     </dl>
@@ -230,7 +299,38 @@ export default function ShowPerformanceReview({ review }: Props) {
                             <p className="text-sm text-slate-700 whitespace-pre-wrap">{review.goals}</p>
                         </div>
                     )}
+                    {review.employee_comments && (
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                            <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Employee Comments</dt>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap">{review.employee_comments}</p>
+                        </div>
+                    )}
                 </div>
+
+                {/* Competency Ratings */}
+                {review.ratings && review.ratings.length > 0 && (
+                    <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                        <h2 className="text-base font-semibold text-slate-900 mb-4">Competency Ratings</h2>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-xs font-medium text-slate-500 uppercase tracking-wide border-b border-slate-200">
+                                    <th className="pb-2 pr-4">Competency</th>
+                                    <th className="pb-2 pr-4">Rating</th>
+                                    <th className="pb-2">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {review.ratings.map((r) => (
+                                    <tr key={r.id} className="border-b border-slate-100 last:border-0">
+                                        <td className="py-2 pr-4 font-medium text-slate-900">{r.competency}</td>
+                                        <td className="py-2 pr-4 text-slate-700">{r.rating} / 5</td>
+                                        <td className="py-2 text-slate-500">{r.notes ?? '—'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
 
                 {/* KPIs */}
                 <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -265,42 +365,42 @@ export default function ShowPerformanceReview({ review }: Props) {
                         <p className="text-sm text-slate-500">No KPIs added yet.</p>
                     )}
 
-                    {can('hr.update') && (
+                    {can('hr.create') && (
                         <AddKpiForm reviewId={review.id} />
                     )}
                 </div>
 
                 {/* Actions */}
-                {can('hr.update') && (
+                {can('hr.create') && (
                     <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
                         <h2 className="text-base font-semibold text-slate-900">Actions</h2>
 
-                        <div className="flex items-center gap-3 flex-wrap">
-                            {review.status === 'draft' && (
+                        {review.status === 'draft' && (
+                            <div>
                                 <Button onClick={submitReview} className="bg-blue-600 hover:bg-blue-700">
                                     Submit for Review
                                 </Button>
-                            )}
+                            </div>
+                        )}
 
-                            {review.status === 'submitted' && (
-                                <Button onClick={acknowledgeReview} className="bg-green-600 hover:bg-green-700">
-                                    Acknowledge
-                                </Button>
-                            )}
+                        {review.status === 'submitted' && (
+                            <AcknowledgeForm reviewId={review.id} />
+                        )}
 
-                            {review.status === 'acknowledged' && (
-                                <p className="text-sm text-slate-500">This review has been acknowledged.</p>
-                            )}
+                        {review.status === 'acknowledged' && (
+                            <p className="text-sm text-green-700 font-medium">This review has been acknowledged.</p>
+                        )}
 
-                            {can('hr.delete') && (
+                        {can('hr.delete') && (
+                            <div className="pt-2 border-t border-slate-100">
                                 <button
                                     onClick={deleteReview}
                                     className="rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 border border-red-200"
                                 >
                                     Delete Review
                                 </button>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

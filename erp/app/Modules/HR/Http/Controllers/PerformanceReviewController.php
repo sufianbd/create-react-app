@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\HR\Models\Employee;
 use App\Modules\HR\Models\PerformanceKpi;
 use App\Modules\HR\Models\PerformanceReview;
+use App\Modules\HR\Models\ReviewRating;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -49,23 +50,33 @@ class PerformanceReviewController extends Controller
     {
         $this->authorize('create', PerformanceReview::class);
 
+        // Normalise: if the caller used the legacy 'review_period' field, treat as 'period'
+        if ($request->missing('period') && $request->filled('review_period')) {
+            $request->merge(['period' => $request->input('review_period')]);
+        }
+
         $data = $request->validate([
-            'employee_id'    => 'required|exists:employees,id',
-            'reviewer_id'    => 'nullable|exists:users,id',
-            'review_period'  => 'required|string|max:50',
-            'review_date'    => 'required|date',
-            'overall_rating' => 'nullable|numeric|min:1|max:5',
-            'strengths'      => 'nullable|string',
-            'improvements'   => 'nullable|string',
-            'goals'          => 'nullable|string',
-            'reviewer_notes' => 'nullable|string',
+            'employee_id'          => 'required|exists:employees,id',
+            'period'               => 'required|string|max:100',
+            'review_period'        => 'nullable|string|max:50',
+            'review_date'          => 'required|date',
+            'overall_rating'       => 'nullable|numeric|min:1|max:5',
+            'strengths'            => 'nullable|string',
+            'improvements'         => 'nullable|string',
+            'goals'                => 'nullable|string',
+            'reviewer_notes'       => 'nullable|string',
+            'ratings'              => 'nullable|array',
+            'ratings.*.competency' => 'required_with:ratings|string',
+            'ratings.*.rating'     => 'required_with:ratings|integer|min:1|max:5',
+            'ratings.*.notes'      => 'nullable|string',
         ]);
 
         $review = PerformanceReview::create([
             'tenant_id'      => auth()->user()->tenant_id,
             'employee_id'    => $data['employee_id'],
-            'reviewer_id'    => $data['reviewer_id'] ?? null,
-            'review_period'  => $data['review_period'],
+            'reviewer_id'    => auth()->id(),
+            'period'         => $data['period'],
+            'review_period'  => $data['period'],
             'review_date'    => $data['review_date'],
             'status'         => 'draft',
             'overall_rating' => $data['overall_rating'] ?? null,
@@ -75,6 +86,18 @@ class PerformanceReviewController extends Controller
             'reviewer_notes' => $data['reviewer_notes'] ?? null,
         ]);
 
+        if (!empty($data['ratings'])) {
+            foreach ($data['ratings'] as $ratingData) {
+                ReviewRating::create([
+                    'tenant_id'             => $review->tenant_id,
+                    'performance_review_id' => $review->id,
+                    'competency'            => $ratingData['competency'],
+                    'rating'                => $ratingData['rating'],
+                    'notes'                 => $ratingData['notes'] ?? null,
+                ]);
+            }
+        }
+
         return redirect()->route('hr.performance-reviews.show', $review);
     }
 
@@ -82,10 +105,12 @@ class PerformanceReviewController extends Controller
     {
         $this->authorize('view', $performanceReview);
 
-        $performanceReview->load(['kpis', 'employee', 'reviewer']);
+        $performanceReview->load(['kpis', 'employee', 'reviewer', 'ratings']);
 
-        $reviewData = $performanceReview->toArray();
+        $reviewData                      = $performanceReview->toArray();
         $reviewData['average_kpi_score'] = $performanceReview->average_kpi_score;
+        $reviewData['is_complete']       = $performanceReview->is_complete;
+        $reviewData['average_rating']    = $performanceReview->average_rating;
 
         return Inertia::render('HR/PerformanceReviews/Show', [
             'review' => $reviewData,
@@ -110,11 +135,15 @@ class PerformanceReviewController extends Controller
         return back();
     }
 
-    public function acknowledge(PerformanceReview $performanceReview): RedirectResponse
+    public function acknowledge(Request $request, PerformanceReview $performanceReview): RedirectResponse
     {
         $this->authorize('update', $performanceReview);
 
-        $performanceReview->acknowledge();
+        $data = $request->validate([
+            'comments' => 'nullable|string',
+        ]);
+
+        $performanceReview->acknowledge($data['comments'] ?? '');
 
         return back();
     }

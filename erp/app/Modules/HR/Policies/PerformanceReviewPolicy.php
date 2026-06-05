@@ -24,7 +24,7 @@ class PerformanceReviewPolicy
 
     public function update(User $user, PerformanceReview $performanceReview): bool
     {
-        return $user->can('hr.update');
+        return $user->can('hr.create');
     }
 
     public function delete(User $user, PerformanceReview $performanceReview): bool
