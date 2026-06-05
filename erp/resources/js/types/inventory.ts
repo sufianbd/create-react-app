@@ -508,3 +508,31 @@ export interface PurchaseOrder {
     supplier?: Supplier;
     items?: PurchaseOrderItem[];
 }
+
+export interface SalesOrderItem {
+    id: number;
+    sales_order_id: number;
+    product_id: number | null;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    shipped_qty: number;
+    line_total: number;
+    product?: Product;
+}
+
+export interface SalesOrder {
+    id: number;
+    so_number: string;
+    customer_id: number | null;
+    status: 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+    order_date: string;
+    expected_date: string | null;
+    subtotal: number;
+    tax: number;
+    total: number;
+    currency: string;
+    notes: string | null;
+    is_open: boolean;
+    items?: SalesOrderItem[];
+}

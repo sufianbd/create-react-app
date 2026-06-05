@@ -195,3 +195,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::resource('serial-numbers', SerialNumberController::class)->only(['index', 'store', 'show']);
 });
 
+
+// Sales Order Management — custom actions BEFORE resource
+use App\Modules\Inventory\Http\Controllers\SalesOrderController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('sales-orders/{salesOrder}/confirm', [SalesOrderController::class, 'confirm'])->name('sales-orders.confirm');
+    Route::post('sales-orders/{salesOrder}/ship',    [SalesOrderController::class, 'ship'])->name('sales-orders.ship');
+    Route::post('sales-orders/{salesOrder}/deliver', [SalesOrderController::class, 'deliver'])->name('sales-orders.deliver');
+    Route::post('sales-orders/{salesOrder}/cancel',  [SalesOrderController::class, 'cancel'])->name('sales-orders.cancel');
+    Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+});
