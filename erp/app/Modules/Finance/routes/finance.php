@@ -307,3 +307,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
 
 });
 
+
+// Expense Claims — custom actions BEFORE resource
+use App\Modules\Finance\Http\Controllers\ExpenseClaimController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('expense-claims/{expenseClaim}/submit',   [ExpenseClaimController::class, 'submit'])->name('expense-claims.submit');
+    Route::post('expense-claims/{expenseClaim}/approve',  [ExpenseClaimController::class, 'approve'])->name('expense-claims.approve');
+    Route::post('expense-claims/{expenseClaim}/reject',   [ExpenseClaimController::class, 'reject'])->name('expense-claims.reject');
+    Route::post('expense-claims/{expenseClaim}/mark-paid',[ExpenseClaimController::class, 'markPaid'])->name('expense-claims.mark-paid');
+    Route::resource('expense-claims', ExpenseClaimController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+});

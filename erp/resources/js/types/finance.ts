@@ -867,3 +867,30 @@ export interface SupportTicket {
     created_by_user?: { id: number; name: string };
     comments?: TicketComment[];
 }
+
+export interface ExpenseItem {
+    id: number;
+    expense_claim_id: number;
+    category: string;
+    expense_date: string;
+    description: string;
+    amount: number;
+    receipt_url: string | null;
+}
+
+export interface ExpenseClaim {
+    id: number;
+    reference: string;
+    submitted_by: number;
+    approved_by: number | null;
+    status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'paid';
+    claim_date: string;
+    currency: string;
+    total_amount: number;
+    notes: string | null;
+    is_editable: boolean;
+    submitted_at: string | null;
+    approved_at: string | null;
+    paid_at: string | null;
+    items?: ExpenseItem[];
+}

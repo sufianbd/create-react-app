@@ -139,6 +139,7 @@ const navItems: NavItem[] = [
             { label: 'Loyalty Programs', href: '/finance/loyalty-programs', icon: <span /> },
             { label: 'CRM / Leads',      href: '/finance/leads',           icon: <span /> },
             { label: 'Support Tickets',  href: '/finance/support-tickets', icon: <span /> },
+            { label: 'Expense Claims',   href: '/finance/expense-claims',  icon: <span /> },
         ],
     },
     {
