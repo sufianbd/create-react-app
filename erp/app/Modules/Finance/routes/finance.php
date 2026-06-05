@@ -115,10 +115,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('recurring-invoices/{recurringInvoice}/generate', [RecurringInvoiceController::class, 'generateNow'])->name('recurring-invoices.generate');
     Route::delete('recurring-invoices/{recurringInvoice}', [RecurringInvoiceController::class, 'destroy'])->name('recurring-invoices.destroy');
 
-    // Credit Notes
+    // Credit Notes — custom actions BEFORE resource
+    Route::post('credit-notes/{creditNote}/issue',  [CreditNoteController::class, 'issue'])->name('credit-notes.issue');
+    Route::post('credit-notes/{creditNote}/apply',  [CreditNoteController::class, 'apply'])->name('credit-notes.apply');
+    Route::post('credit-notes/{creditNote}/void',   [CreditNoteController::class, 'void'])->name('credit-notes.void');
     Route::resource('credit-notes', CreditNoteController::class)->except(['edit', 'update']);
-    Route::post('credit-notes/{creditNote}/issue', [CreditNoteController::class, 'issue'])->name('credit-notes.issue');
-    Route::post('credit-notes/{creditNote}/void', [CreditNoteController::class, 'void'])->name('credit-notes.void');
 
     // Reports
     Route::get('reports/trial-balance', [ReportController::class, 'trialBalance'])

@@ -160,3 +160,131 @@ test('credit note belongs to correct tenant', function () {
 
     expect($cn->tenant_id)->toBe($this->tenant->id);
 });
+
+// ============================================================
+// Phase 103 — Credit Notes & Invoice Adjustments (10 tests)
+// ============================================================
+
+function makeCreditNote(array $attrs = []): \App\Modules\Finance\Models\CreditNote
+{
+    $cnNumber = \App\Modules\Finance\Models\CreditNote::generateCreditNoteNumber();
+    return \App\Modules\Finance\Models\CreditNote::create(array_merge([
+        'tenant_id'          => test()->tenant->id,
+        'credit_note_number' => $cnNumber,
+        'reference'          => $cnNumber,  // legacy NOT NULL column
+        'type'               => 'sale',     // legacy NOT NULL enum
+        'currency_code'      => 'USD',      // legacy NOT NULL column
+        'exchange_rate'      => 1,
+        'status'             => 'draft',
+        'issue_date'         => now()->toDateString(),
+        'currency'           => 'USD',
+        'subtotal'           => 0,
+        'tax'                => 0,
+        'tax_total'          => 0,
+        'total'              => 0,
+        'amount_applied'     => 0,
+        'created_by'         => test()->admin->id,
+    ], $attrs));
+}
+
+function makeCNItem(\App\Modules\Finance\Models\CreditNote $cn, array $attrs = []): \App\Modules\Finance\Models\CreditNoteItem
+{
+    return $cn->items()->create(array_merge([
+        'tenant_id'   => $cn->tenant_id,
+        'description' => 'Test Item',
+        'quantity'    => 1,
+        'unit_price'  => 100.00,
+    ], $attrs));
+}
+
+it('p103 index requires auth', function () {
+    $this->post('/logout');
+    $this->get('/finance/credit-notes')->assertRedirect('/login');
+});
+
+it('p103 admin can list credit notes', function () {
+    makeCreditNote();
+    $this->get('/finance/credit-notes')->assertStatus(200);
+});
+
+it('p103 staff with finance.view can list credit notes', function () {
+    $viewer = \App\Models\User::factory()->create(['tenant_id' => $this->tenant->id]);
+    $viewer->givePermissionTo('finance.view');
+    $this->actingAs($viewer);
+    $this->get('/finance/credit-notes')->assertStatus(200);
+});
+
+it('p103 store creates credit note with items and recalculates totals', function () {
+    $response = $this->post('/finance/credit-notes', [
+        'issue_date' => now()->toDateString(),
+        'currency'   => 'USD',
+        'reason'     => 'Customer overpayment',
+        'items'      => [
+            ['description' => 'Refund item A', 'quantity' => 2, 'unit_price' => 50.00],
+            ['description' => 'Refund item B', 'quantity' => 1, 'unit_price' => 30.00],
+        ],
+    ]);
+
+    $response->assertRedirect();
+
+    $cn = \App\Modules\Finance\Models\CreditNote::where('reason', 'Customer overpayment')->latest()->first();
+    expect($cn)->not->toBeNull();
+    expect($cn->credit_note_number)->toStartWith('CN-');
+    expect($cn->items()->count())->toBe(2);
+    expect($cn->subtotal)->toBe(130.0);
+    expect($cn->total)->toBe(130.0);
+});
+
+it('p103 store validates required fields — 422 for missing items', function () {
+    $this->postJson('/finance/credit-notes', [
+        'issue_date' => now()->toDateString(),
+        'currency'   => 'USD',
+        // no items
+    ])->assertStatus(422)->assertJsonValidationErrors(['items']);
+});
+
+it('p103 show loads credit note with items', function () {
+    $cn = makeCreditNote();
+    makeCNItem($cn);
+
+    $this->get("/finance/credit-notes/{$cn->id}")
+        ->assertStatus(200)
+        ->assertInertia(fn ($p) => $p->component('Finance/CreditNotes/Show'));
+});
+
+it('p103 issue transitions status to issued', function () {
+    $cn = makeCreditNote(['status' => 'draft']);
+
+    $this->post("/finance/credit-notes/{$cn->id}/issue")
+        ->assertRedirect();
+
+    expect($cn->fresh()->status)->toBe('issued');
+});
+
+it('p103 apply transitions status to applied', function () {
+    $cn = makeCreditNote(['status' => 'issued']);
+
+    $this->post("/finance/credit-notes/{$cn->id}/apply")
+        ->assertRedirect();
+
+    expect($cn->fresh()->status)->toBe('applied');
+});
+
+it('p103 void transitions status to voided', function () {
+    $cn = makeCreditNote(['status' => 'issued']);
+
+    $this->post("/finance/credit-notes/{$cn->id}/void")
+        ->assertRedirect();
+
+    expect($cn->fresh()->status)->toBe('void');
+});
+
+it('p103 destroy soft-deletes the credit note', function () {
+    $cn = makeCreditNote(['status' => 'draft']);
+
+    $this->delete("/finance/credit-notes/{$cn->id}")
+        ->assertRedirect();
+
+    expect(\App\Modules\Finance\Models\CreditNote::withTrashed()->find($cn->id)->deleted_at)
+        ->not->toBeNull();
+});

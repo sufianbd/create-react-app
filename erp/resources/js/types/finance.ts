@@ -918,3 +918,27 @@ export interface VendorBill {
     is_open: boolean;
     items?: VendorBillItem[];
 }
+
+// Phase 103 — Credit Notes & Invoice Adjustments
+export interface CreditNoteItemV2 {
+    id: number;
+    credit_note_id: number;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    line_total: number;
+}
+export interface CreditNoteV2 {
+    id: number;
+    credit_note_number: string;
+    status: string;
+    issue_date: string;
+    currency: string;
+    subtotal: number;
+    tax: number;
+    total: number;
+    reason: string | null;
+    is_available: boolean;
+    is_open: boolean;
+    items?: CreditNoteItemV2[];
+}
