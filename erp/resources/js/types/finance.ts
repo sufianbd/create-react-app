@@ -566,14 +566,27 @@ export interface Commission {
     created_at: string;
 }
 
+export interface ContractRenewal {
+    id: number;
+    contract_id: number;
+    new_end_date: string;
+    new_value: number | null;
+    notes: string | null;
+    renewed_by: number;
+}
+
 export interface Contract {
     id: number;
+    contract_number: string | null;
     contact_id: number | null;
     title: string;
+    party_name: string | null;
+    party_email: string | null;
     reference: string | null;
-    type: 'client' | 'vendor' | 'employment' | 'nda' | 'other';
+    type: 'client' | 'vendor' | 'employee' | 'employment' | 'nda' | 'other';
     status: 'draft' | 'active' | 'expired' | 'terminated';
     value: number | null;
+    currency: string | null;
     currency_code: string | null;
     start_date: string | null;
     end_date: string | null;
@@ -581,10 +594,14 @@ export interface Contract {
     renewal_notice_days: number;
     description: string | null;
     terms: string | null;
+    notes: string | null;
     signed_at: string | null;
+    terminated_at: string | null;
     is_expiring: boolean;
     is_expired: boolean;
+    days_remaining: number;
     contact?: Contact;
+    renewals?: ContractRenewal[];
     created_at: string;
 }
 

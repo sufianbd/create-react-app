@@ -57,6 +57,7 @@ use App\Modules\Finance\Policies\SubscriptionPolicy;
 use App\Modules\Finance\Models\Commission;
 use App\Modules\Finance\Models\CommissionRule;
 use App\Modules\Finance\Models\Contract;
+use App\Modules\Finance\Models\ContractRenewal;
 use App\Modules\Finance\Policies\ContractPolicy;
 use App\Modules\Finance\Policies\CommissionPolicy;
 use App\Modules\Finance\Policies\CommissionRulePolicy;
@@ -124,6 +125,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(Commission::class,     CommissionPolicy::class);
         Gate::policy(CommissionRule::class, CommissionRulePolicy::class);
         Gate::policy(Contract::class, ContractPolicy::class);
+        Gate::policy(ContractRenewal::class, ContractPolicy::class);
 
         Gate::policy(ReturnRequest::class,     ReturnRequestPolicy::class);
         Gate::policy(ReturnRequestItem::class, ReturnRequestPolicy::class);

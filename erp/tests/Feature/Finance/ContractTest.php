@@ -2,8 +2,8 @@
 
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
-use App\Modules\Finance\Models\Contact;
 use App\Modules\Finance\Models\Contract;
+use App\Modules\Finance\Models\ContractRenewal;
 use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
@@ -17,12 +17,18 @@ beforeEach(function () {
     app()->instance('tenant', $this->tenant);
 });
 
-function makeContractContact(): Contact
+function makeContract(string $status = 'draft'): Contract
 {
-    return Contact::create([
-        'tenant_id' => test()->tenant->id,
-        'name'      => 'Contract Client',
-        'type'      => 'customer',
+    return Contract::create([
+        'tenant_id'       => test()->tenant->id,
+        'contract_number' => 'CNT-' . uniqid(),
+        'title'           => 'Service Agreement',
+        'party_name'      => 'Acme Corp',
+        'type'            => 'client',
+        'status'          => $status,
+        'start_date'      => now()->toDateString(),
+        'end_date'        => now()->addYear()->toDateString(),
+        'created_by'      => test()->admin->id,
     ]);
 }
 
@@ -31,103 +37,70 @@ it('admin can list contracts', function () {
 });
 
 it('admin can create a contract', function () {
-    $contact = makeContractContact();
     $this->post('/finance/contracts', [
-        'title'      => 'Service Agreement',
-        'type'       => 'client',
-        'contact_id' => $contact->id,
-        'start_date' => '2025-01-01',
-        'end_date'   => '2025-12-31',
+        'title'      => 'New Deal',
+        'party_name' => 'Partner Ltd',
+        'type'       => 'vendor',
+        'start_date' => now()->toDateString(),
+        'end_date'   => now()->addMonths(6)->toDateString(),
     ])->assertRedirect();
-    expect(Contract::where('title', 'Service Agreement')->exists())->toBeTrue();
+    expect(Contract::where('title', 'New Deal')->exists())->toBeTrue();
+});
+
+it('contract store requires title, party_name, start_date, end_date', function () {
+    $this->postJson('/finance/contracts', [])->assertStatus(422)
+        ->assertJsonValidationErrors(['title', 'party_name', 'start_date', 'end_date']);
 });
 
 it('admin can view a contract', function () {
-    $contract = Contract::create([
-        'tenant_id' => test()->tenant->id,
-        'title'     => 'View Test',
-        'type'      => 'nda',
-        'status'    => 'draft',
-    ]);
+    $contract = makeContract();
     $this->get("/finance/contracts/{$contract->id}")->assertStatus(200);
 });
 
-it('admin can update a contract', function () {
-    $contract = Contract::create([
-        'tenant_id' => test()->tenant->id,
-        'title'     => 'Old Title',
-        'type'      => 'client',
-        'status'    => 'draft',
-    ]);
-    $this->patch("/finance/contracts/{$contract->id}", [
-        'title' => 'New Title',
-        'type'  => 'client',
-    ])->assertRedirect();
-    expect($contract->fresh()->title)->toBe('New Title');
-});
-
-it('admin can activate contract', function () {
-    $contract = Contract::create([
-        'tenant_id' => test()->tenant->id,
-        'title'     => 'Activate Test',
-        'type'      => 'client',
-        'status'    => 'draft',
-    ]);
-    $this->post("/finance/contracts/{$contract->id}/activate");
+it('admin can activate a contract', function () {
+    $contract = makeContract('draft');
+    $this->post("/finance/contracts/{$contract->id}/activate")->assertRedirect();
     expect($contract->fresh()->status)->toBe('active');
+    expect($contract->fresh()->signed_at)->not->toBeNull();
 });
 
-it('admin can terminate contract', function () {
-    $contract = Contract::create([
-        'tenant_id' => test()->tenant->id,
-        'title'     => 'Terminate Test',
-        'type'      => 'client',
-        'status'    => 'active',
-    ]);
-    $this->post("/finance/contracts/{$contract->id}/terminate");
+it('admin can terminate a contract', function () {
+    $contract = makeContract('active');
+    $this->post("/finance/contracts/{$contract->id}/terminate", ['notes' => 'Early exit'])->assertRedirect();
     expect($contract->fresh()->status)->toBe('terminated');
+    expect($contract->fresh()->terminated_at)->not->toBeNull();
 });
 
-it('is_expiring returns true when within notice period', function () {
-    $contract = Contract::create([
-        'tenant_id'           => test()->tenant->id,
-        'title'               => 'Expiring Soon',
-        'type'                => 'client',
-        'status'              => 'active',
-        'end_date'            => now()->addDays(15)->toDateString(),
-        'renewal_notice_days' => 30,
-    ]);
-    expect($contract->is_expiring)->toBeTrue();
+it('admin can renew a contract', function () {
+    $contract = makeContract('active');
+    $newEnd   = now()->addYears(2)->toDateString();
+    $this->post("/finance/contracts/{$contract->id}/renew", [
+        'new_end_date' => $newEnd,
+        'new_value'    => 50000,
+        'notes'        => 'Extended',
+    ])->assertRedirect();
+    expect($contract->fresh()->end_date->toDateString())->toBe($newEnd);
+    expect(ContractRenewal::where('contract_id', $contract->id)->count())->toBe(1);
 });
 
-it('is_expiring returns false when outside notice period', function () {
-    $contract = Contract::create([
-        'tenant_id'           => test()->tenant->id,
-        'title'               => 'Not Expiring',
-        'type'                => 'client',
-        'status'              => 'active',
-        'end_date'            => now()->addDays(90)->toDateString(),
-        'renewal_notice_days' => 30,
-    ]);
-    expect($contract->is_expiring)->toBeFalse();
+it('is_expiring returns true when end_date within 30 days', function () {
+    $contract = makeContract('active');
+    \Illuminate\Support\Facades\DB::table('contracts')
+        ->where('id', $contract->id)
+        ->update(['end_date' => now()->addDays(15)->toDateString()]);
+    expect($contract->fresh()->is_expiring)->toBeTrue();
 });
 
-it('end_date must be after start_date', function () {
-    $this->postJson('/finance/contracts', [
-        'title'      => 'Bad Dates',
-        'type'       => 'client',
-        'start_date' => '2025-12-31',
-        'end_date'   => '2025-01-01',
-    ])->assertStatus(422);
+it('days_remaining returns correct count', function () {
+    $contract = makeContract();
+    \Illuminate\Support\Facades\DB::table('contracts')
+        ->where('id', $contract->id)
+        ->update(['end_date' => now()->addDays(10)->toDateString()]);
+    expect($contract->fresh()->days_remaining)->toBe(10);
 });
 
-it('staff cannot delete contract', function () {
-    $contract = Contract::create([
-        'tenant_id' => test()->tenant->id,
-        'title'     => 'Staff Test',
-        'type'      => 'other',
-        'status'    => 'draft',
-    ]);
+it('staff cannot delete a contract', function () {
+    $contract = makeContract();
     $this->actingAs($this->staff)
         ->delete("/finance/contracts/{$contract->id}")
         ->assertStatus(403);

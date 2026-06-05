@@ -258,11 +258,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::resource('commissions', CommissionController::class)->except(['edit', 'update']);
 
 
-    // Contracts
+    // Contracts — custom actions BEFORE resource
     Route::post('contracts/{contract}/activate',  [ContractController::class, 'activate'])->name('contracts.activate');
     Route::post('contracts/{contract}/terminate', [ContractController::class, 'terminate'])->name('contracts.terminate');
-    Route::resource('contracts', ContractController::class)->except(['show']);
-    Route::get('contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
+    Route::post('contracts/{contract}/renew',     [ContractController::class, 'renew'])->name('contracts.renew');
+    Route::resource('contracts', ContractController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
     // Return Requests — custom actions BEFORE resource
     Route::post('return-requests/{returnRequest}/approve',       [ReturnRequestController::class, 'approve'])->name('return-requests.approve');
