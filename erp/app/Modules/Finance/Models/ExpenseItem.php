@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExpenseItem extends Model
 {
+    protected $table = 'finance_expense_items';
+
     use BelongsToTenant;
 
     protected $fillable = [

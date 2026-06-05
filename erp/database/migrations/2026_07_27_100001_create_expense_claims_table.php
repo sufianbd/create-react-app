@@ -8,17 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::dropIfExists('expense_claim_items');
-        Schema::dropIfExists('expense_items');
-        Schema::dropIfExists('expense_claims');
+        // Finance expense claims use a separate table to avoid conflicting
+        // with the HR module's expense_claims table (different schema)
+        Schema::dropIfExists('finance_expense_items');
+        Schema::dropIfExists('finance_expense_claims');
 
-        Schema::create('expense_claims', function (Blueprint $table) {
+        Schema::create('finance_expense_claims', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
             $table->string('reference')->unique();
             $table->unsignedBigInteger('submitted_by');
             $table->unsignedBigInteger('approved_by')->nullable();
-            $table->enum('status', ['draft', 'submitted', 'approved', 'rejected', 'paid'])->default('draft');
+            $table->string('status')->default('draft');
             $table->date('claim_date');
             $table->string('currency', 3)->default('USD');
             $table->decimal('total_amount', 15, 2)->default(0);
@@ -33,6 +34,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('expense_claims');
+        Schema::dropIfExists('finance_expense_claims');
     }
 };

@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ExpenseClaim extends Model
 {
+    protected $table = 'finance_expense_claims';
+
     use BelongsToTenant;
     use SoftDeletes;
 
