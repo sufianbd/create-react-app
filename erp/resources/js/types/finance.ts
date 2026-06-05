@@ -456,27 +456,30 @@ export interface VendorEvaluation {
 export interface BudgetLine {
     id: number;
     budget_id: number;
-    account_id: number;
-    period: number;
-    amount: number;
-    notes: string | null;
+    category: string;
+    line_type: 'income' | 'expense';
+    period_number: number;
+    budgeted_amount: number;
     actual_amount: number;
+    notes: string | null;
     variance: number;
-    account?: Account;
+    variance_percent: number;
+    is_over_budget: boolean;
 }
 
 export interface Budget {
     id: number;
     name: string;
     fiscal_year: number;
-    year?: number;
     period_type: 'annual' | 'quarterly' | 'monthly';
     status: 'draft' | 'active' | 'closed';
     notes: string | null;
-    total_budgeted: number;
     lines_count?: number;
+    total_budgeted: number;
+    total_actual: number;
+    total_variance: number;
+    variance_percent: number;
     lines?: BudgetLine[];
-    created_at: string;
 }
 
 

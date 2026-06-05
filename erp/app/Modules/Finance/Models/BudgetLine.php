@@ -5,20 +5,20 @@ namespace App\Modules\Finance\Models;
 use App\Modules\Core\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetLine extends Model
 {
     use BelongsToTenant;
-    use SoftDeletes;
 
     protected $fillable = [
-        'tenant_id', 'budget_id', 'account_id', 'period', 'amount', 'notes',
+        'tenant_id', 'budget_id', 'category', 'line_type', 'period_number',
+        'budgeted_amount', 'actual_amount', 'notes',
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
-        'period' => 'integer',
+        'budgeted_amount' => 'float',
+        'actual_amount'   => 'float',
+        'period_number'   => 'integer',
     ];
 
     public function budget(): BelongsTo
@@ -26,18 +26,26 @@ class BudgetLine extends Model
         return $this->belongsTo(Budget::class);
     }
 
-    public function account(): BelongsTo
-    {
-        return $this->belongsTo(Account::class);
-    }
-
-    public function getActualAmountAttribute(): float
-    {
-        return 0.0;
-    }
-
     public function getVarianceAttribute(): float
     {
-        return $this->actual_amount - (float) $this->amount;
+        return $this->actual_amount - $this->budgeted_amount;
+    }
+
+    public function getVariancePercentAttribute(): float
+    {
+        if ($this->budgeted_amount == 0) {
+            return 0.0;
+        }
+        return round(($this->variance / abs($this->budgeted_amount)) * 100, 1);
+    }
+
+    public function getIsOverBudgetAttribute(): bool
+    {
+        if ($this->line_type === 'income') {
+            // For income, negative variance = under-performing = over budget
+            return $this->variance < 0;
+        }
+        // For expenses, positive variance = over budget
+        return $this->variance > 0;
     }
 }

@@ -1,18 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { BudgetStatusBadge } from '@/Components/Finance/BudgetStatusBadge';
 import type { PageProps } from '@/types';
-
-interface Budget {
-    id: number;
-    name: string;
-    fiscal_year: number;
-    year?: number;
-    period_type: string;
-    status: 'draft' | 'active' | 'closed';
-    lines_count: number;
-    total_budgeted: number | null;
-}
+import type { Budget } from '@/types/finance';
 
 interface PaginatedBudgets {
     data: Budget[];
@@ -25,22 +14,23 @@ interface PaginatedBudgets {
 
 interface Props extends PageProps {
     budgets: PaginatedBudgets;
+    filters: { fiscal_year?: string; status?: string };
 }
 
-export default function Index({ budgets }: Props) {
+const statusColors: Record<string, string> = {
+    draft:  'bg-slate-100 text-slate-700',
+    active: 'bg-green-100 text-green-700',
+    closed: 'bg-orange-100 text-orange-700',
+};
+
+export default function Index({ budgets, filters }: Props) {
+    function handleFilter(key: string, value: string) {
+        router.get('/finance/budgets', { ...filters, [key]: value || undefined }, { preserveState: true });
+    }
+
     function handleDelete(budget: Budget) {
         if (!confirm(`Delete budget "${budget.name}"?`)) return;
         router.delete(`/finance/budgets/${budget.id}`);
-    }
-
-    function handleActivate(budget: Budget) {
-        if (!confirm(`Activate budget "${budget.name}"?`)) return;
-        router.post(`/finance/budgets/${budget.id}/activate`);
-    }
-
-    function handleClose(budget: Budget) {
-        if (!confirm(`Close budget "${budget.name}"?`)) return;
-        router.post(`/finance/budgets/${budget.id}/close`);
     }
 
     return (
@@ -50,7 +40,7 @@ export default function Index({ budgets }: Props) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold text-slate-900">Budgets</h1>
-                        <p className="mt-1 text-sm text-slate-500">Manage revenue and expense budgets with variance tracking</p>
+                        <p className="mt-1 text-sm text-slate-500">Plan and track budgets with variance analysis</p>
                     </div>
                     <Link
                         href="/finance/budgets/create"
@@ -58,6 +48,27 @@ export default function Index({ budgets }: Props) {
                     >
                         New Budget
                     </Link>
+                </div>
+
+                {/* Filters */}
+                <div className="flex items-center gap-3">
+                    <input
+                        type="number"
+                        placeholder="Fiscal Year"
+                        defaultValue={filters.fiscal_year ?? ''}
+                        onBlur={(e) => handleFilter('fiscal_year', e.target.value)}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none w-32"
+                    />
+                    <select
+                        defaultValue={filters.status ?? ''}
+                        onChange={(e) => handleFilter('status', e.target.value)}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="active">Active</option>
+                        <option value="closed">Closed</option>
+                    </select>
                 </div>
 
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -69,25 +80,30 @@ export default function Index({ budgets }: Props) {
                                 <th className="px-4 py-3 text-left font-medium w-28">Period Type</th>
                                 <th className="px-4 py-3 text-left font-medium w-24">Status</th>
                                 <th className="px-4 py-3 text-right font-medium w-20">Lines</th>
-                                <th className="px-4 py-3 text-right font-medium w-40">Actions</th>
+                                <th className="px-4 py-3 text-right font-medium w-32">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {budgets.data.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                                        No budgets yet. <Link href="/finance/budgets/create" className="text-indigo-600 hover:underline">Create one</Link>.
+                                        No budgets yet.{' '}
+                                        <Link href="/finance/budgets/create" className="text-indigo-600 hover:underline">
+                                            Create one
+                                        </Link>.
                                     </td>
                                 </tr>
                             ) : budgets.data.map((budget) => (
                                 <tr key={budget.id} className="hover:bg-slate-50">
                                     <td className="px-4 py-3 font-medium text-slate-900">{budget.name}</td>
-                                    <td className="px-4 py-3 text-slate-600">{budget.fiscal_year ?? budget.year}</td>
+                                    <td className="px-4 py-3 text-slate-600">{budget.fiscal_year}</td>
                                     <td className="px-4 py-3 capitalize text-slate-600">{budget.period_type}</td>
                                     <td className="px-4 py-3">
-                                        <BudgetStatusBadge status={budget.status} />
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[budget.status] ?? ''}`}>
+                                            {budget.status}
+                                        </span>
                                     </td>
-                                    <td className="px-4 py-3 text-right text-slate-600">{budget.lines_count}</td>
+                                    <td className="px-4 py-3 text-right text-slate-600">{budget.lines_count ?? 0}</td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <Link
@@ -96,30 +112,12 @@ export default function Index({ budgets }: Props) {
                                             >
                                                 View
                                             </Link>
-                                            {budget.status === 'draft' && (
-                                                <button
-                                                    onClick={() => handleActivate(budget)}
-                                                    className="text-green-600 hover:text-green-800 text-sm font-medium"
-                                                >
-                                                    Activate
-                                                </button>
-                                            )}
-                                            {budget.status === 'active' && (
-                                                <button
-                                                    onClick={() => handleClose(budget)}
-                                                    className="text-orange-600 hover:text-orange-800 text-sm font-medium"
-                                                >
-                                                    Close
-                                                </button>
-                                            )}
-                                            {budget.status === 'draft' && (
-                                                <button
-                                                    onClick={() => handleDelete(budget)}
-                                                    className="text-red-600 hover:text-red-800 text-sm font-medium"
-                                                >
-                                                    Delete
-                                                </button>
-                                            )}
+                                            <button
+                                                onClick={() => handleDelete(budget)}
+                                                className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                            >
+                                                Delete
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>

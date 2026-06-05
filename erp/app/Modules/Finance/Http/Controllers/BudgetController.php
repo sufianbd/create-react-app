@@ -3,11 +3,10 @@
 namespace App\Modules\Finance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Finance\Models\Account;
 use App\Modules\Finance\Models\Budget;
+use App\Modules\Finance\Models\BudgetLine;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,27 +17,23 @@ class BudgetController extends Controller
     {
         $this->authorize('viewAny', Budget::class);
 
-        $budgets = Budget::withCount('lines')
-            ->orderByDesc('fiscal_year')
+        $query = Budget::withCount('lines');
+
+        if ($request->filled('fiscal_year')) {
+            $query->where('fiscal_year', (int) $request->input('fiscal_year'));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $budgets = $query->orderByDesc('fiscal_year')
             ->orderByDesc('id')
-            ->paginate(15)
-            ->through(fn ($b) => [
-                'id'             => $b->id,
-                'name'           => $b->name,
-                'fiscal_year'    => $b->fiscal_year ?? $b->year,
-                'year'           => $b->year,
-                'period_type'    => $b->period_type,
-                'status'         => $b->status,
-                'lines_count'    => $b->lines_count,
-                'total_budgeted' => null,
-            ]);
+            ->paginate(20);
 
         return Inertia::render('Finance/Budgets/Index', [
-            'budgets' => $budgets,
-            'breadcrumbs' => [
-                ['label' => 'Finance'],
-                ['label' => 'Budgets'],
-            ],
+            'budgets'  => $budgets,
+            'filters'  => $request->only(['fiscal_year', 'status']),
         ]);
     }
 
@@ -46,149 +41,51 @@ class BudgetController extends Controller
     {
         $this->authorize('create', Budget::class);
 
-        $accounts = Account::whereIn('type', ['income', 'expense'])
-            ->where('is_active', true)
-            ->orderBy('code')
-            ->get(['id', 'code', 'name', 'type']);
-
-        return Inertia::render('Finance/Budgets/Create', [
-            'accounts' => $accounts,
-            'breadcrumbs' => [
-                ['label' => 'Finance'],
-                ['label' => 'Budgets', 'href' => '/finance/budgets'],
-                ['label' => 'New Budget'],
-            ],
-        ]);
+        return Inertia::render('Finance/Budgets/Create');
     }
 
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Budget::class);
 
-        $tenantId   = app('tenant')->id;
-        $fiscalYear = $request->input('fiscal_year') ?? $request->input('year');
-
         $validated = $request->validate([
-            'name'        => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('budgets')->where(fn ($q) => $q
-                    ->where('fiscal_year', $fiscalYear)
-                    ->where('tenant_id', $tenantId)
-                    ->whereNull('deleted_at')
-                ),
-            ],
-            'fiscal_year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'period_type' => ['required', Rule::in(['annual', 'quarterly', 'monthly'])],
+            'name'        => ['required', 'string', 'max:255'],
+            'fiscal_year' => ['required', 'integer'],
+            'period_type' => ['nullable', Rule::in(['annual', 'quarterly', 'monthly'])],
             'notes'       => ['nullable', 'string'],
-            'lines'       => ['required', 'array', 'min:1'],
-            'lines.*.account_id' => ['required', Rule::exists('accounts', 'id')],
-            'lines.*.period'     => ['required', 'integer', 'min:0', 'max:12'],
-            'lines.*.amount'     => ['required', 'numeric', 'min:0'],
         ]);
 
-        $fy = $validated['fiscal_year'];
+        $budget = Budget::create([
+            'tenant_id'   => app('tenant')->id,
+            'name'        => $validated['name'],
+            'fiscal_year' => $validated['fiscal_year'],
+            'year'        => $validated['fiscal_year'],
+            'period_type' => $validated['period_type'] ?? 'annual',
+            'notes'       => $validated['notes'] ?? null,
+            'status'      => 'draft',
+        ]);
 
-        $budget = DB::transaction(function () use ($validated, $request, $tenantId, $fy) {
-            $budget = Budget::create([
-                'tenant_id'   => $tenantId,
-                'name'        => $validated['name'],
-                'fiscal_year' => $fy,
-                'year'        => $fy,
-                'period_type' => $validated['period_type'],
-                'notes'       => $validated['notes'] ?? null,
-                'status'      => 'draft',
-                'created_by'  => $request->user()->id,
-            ]);
-
-            foreach ($validated['lines'] as $line) {
-                $budget->lines()->create([
-                    'tenant_id'  => $tenantId,
-                    'account_id' => $line['account_id'],
-                    'period'     => $line['period'],
-                    'amount'     => $line['amount'],
-                    'notes'      => $line['notes'] ?? null,
-                ]);
-            }
-
-            return $budget;
-        });
-
-        return redirect()->route('finance.budgets.show', $budget)
-            ->with('success', 'Budget created successfully.');
+        return redirect()->route('finance.budgets.show', $budget);
     }
 
     public function show(Budget $budget): Response
     {
         $this->authorize('view', $budget);
-        $budget->load(['lines.account']);
 
-        $tenantId = request()->user()->tenant_id;
-        $year     = $budget->fiscal_year ?? $budget->year;
-
-        // Compute actuals from posted journal entries for this fiscal year
-        $actuals = DB::table('journal_lines')
-            ->join('journal_entries', 'journal_lines.journal_entry_id', '=', 'journal_entries.id')
-            ->join('accounts', 'journal_lines.account_id', '=', 'accounts.id')
-            ->where('journal_entries.tenant_id', $tenantId)
-            ->where('journal_entries.status', 'posted')
-            ->whereYear('journal_entries.date', $year)
-            ->whereIn('accounts.type', ['income', 'expense'])
-            ->select(
-                'journal_lines.account_id',
-                'accounts.type',
-                DB::raw('SUM(journal_lines.debit) as total_debit'),
-                DB::raw('SUM(journal_lines.credit) as total_credit'),
-            )
-            ->groupBy('journal_lines.account_id', 'accounts.type')
-            ->get()
-            ->keyBy('account_id');
-
-        $lines = $budget->lines->map(function ($line) use ($actuals) {
-            $actual = $actuals->get($line->account_id);
-            $actualAmount = 0;
-            if ($actual) {
-                $actualAmount = $actual->type === 'income'
-                    ? (float) $actual->total_credit - (float) $actual->total_debit
-                    : (float) $actual->total_debit - (float) $actual->total_credit;
-            }
-            $variance    = $actualAmount - (float) $line->amount;
-            $variancePct = $line->amount != 0 ? round($variance / $line->amount * 100, 1) : null;
-
-            return [
-                'id'           => $line->id,
-                'account_id'   => $line->account_id,
-                'account_code' => $line->account->code,
-                'account_name' => $line->account->name,
-                'account_type' => $line->account->type,
-                'period'       => $line->period,
-                'budget'       => round((float) $line->amount, 2),
-                'actual'       => round($actualAmount, 2),
-                'variance'     => round($variance, 2),
-                'variance_pct' => $variancePct,
-            ];
-        });
+        $budget->load('lines');
 
         return Inertia::render('Finance/Budgets/Show', [
-            'budget' => [
-                'id'          => $budget->id,
-                'name'        => $budget->name,
-                'fiscal_year' => $budget->fiscal_year ?? $budget->year,
-                'year'        => $budget->year,
-                'period_type' => $budget->period_type,
-                'status'      => $budget->status,
-                'notes'       => $budget->notes,
-            ],
-            'lines'          => $lines->values(),
-            'total_budget'   => $lines->sum('budget'),
-            'total_actual'   => $lines->sum('actual'),
-            'total_variance' => round($lines->sum('variance'), 2),
-            'breadcrumbs'    => [
-                ['label' => 'Finance'],
-                ['label' => 'Budgets', 'href' => '/finance/budgets'],
-                ['label' => $budget->name],
-            ],
+            'budget' => array_merge($budget->toArray(), [
+                'total_budgeted'  => $budget->total_budgeted,
+                'total_actual'    => $budget->total_actual,
+                'total_variance'  => $budget->total_variance,
+                'variance_percent' => $budget->variance_percent,
+                'lines'           => $budget->lines->map(fn ($line) => array_merge($line->toArray(), [
+                    'variance'         => $line->variance,
+                    'variance_percent' => $line->variance_percent,
+                    'is_over_budget'   => $line->is_over_budget,
+                ]))->values(),
+            ]),
         ]);
     }
 
@@ -198,25 +95,71 @@ class BudgetController extends Controller
 
         $budget->delete();
 
-        return redirect()->route('finance.budgets.index')
-            ->with('success', 'Budget deleted.');
+        return redirect()->route('finance.budgets.index');
     }
 
-    public function activate(Budget $budget): RedirectResponse
+    public function activate(Request $request, Budget $budget): RedirectResponse
     {
         $this->authorize('update', $budget);
 
         $budget->activate();
 
-        return redirect()->back()->with('success', 'Budget activated.');
+        return redirect()->back();
     }
 
-    public function close(Budget $budget): RedirectResponse
+    public function close(Request $request, Budget $budget): RedirectResponse
     {
         $this->authorize('update', $budget);
 
         $budget->close();
 
-        return redirect()->back()->with('success', 'Budget closed.');
+        return redirect()->back();
+    }
+
+    public function addLine(Request $request, Budget $budget): RedirectResponse
+    {
+        $this->authorize('update', $budget);
+
+        $validated = $request->validate([
+            'category'        => ['required', 'string', 'max:255'],
+            'line_type'       => ['required', Rule::in(['income', 'expense'])],
+            'period_number'   => ['required', 'integer', 'min:1'],
+            'budgeted_amount' => ['required', 'numeric', 'min:0'],
+            'notes'           => ['nullable', 'string'],
+        ]);
+
+        $budget->lines()->create([
+            'tenant_id'       => app('tenant')->id,
+            'category'        => $validated['category'],
+            'line_type'       => $validated['line_type'],
+            'period_number'   => $validated['period_number'],
+            'budgeted_amount' => $validated['budgeted_amount'],
+            'actual_amount'   => 0,
+            'notes'           => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()->back();
+    }
+
+    public function updateActual(Request $request, Budget $budget, BudgetLine $line): RedirectResponse
+    {
+        $this->authorize('update', $budget);
+
+        $validated = $request->validate([
+            'actual_amount' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $line->update(['actual_amount' => $validated['actual_amount']]);
+
+        return redirect()->back();
+    }
+
+    public function removeLine(Request $request, Budget $budget, BudgetLine $line): RedirectResponse
+    {
+        $this->authorize('update', $budget);
+
+        $line->delete();
+
+        return redirect()->back();
     }
 }

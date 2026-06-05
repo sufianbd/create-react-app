@@ -152,12 +152,15 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::get('exchange-rates/report', [ExchangeRateController::class, 'report'])->name('exchange-rates.report');
     Route::resource('exchange-rates', ExchangeRateController::class)->only(['index', 'create', 'store', 'destroy']);
 
-    // Budgets
-    Route::post('budgets/{budget}/activate', [BudgetController::class, 'activate'])->name('budgets.activate');
-    Route::post('budgets/{budget}/close',    [BudgetController::class, 'close'])->name('budgets.close');
+    // Budgets — custom actions BEFORE resource
+    Route::post('budgets/{budget}/activate',                [BudgetController::class, 'activate'])->name('budgets.activate');
+    Route::post('budgets/{budget}/close',                   [BudgetController::class, 'close'])->name('budgets.close');
+    Route::post('budgets/{budget}/lines',                   [BudgetController::class, 'addLine'])->name('budgets.lines.add');
+    Route::patch('budgets/{budget}/lines/{line}/actual',    [BudgetController::class, 'updateActual'])->name('budgets.lines.actual');
+    Route::delete('budgets/{budget}/lines/{line}',          [BudgetController::class, 'removeLine'])->name('budgets.lines.remove');
     Route::resource('budgets', BudgetController::class)->except(['edit', 'update']);
 
-    // Budget Lines
+    // Budget Lines (legacy routes kept for backwards compatibility)
     Route::patch('budget-lines/{budgetLine}', [BudgetLineController::class, 'update'])->name('budget-lines.update');
     Route::delete('budget-lines/{budgetLine}', [BudgetLineController::class, 'destroy'])->name('budget-lines.destroy');
 

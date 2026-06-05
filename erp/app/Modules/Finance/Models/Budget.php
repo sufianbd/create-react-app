@@ -3,9 +3,7 @@
 namespace App\Modules\Finance\Models;
 
 use App\Modules\Core\Traits\BelongsToTenant;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -28,11 +26,6 @@ class Budget extends Model
         return $this->hasMany(BudgetLine::class);
     }
 
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
     public function activate(): void
     {
         $this->status = 'active';
@@ -47,6 +40,25 @@ class Budget extends Model
 
     public function getTotalBudgetedAttribute(): float
     {
-        return (float) $this->lines->sum('amount');
+        return (float) $this->lines->sum('budgeted_amount');
+    }
+
+    public function getTotalActualAttribute(): float
+    {
+        return (float) $this->lines->sum('actual_amount');
+    }
+
+    public function getTotalVarianceAttribute(): float
+    {
+        return $this->total_actual - $this->total_budgeted;
+    }
+
+    public function getVariancePercentAttribute(): float
+    {
+        $budgeted = $this->total_budgeted;
+        if ($budgeted == 0) {
+            return 0.0;
+        }
+        return round(($this->total_variance / abs($budgeted)) * 100, 1);
     }
 }

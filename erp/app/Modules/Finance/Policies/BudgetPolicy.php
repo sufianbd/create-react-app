@@ -3,7 +3,6 @@
 namespace App\Modules\Finance\Policies;
 
 use App\Models\User;
-use App\Modules\Finance\Models\Budget;
 
 class BudgetPolicy
 {
@@ -12,7 +11,7 @@ class BudgetPolicy
         return $user->hasPermissionTo('finance.view');
     }
 
-    public function view(User $user, Budget $budget): bool
+    public function view(User $user, $model): bool
     {
         return $user->hasPermissionTo('finance.view');
     }
@@ -22,13 +21,13 @@ class BudgetPolicy
         return $user->hasPermissionTo('finance.create');
     }
 
-    public function update(User $user, Budget $budget): bool
+    public function update(User $user, $model): bool
     {
         return $user->hasPermissionTo('finance.create');
     }
 
-    public function delete(User $user, Budget $budget): bool
+    public function delete(User $user, $model): bool
     {
-        return $user->hasPermissionTo('finance.delete') && $budget->status === 'draft';
+        return $user->hasPermissionTo('finance.delete');
     }
 }
