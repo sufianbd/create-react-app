@@ -264,3 +264,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('reorder-rules/{reorder_rule}/resume',  [ReorderRuleController::class, 'resume'])->name('reorder-rules.resume');
     Route::resource('reorder-rules', ReorderRuleController::class);
 });
+
+// Supplier Scorecards
+use App\Modules\Inventory\Http\Controllers\SupplierScorecardController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('supplier-scorecards/{supplier_scorecard}/publish', [SupplierScorecardController::class, 'publish'])->name('supplier-scorecards.publish');
+    Route::resource('supplier-scorecards', SupplierScorecardController::class);
+});
