@@ -231,3 +231,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('cycle-counts/{cycleCount}/counts',   [CycleCountController::class, 'updateCounts'])->name('cycle-counts.counts.update');
     Route::resource('cycle-counts', CycleCountController::class)->names('cycle-counts');
 });
+
+// Product Tags
+use App\Modules\Inventory\Http\Controllers\ProductTagController;
+use App\Modules\Inventory\Http\Controllers\ProductTagAssignmentController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::resource('product-tags', ProductTagController::class)->except(['create', 'edit', 'show']);
+    Route::post('products/{product}/tags',                  [ProductTagAssignmentController::class, 'attach'])->name('products.tags.attach');
+    Route::delete('products/{product}/tags/{productTag}',   [ProductTagAssignmentController::class, 'detach'])->name('products.tags.detach');
+});

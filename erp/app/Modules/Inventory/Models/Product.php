@@ -6,6 +6,7 @@ use App\Modules\Core\Traits\BelongsToTenant;
 use App\Modules\Core\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -129,6 +130,12 @@ class Product extends Model
     public function getAverageCostAttribute(): float
     {
         return CostingLayer::getAverageCost($this->tenant_id, $this->id);
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductTag::class, 'product_tag_assignments', 'product_id', 'product_tag_id')
+                    ->withTimestamps();
     }
 
 }

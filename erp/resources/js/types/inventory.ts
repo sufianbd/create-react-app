@@ -600,3 +600,12 @@ export interface CycleCount {
     items_counted: number;
     items?: CycleCountItem[];
 }
+
+export interface ProductTag {
+    id: number;
+    name: string;
+    color: string;
+    description: string | null;
+    is_active: boolean;
+    product_count: number;
+}

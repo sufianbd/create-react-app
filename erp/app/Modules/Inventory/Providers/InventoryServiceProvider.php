@@ -62,6 +62,8 @@ use App\Modules\Inventory\Models\UnitOfMeasure;
 use App\Modules\Inventory\Models\CycleCount;
 use App\Modules\Inventory\Policies\CycleCountPolicy;
 use App\Modules\Inventory\Policies\UnitOfMeasurePolicy;
+use App\Modules\Inventory\Models\ProductTag;
+use App\Modules\Inventory\Policies\ProductTagPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -113,5 +115,6 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(CustomerDiscount::class, PriceListPolicy::class);
         Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
         Gate::policy(CycleCount::class, CycleCountPolicy::class);
+        Gate::policy(ProductTag::class, ProductTagPolicy::class);
     }
 }
