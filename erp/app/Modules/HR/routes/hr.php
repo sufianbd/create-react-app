@@ -220,3 +220,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::resource('employee-skills',   EmployeeSkillController::class)->only(['index', 'store', 'show', 'destroy']);
     Route::resource('skill-definitions', SkillDefinitionController::class)->only(['index', 'store', 'destroy']);
 });
+
+// HR Announcements
+use App\Modules\HR\Http\Controllers\HrAnnouncementController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('announcements/{announcement}/publish', [HrAnnouncementController::class, 'publish'])->name('announcements.publish');
+    Route::post('announcements/{announcement}/archive', [HrAnnouncementController::class, 'archive'])->name('announcements.archive');
+    Route::resource('announcements', HrAnnouncementController::class)->only(['index', 'store', 'show', 'destroy']);
+});

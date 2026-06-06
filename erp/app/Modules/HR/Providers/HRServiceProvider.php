@@ -64,6 +64,8 @@ use App\Modules\HR\Policies\EmployeeDocumentPolicy;
 use App\Modules\HR\Models\SkillDefinition;
 use App\Modules\HR\Models\EmployeeSkill;
 use App\Modules\HR\Policies\EmployeeSkillPolicy;
+use App\Modules\HR\Models\HrAnnouncement;
+use App\Modules\HR\Policies\HrAnnouncementPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -115,5 +117,6 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(EmployeeDocument::class,      EmployeeDocumentPolicy::class);
         Gate::policy(SkillDefinition::class,       EmployeeSkillPolicy::class);
         Gate::policy(EmployeeSkill::class,         EmployeeSkillPolicy::class);
+        Gate::policy(HrAnnouncement::class,          HrAnnouncementPolicy::class);
     }
 }

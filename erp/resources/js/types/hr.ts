@@ -725,3 +725,16 @@ export interface EmployeeSkill {
     employee?: Employee;
     definition?: SkillDefinition;
 }
+
+export interface HrAnnouncement {
+    id: number;
+    title: string;
+    body: string;
+    target_audience: string;
+    department_id: number | null;
+    is_published: boolean;
+    is_active: boolean;
+    priority: string;
+    publish_at: string | null;
+    expire_at: string | null;
+}
