@@ -108,6 +108,7 @@ const navItems: NavItem[] = [
             { label: 'Delivery Notes',    href: '/finance/delivery-notes',               icon: <span /> },
             { label: 'Credit Notes',      href: '/finance/credit-notes',                  icon: <span /> },
             { label: 'Contacts',          href: '/finance/contacts',                      icon: <span /> },
+            { label: 'Customer Groups',  href: '/finance/customer-groups',               icon: <span /> },
             { label: 'Journal Entries',   href: '/finance/journal-entries',               icon: <span /> },
             { label: 'Chart of Accounts', href: '/finance/accounts',                      icon: <span /> },
             { label: 'Bills (AP)',         href: '/finance/bills',                         icon: <span /> },

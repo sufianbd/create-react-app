@@ -989,3 +989,15 @@ export interface BankTransfer {
     is_pending: boolean;
     is_completed: boolean;
 }
+
+export interface CustomerGroup {
+    id: number;
+    name: string;
+    description: string | null;
+    discount_percent: number;
+    credit_limit: number;
+    currency: string;
+    is_active: boolean;
+    has_discount: boolean;
+    member_count: number;
+}

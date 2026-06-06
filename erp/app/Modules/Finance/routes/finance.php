@@ -43,6 +43,7 @@ use App\Modules\Finance\Http\Controllers\LeadController;
 use App\Modules\Finance\Http\Controllers\SupportTicketController;
 use App\Modules\Finance\Http\Controllers\CurrencyController;
 use App\Modules\Finance\Http\Controllers\PaymentTermController;
+use App\Modules\Finance\Http\Controllers\CustomerGroupController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -306,6 +307,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::patch('support-tickets/{supportTicket}/assign',    [SupportTicketController::class, 'assign'])->name('support-tickets.assign');
     Route::post('support-tickets/{supportTicket}/comments',   [SupportTicketController::class, 'addComment'])->name('support-tickets.comments.add');
     Route::resource('support-tickets', SupportTicketController::class)->except(['edit', 'update']);
+
+    // Customer Groups — custom member actions BEFORE resource
+    Route::post('customer-groups/{customerGroup}/members',              [CustomerGroupController::class, 'addMember'])->name('finance.customer-groups.members.add');
+    Route::delete('customer-groups/{customerGroup}/members/{contact}',  [CustomerGroupController::class, 'removeMember'])->name('finance.customer-groups.members.remove');
+    Route::resource('customer-groups', CustomerGroupController::class)->except(['create', 'edit']);
 
 });
 

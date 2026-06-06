@@ -95,6 +95,8 @@ use App\Modules\Finance\Models\PettyCashTransaction;
 use App\Modules\Finance\Policies\PettyCashPolicy;
 use App\Modules\Finance\Models\BankTransfer;
 use App\Modules\Finance\Policies\BankTransferPolicy;
+use App\Modules\Finance\Models\CustomerGroup;
+use App\Modules\Finance\Policies\CustomerGroupPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -170,6 +172,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(PettyCashFund::class,        PettyCashPolicy::class);
         Gate::policy(PettyCashTransaction::class, PettyCashPolicy::class);
         Gate::policy(BankTransfer::class, BankTransferPolicy::class);
+        Gate::policy(CustomerGroup::class, CustomerGroupPolicy::class);
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
         }
