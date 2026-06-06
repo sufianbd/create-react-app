@@ -12,7 +12,9 @@ use App\Modules\Inventory\Models\ProductVariantValue;
 use App\Modules\Inventory\Policies\ProductVariantPolicy;
 use App\Modules\Inventory\Models\ForecastAlert;
 use App\Modules\Inventory\Models\Product;
+use App\Modules\Inventory\Models\ProductBundle;
 use App\Modules\Inventory\Models\ProductBundleItem;
+use App\Modules\Inventory\Policies\ProductBundlePolicy;
 use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\PurchaseRequisition;
 use App\Modules\Inventory\Models\QcChecklist;
@@ -86,7 +88,6 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(PurchaseRequisition::class, PurchaseRequisitionPolicy::class);
         Gate::policy(Asset::class,            AssetPolicy::class);
         Gate::policy(AssetMaintenance::class, AssetPolicy::class);
-        Gate::policy(ProductBundleItem::class, ProductPolicy::class);
         Gate::policy(WarehouseStock::class,    StockTransferPolicy::class);
         Gate::policy(StockTransfer::class,     StockTransferPolicy::class);
         Gate::policy(StockTransferItem::class, StockTransferPolicy::class);
@@ -122,5 +123,7 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(ProductTag::class, ProductTagPolicy::class);
         Gate::policy(ProductSubstitute::class, ProductSubstitutePolicy::class);
         Gate::policy(Backorder::class, BackorderPolicy::class);
+        Gate::policy(ProductBundle::class,     ProductBundlePolicy::class);
+        Gate::policy(ProductBundleItem::class, ProductBundlePolicy::class);
     }
 }

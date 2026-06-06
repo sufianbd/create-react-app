@@ -3,11 +3,10 @@
 namespace App\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Inventory\Models\Product;
+use App\Modules\Inventory\Models\ProductBundle;
 use App\Modules\Inventory\Models\ProductBundleItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,95 +14,81 @@ class ProductBundleController extends Controller
 {
     public function index(): Response
     {
-        $this->authorize('viewAny', Product::class);
-        $bundles = Product::with('bundleItems.componentProduct')
-            ->where('tenant_id', app('tenant')->id)
-            ->where('is_bundle', true)
+        $this->authorize('viewAny', ProductBundle::class);
+
+        $bundles = ProductBundle::where('tenant_id', app('tenant')->id)
+            ->latest()
             ->paginate(20);
+
         return Inertia::render('Inventory/ProductBundles/Index', compact('bundles'));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $this->authorize('create', Product::class);
+        $this->authorize('create', ProductBundle::class);
+
         $validated = $request->validate([
-            'name'                         => 'required|string|max:255',
-            'sku'                          => 'nullable|string|max:100',
-            'description'                  => 'nullable|string',
-            'selling_price'                => 'nullable|numeric|min:0',
-            'items'                        => 'required|array|min:1',
-            'items.*.component_product_id' => ['required', Rule::exists('products', 'id')],
-            'items.*.quantity'             => 'required|numeric|min:0.0001',
+            'name'         => 'required|string|max:255',
+            'sku'          => 'nullable|string|max:100',
+            'description'  => 'nullable|string',
+            'bundle_price' => 'nullable|numeric|min:0',
+            'is_active'    => 'nullable|boolean',
         ]);
 
-        $bundle = Product::create([
-            'tenant_id'   => app('tenant')->id,
-            'name'        => $validated['name'],
-            'sku'         => $validated['sku'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'sale_price'  => $validated['selling_price'] ?? 0,
-            'cost_price'  => 0,
-            'is_bundle'   => true,
-            'is_active'   => true,
-        ]);
+        $validated['tenant_id'] = app('tenant')->id;
 
-        foreach ($validated['items'] as $item) {
-            ProductBundleItem::create([
-                'tenant_id'            => app('tenant')->id,
-                'bundle_product_id'    => $bundle->id,
-                'component_product_id' => $item['component_product_id'],
-                'quantity'             => $item['quantity'],
-            ]);
-        }
+        ProductBundle::create($validated);
 
-        return redirect()->route('inventory.product-bundles.show', $bundle)
-            ->with('success', 'Bundle created.');
+        return back()->with('success', 'Product bundle created.');
     }
 
-    public function show(Product $productBundle): Response
+    public function show(ProductBundle $productBundle): Response
     {
         $this->authorize('view', $productBundle);
-        $productBundle->load('bundleItems.componentProduct');
-        return Inertia::render('Inventory/ProductBundles/Show', ['bundle' => $productBundle]);
+
+        $productBundle->load('items.product');
+
+        return Inertia::render('Inventory/ProductBundles/Show', compact('productBundle'));
     }
 
-    public function addItem(Request $request, Product $productBundle): RedirectResponse
+    public function addItem(Request $request, ProductBundle $productBundle): RedirectResponse
     {
         $this->authorize('update', $productBundle);
+
         $validated = $request->validate([
-            'component_product_id' => [
-                'required',
-                Rule::exists('products', 'id'),
-                Rule::unique('product_bundle_items')
-                    ->where(fn ($q) => $q->where('bundle_product_id', $productBundle->id)),
+            'product_id' => 'required|exists:products,id',
+            'quantity'   => 'required|numeric|min:0.01',
+        ]);
+
+        ProductBundleItem::firstOrCreate(
+            [
+                'product_bundle_id' => $productBundle->id,
+                'product_id'        => $validated['product_id'],
             ],
-            'quantity' => 'required|numeric|min:0.0001',
-        ]);
+            [
+                'tenant_id' => app('tenant')->id,
+                'quantity'  => $validated['quantity'],
+            ]
+        );
 
-        ProductBundleItem::create([
-            'tenant_id'            => app('tenant')->id,
-            'bundle_product_id'    => $productBundle->id,
-            'component_product_id' => $validated['component_product_id'],
-            'quantity'             => $validated['quantity'],
-        ]);
-
-        return redirect()->route('inventory.product-bundles.show', $productBundle)
-            ->with('success', 'Component added.');
+        return back()->with('success', 'Item added to bundle.');
     }
 
-    public function removeItem(Product $productBundle, ProductBundleItem $item): RedirectResponse
+    public function removeItem(ProductBundle $productBundle, ProductBundleItem $item): RedirectResponse
     {
-        $this->authorize('delete', $productBundle);
+        $this->authorize('update', $productBundle);
+
         $item->delete();
-        return redirect()->route('inventory.product-bundles.show', $productBundle)
-            ->with('success', 'Component removed.');
+
+        return back()->with('success', 'Item removed from bundle.');
     }
 
-    public function destroy(Product $productBundle): RedirectResponse
+    public function destroy(ProductBundle $productBundle): RedirectResponse
     {
         $this->authorize('delete', $productBundle);
+
         $productBundle->delete();
-        return redirect()->route('inventory.product-bundles.index')
-            ->with('success', 'Bundle deleted.');
+
+        return back()->with('success', 'Product bundle deleted.');
     }
 }
