@@ -211,3 +211,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('employee-documents/{employeeDocument}/verify', [EmployeeDocumentController::class, 'verify'])->name('employee-documents.verify');
     Route::resource('employee-documents', EmployeeDocumentController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Employee Skills
+use App\Modules\HR\Http\Controllers\EmployeeSkillController;
+use App\Modules\HR\Http\Controllers\SkillDefinitionController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('employee-skills/{employeeSkill}/verify', [EmployeeSkillController::class, 'verify'])->name('employee-skills.verify');
+    Route::resource('employee-skills',   EmployeeSkillController::class)->only(['index', 'store', 'show', 'destroy']);
+    Route::resource('skill-definitions', SkillDefinitionController::class)->only(['index', 'store', 'destroy']);
+});

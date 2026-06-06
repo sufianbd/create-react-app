@@ -706,3 +706,22 @@ export interface EmployeeDocument {
     is_expiring_soon: boolean;
     employee?: Employee;
 }
+
+export interface SkillDefinition {
+    id: number;
+    name: string;
+    category: string | null;
+    is_active: boolean;
+}
+
+export interface EmployeeSkill {
+    id: number;
+    employee_id: number;
+    skill_name: string;
+    proficiency_level: number;
+    proficiency_label: string;
+    is_verified: boolean;
+    acquired_date: string | null;
+    employee?: Employee;
+    definition?: SkillDefinition;
+}

@@ -185,6 +185,8 @@ const navItems: NavItem[] = [
             { label: 'Timesheets',    href: '/hr/timesheets',          icon: <span /> },
             { label: 'Benefit Plans',    href: '/hr/benefit-plans',     icon: <span /> },
             { label: 'Employee Benefits', href: '/hr/employee-benefits', icon: <span /> },
+            { label: 'Skills', href: '/hr/employee-skills', icon: <span /> },
+            { label: 'Skill Definitions', href: '/hr/skill-definitions', icon: <span /> },
         ],
     },
     {
