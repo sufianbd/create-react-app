@@ -80,6 +80,8 @@ use App\Modules\HR\Policies\FlexibleWorkPolicy;
 use App\Modules\HR\Policies\EmployeeSurveyPolicy;
 use App\Modules\HR\Models\JobOfferLetter;
 use App\Modules\HR\Policies\JobOfferPolicy;
+use App\Modules\HR\Models\TrainingSession;
+use App\Modules\HR\Policies\TrainingSessionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -139,5 +141,6 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(EmployeeSurvey::class,          EmployeeSurveyPolicy::class);
         Gate::policy(FlexibleWorkArrangement::class,  FlexibleWorkPolicy::class);
         Gate::policy(JobOfferLetter::class,            JobOfferPolicy::class);
+        Gate::policy(TrainingSession::class,           TrainingSessionPolicy::class);
     }
 }

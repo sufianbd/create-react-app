@@ -285,3 +285,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('job-offers/{jobOffer}/decline', [JobOfferController::class, 'decline'])->name('job-offers.decline');
     Route::resource('job-offers', JobOfferController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Training Sessions
+use App\Modules\HR\Http\Controllers\TrainingSessionController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('training-sessions/{training_session}/start',    [TrainingSessionController::class, 'start'])->name('training-sessions.start');
+    Route::post('training-sessions/{training_session}/complete', [TrainingSessionController::class, 'complete'])->name('training-sessions.complete');
+    Route::post('training-sessions/{training_session}/cancel',   [TrainingSessionController::class, 'cancel'])->name('training-sessions.cancel');
+    Route::resource('training-sessions', TrainingSessionController::class);
+});
