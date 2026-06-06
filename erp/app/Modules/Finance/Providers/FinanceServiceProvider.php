@@ -108,6 +108,8 @@ use App\Modules\Finance\Models\IntercompanyTransaction;
 use App\Modules\Finance\Policies\IntercompanyPolicy;
 use App\Modules\Finance\Models\CashFlowForecast;
 use App\Modules\Finance\Policies\CashFlowForecastPolicy;
+use App\Modules\Finance\Models\RecurringExpense;
+use App\Modules\Finance\Policies\RecurringExpensePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -190,6 +192,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(WriteOff::class,              WriteOffPolicy::class);
         Gate::policy(IntercompanyTransaction::class, IntercompanyPolicy::class);
         Gate::policy(CashFlowForecast::class,        CashFlowForecastPolicy::class);
+        Gate::policy(RecurringExpense::class,        RecurringExpensePolicy::class);
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
         }

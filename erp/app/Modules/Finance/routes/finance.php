@@ -400,3 +400,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('cash-flow-forecasts/{cash_flow_forecast}/archive', [CashFlowForecastController::class, 'archive'])->name('cash-flow-forecasts.archive');
     Route::resource('cash-flow-forecasts', CashFlowForecastController::class);
 });
+
+// Recurring Expenses
+use App\Modules\Finance\Http\Controllers\RecurringExpenseController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('recurring-expenses/{recurring_expense}/pause',  [RecurringExpenseController::class, 'pause'])->name('recurring-expenses.pause');
+    Route::post('recurring-expenses/{recurring_expense}/resume', [RecurringExpenseController::class, 'resume'])->name('recurring-expenses.resume');
+    Route::post('recurring-expenses/{recurring_expense}/cancel', [RecurringExpenseController::class, 'cancel'])->name('recurring-expenses.cancel');
+    Route::resource('recurring-expenses', RecurringExpenseController::class);
+});
