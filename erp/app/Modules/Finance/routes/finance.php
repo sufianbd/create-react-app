@@ -375,3 +375,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('debit-notes/{debitNote}/void',   [DebitNoteController::class, 'void'])->name('debit-notes.void');
     Route::resource('debit-notes', DebitNoteController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Write-offs — custom actions BEFORE resource
+use App\Modules\Finance\Http\Controllers\WriteOffController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('write-offs/{writeOff}/approve', [WriteOffController::class, 'approve'])->name('write-offs.approve');
+    Route::post('write-offs/{writeOff}/reverse', [WriteOffController::class, 'reverse'])->name('write-offs.reverse');
+    Route::resource('write-offs', WriteOffController::class)->only(['index', 'store', 'show', 'destroy']);
+});
