@@ -49,44 +49,98 @@ class BudgetController extends Controller
         $this->authorize('create', Budget::class);
 
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'fiscal_year' => ['required', 'integer'],
-            'period_type' => ['nullable', Rule::in(['annual', 'quarterly', 'monthly'])],
-            'notes'       => ['nullable', 'string'],
+            'name'         => ['required', 'string', 'max:255'],
+            'fiscal_year'  => ['required'],
+            'total_amount' => ['required', 'numeric', 'min:0'],
+            'department'   => ['nullable', 'string', 'max:255'],
+            'budget_type'  => ['nullable', Rule::in(['annual', 'quarterly', 'monthly', 'project'])],
+            'notes'        => ['nullable', 'string'],
+            'start_date'   => ['nullable', 'date'],
+            'end_date'     => ['nullable', 'date'],
         ]);
 
         $budget = Budget::create([
-            'tenant_id'   => app('tenant')->id,
-            'name'        => $validated['name'],
-            'fiscal_year' => $validated['fiscal_year'],
-            'year'        => $validated['fiscal_year'],
-            'period_type' => $validated['period_type'] ?? 'annual',
-            'notes'       => $validated['notes'] ?? null,
-            'status'      => 'draft',
+            'tenant_id'    => app('tenant')->id,
+            'created_by'   => auth()->id(),
+            'name'         => $validated['name'],
+            'fiscal_year'  => $validated['fiscal_year'],
+            'year'         => $validated['fiscal_year'],
+            'total_amount' => $validated['total_amount'],
+            'department'   => $validated['department'] ?? null,
+            'budget_type'  => $validated['budget_type'] ?? 'annual',
+            'period_type'  => $validated['budget_type'] ?? 'annual',
+            'notes'        => $validated['notes'] ?? null,
+            'start_date'   => $validated['start_date'] ?? null,
+            'end_date'     => $validated['end_date'] ?? null,
+            'status'       => 'draft',
         ]);
 
-        return redirect()->route('finance.budgets.show', $budget);
+        return redirect()->route('finance.budgets.index');
     }
 
     public function show(Budget $budget): Response
     {
         $this->authorize('view', $budget);
 
-        $budget->load('lines');
+        $budget->load('lines', 'lineItems');
 
         return Inertia::render('Finance/Budgets/Show', [
             'budget' => array_merge($budget->toArray(), [
-                'total_budgeted'  => $budget->total_budgeted,
-                'total_actual'    => $budget->total_actual,
-                'total_variance'  => $budget->total_variance,
-                'variance_percent' => $budget->variance_percent,
-                'lines'           => $budget->lines->map(fn ($line) => array_merge($line->toArray(), [
+                'total_budgeted'      => $budget->total_budgeted,
+                'total_actual'        => $budget->total_actual,
+                'total_variance'      => $budget->total_variance,
+                'variance_percent'    => $budget->variance_percent,
+                'remaining_amount'    => $budget->remaining_amount,
+                'utilization_percent' => $budget->utilization_percent,
+                'is_active'           => $budget->is_active,
+                'is_exceeded'         => $budget->is_exceeded,
+                'lines'               => $budget->lines->map(fn ($line) => array_merge($line->toArray(), [
                     'variance'         => $line->variance,
                     'variance_percent' => $line->variance_percent,
                     'is_over_budget'   => $line->is_over_budget,
                 ]))->values(),
             ]),
         ]);
+    }
+
+    public function edit(Budget $budget): Response
+    {
+        $this->authorize('update', $budget);
+
+        return Inertia::render('Finance/Budgets/Edit', [
+            'budget' => $budget,
+        ]);
+    }
+
+    public function update(Request $request, Budget $budget): RedirectResponse
+    {
+        $this->authorize('update', $budget);
+
+        $validated = $request->validate([
+            'name'         => ['required', 'string', 'max:255'],
+            'fiscal_year'  => ['required'],
+            'total_amount' => ['required', 'numeric', 'min:0'],
+            'department'   => ['nullable', 'string', 'max:255'],
+            'budget_type'  => ['nullable', Rule::in(['annual', 'quarterly', 'monthly', 'project'])],
+            'notes'        => ['nullable', 'string'],
+            'start_date'   => ['nullable', 'date'],
+            'end_date'     => ['nullable', 'date'],
+        ]);
+
+        $budget->update([
+            'name'         => $validated['name'],
+            'fiscal_year'  => $validated['fiscal_year'],
+            'year'         => $validated['fiscal_year'],
+            'total_amount' => $validated['total_amount'],
+            'department'   => $validated['department'] ?? null,
+            'budget_type'  => $validated['budget_type'] ?? $budget->budget_type,
+            'period_type'  => $validated['budget_type'] ?? $budget->period_type,
+            'notes'        => $validated['notes'] ?? null,
+            'start_date'   => $validated['start_date'] ?? null,
+            'end_date'     => $validated['end_date'] ?? null,
+        ]);
+
+        return redirect()->route('finance.budgets.index');
     }
 
     public function destroy(Budget $budget): RedirectResponse
@@ -102,7 +156,7 @@ class BudgetController extends Controller
     {
         $this->authorize('update', $budget);
 
-        $budget->activate();
+        $budget->activate(auth()->id());
 
         return redirect()->back();
     }

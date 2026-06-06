@@ -168,7 +168,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('budgets/{budget}/lines',                   [BudgetController::class, 'addLine'])->name('budgets.lines.add');
     Route::patch('budgets/{budget}/lines/{line}/actual',    [BudgetController::class, 'updateActual'])->name('budgets.lines.actual');
     Route::delete('budgets/{budget}/lines/{line}',          [BudgetController::class, 'removeLine'])->name('budgets.lines.remove');
-    Route::resource('budgets', BudgetController::class)->except(['edit', 'update']);
+    Route::resource('budgets', BudgetController::class);
 
     // Budget Lines (legacy routes kept for backwards compatibility)
     Route::patch('budget-lines/{budgetLine}', [BudgetLineController::class, 'update'])->name('budget-lines.update');

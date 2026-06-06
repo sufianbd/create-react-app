@@ -30,4 +30,14 @@ class BudgetPolicy
     {
         return $user->hasPermissionTo('finance.delete');
     }
+
+    public function activate(User $user, $model): bool
+    {
+        return $user->hasPermissionTo('finance.create');
+    }
+
+    public function close(User $user, $model): bool
+    {
+        return $user->hasPermissionTo('finance.create');
+    }
 }
