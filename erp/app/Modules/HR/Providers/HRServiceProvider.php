@@ -70,6 +70,8 @@ use App\Modules\HR\Models\EmployeeExit;
 use App\Modules\HR\Policies\EmployeeExitPolicy;
 use App\Modules\HR\Models\EmployeePositionChange;
 use App\Modules\HR\Policies\PositionChangePolicy;
+use App\Modules\HR\Models\SalaryGrade;
+use App\Modules\HR\Policies\SalaryGradePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -124,5 +126,6 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(HrAnnouncement::class,          HrAnnouncementPolicy::class);
         Gate::policy(EmployeeExit::class,            EmployeeExitPolicy::class);
         Gate::policy(EmployeePositionChange::class,  PositionChangePolicy::class);
+        Gate::policy(SalaryGrade::class,             SalaryGradePolicy::class);
     }
 }

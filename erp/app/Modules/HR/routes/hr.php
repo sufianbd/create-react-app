@@ -243,3 +243,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('position-changes/{positionChange}/approve', [EmployeePositionChangeController::class, 'approve'])->name('position-changes.approve');
     Route::resource('position-changes', EmployeePositionChangeController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Salary Grades
+use App\Modules\HR\Http\Controllers\SalaryGradeController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::resource('salary-grades', SalaryGradeController::class)->except(['create', 'edit']);
+});

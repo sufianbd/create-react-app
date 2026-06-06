@@ -195,6 +195,7 @@ const navItems: NavItem[] = [
             { label: 'Announcements', href: '/hr/announcements', icon: <span /> },
             { label: 'Exit Management', href: '/hr/employee-exits', icon: <span /> },
             { label: 'Position Changes', href: '/hr/position-changes', icon: <span /> },
+            { label: 'Salary Grades', href: '/hr/salary-grades', icon: <span /> },
         ],
     },
     {

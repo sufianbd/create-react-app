@@ -767,3 +767,16 @@ export interface EmployeePositionChange {
     reason: string | null;
     employee?: Employee;
 }
+
+export interface SalaryGrade {
+    id: number;
+    name: string;
+    code: string | null;
+    min_salary: number;
+    mid_salary: number | null;
+    max_salary: number;
+    currency: string;
+    is_active: boolean;
+    salary_range: string;
+    midpoint: number;
+}
