@@ -204,3 +204,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('work-schedules/{workSchedule}/shifts', [WorkScheduleController::class, 'addShift'])->name('work-schedules.shifts.store');
     Route::resource('employee-schedules', EmployeeScheduleController::class)->only(['index', 'store', 'destroy']);
 });
+
+// Employee Documents
+use App\Modules\HR\Http\Controllers\EmployeeDocumentController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('employee-documents/{employeeDocument}/verify', [EmployeeDocumentController::class, 'verify'])->name('employee-documents.verify');
+    Route::resource('employee-documents', EmployeeDocumentController::class)->only(['index', 'store', 'show', 'destroy']);
+});

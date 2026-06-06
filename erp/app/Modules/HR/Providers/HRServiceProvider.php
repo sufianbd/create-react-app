@@ -59,6 +59,8 @@ use App\Modules\HR\Policies\BenefitPolicy;
 use App\Modules\HR\Models\WorkScheduleShift;
 use App\Modules\HR\Models\EmployeeSchedule;
 use App\Modules\HR\Policies\WorkSchedulePolicy;
+use App\Modules\HR\Models\EmployeeDocument;
+use App\Modules\HR\Policies\EmployeeDocumentPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -107,5 +109,6 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(WorkSchedule::class,          WorkSchedulePolicy::class);
         Gate::policy(WorkScheduleShift::class,     WorkSchedulePolicy::class);
         Gate::policy(EmployeeSchedule::class,      WorkSchedulePolicy::class);
+        Gate::policy(EmployeeDocument::class,      EmployeeDocumentPolicy::class);
     }
 }

@@ -691,3 +691,18 @@ export interface PerformanceReviewPhase96 {
     employee?: Employee;
     ratings?: ReviewRating[];
 }
+
+export interface EmployeeDocument {
+    id: number;
+    employee_id: number;
+    document_type: string;
+    document_name: string;
+    document_number: string | null;
+    file_url: string | null;
+    issued_date: string | null;
+    expiry_date: string | null;
+    is_verified: boolean;
+    is_expired: boolean;
+    is_expiring_soon: boolean;
+    employee?: Employee;
+}
