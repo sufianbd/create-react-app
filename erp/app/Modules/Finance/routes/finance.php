@@ -392,3 +392,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('intercompany/{intercompany}/reverse',    [IntercompanyController::class, 'reverse'])->name('intercompany.reverse');
     Route::resource('intercompany', IntercompanyController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Cash Flow Forecasts
+use App\Modules\Finance\Http\Controllers\CashFlowForecastController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('cash-flow-forecasts/{cash_flow_forecast}/publish', [CashFlowForecastController::class, 'publish'])->name('cash-flow-forecasts.publish');
+    Route::post('cash-flow-forecasts/{cash_flow_forecast}/archive', [CashFlowForecastController::class, 'archive'])->name('cash-flow-forecasts.archive');
+    Route::resource('cash-flow-forecasts', CashFlowForecastController::class);
+});
