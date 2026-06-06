@@ -75,6 +75,8 @@ use App\Modules\HR\Policies\OvertimeRequestPolicy;
 use App\Modules\HR\Models\SalaryGrade;
 use App\Modules\HR\Policies\SalaryGradePolicy;
 use App\Modules\HR\Models\EmployeeSurvey;
+use App\Modules\HR\Models\FlexibleWorkArrangement;
+use App\Modules\HR\Policies\FlexibleWorkPolicy;
 use App\Modules\HR\Policies\EmployeeSurveyPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -133,5 +135,6 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(SalaryGrade::class,             SalaryGradePolicy::class);
         Gate::policy(OvertimeRequest::class,         OvertimeRequestPolicy::class);
         Gate::policy(EmployeeSurvey::class,          EmployeeSurveyPolicy::class);
+        Gate::policy(FlexibleWorkArrangement::class,  FlexibleWorkPolicy::class);
     }
 }

@@ -267,3 +267,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('surveys/{survey}/respond',  [EmployeeSurveyController::class, 'respond'])->name('surveys.respond');
     Route::resource('surveys', EmployeeSurveyController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+
+// Flexible Work Arrangements
+use App\Modules\HR\Http\Controllers\FlexibleWorkController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('flexible-work/{flexibleWork}/approve', [FlexibleWorkController::class, 'approve'])->name('flexible-work.approve');
+    Route::post('flexible-work/{flexibleWork}/reject',  [FlexibleWorkController::class, 'reject'])->name('flexible-work.reject');
+    Route::resource('flexible-work', FlexibleWorkController::class)->only(['index', 'store', 'show', 'destroy']);
+});
