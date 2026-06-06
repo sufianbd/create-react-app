@@ -66,6 +66,8 @@ use App\Modules\Inventory\Models\ProductTag;
 use App\Modules\Inventory\Policies\ProductTagPolicy;
 use App\Modules\Inventory\Models\ProductSubstitute;
 use App\Modules\Inventory\Policies\ProductSubstitutePolicy;
+use App\Modules\Inventory\Models\Backorder;
+use App\Modules\Inventory\Policies\BackorderPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -119,5 +121,6 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(CycleCount::class, CycleCountPolicy::class);
         Gate::policy(ProductTag::class, ProductTagPolicy::class);
         Gate::policy(ProductSubstitute::class, ProductSubstitutePolicy::class);
+        Gate::policy(Backorder::class, BackorderPolicy::class);
     }
 }

@@ -249,3 +249,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::patch( 'products/{product}/substitutes/{productSubstitute}',    [ProductSubstituteController::class, 'update'])->name('products.substitutes.update');
     Route::delete('products/{product}/substitutes/{productSubstitute}',    [ProductSubstituteController::class, 'destroy'])->name('products.substitutes.destroy');
 });
+
+// Backorders — custom actions BEFORE resource
+use App\Modules\Inventory\Http\Controllers\BackorderController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('backorders/{backorder}/fulfill', [BackorderController::class, 'fulfill'])->name('backorders.fulfill');
+    Route::post('backorders/{backorder}/cancel',  [BackorderController::class, 'cancel'])->name('backorders.cancel');
+    Route::resource('backorders', BackorderController::class)->only(['index', 'store', 'show', 'destroy']);
+});
