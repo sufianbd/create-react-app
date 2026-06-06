@@ -228,3 +228,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('announcements/{announcement}/archive', [HrAnnouncementController::class, 'archive'])->name('announcements.archive');
     Route::resource('announcements', HrAnnouncementController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Employee Exits
+use App\Modules\HR\Http\Controllers\EmployeeExitController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('employee-exits/{employeeExit}/complete',    [EmployeeExitController::class, 'complete'])->name('employee-exits.complete');
+    Route::post('employee-exits/{employeeExit}/in-progress', [EmployeeExitController::class, 'markInProgress'])->name('employee-exits.in-progress');
+    Route::resource('employee-exits', EmployeeExitController::class)->only(['index', 'store', 'show', 'destroy']);
+});

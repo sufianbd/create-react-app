@@ -738,3 +738,17 @@ export interface HrAnnouncement {
     publish_at: string | null;
     expire_at: string | null;
 }
+
+export interface EmployeeExit {
+    id: number;
+    employee_id: number;
+    exit_date: string;
+    exit_type: string;
+    reason: string | null;
+    equipment_returned: boolean;
+    access_revoked: boolean;
+    status: string;
+    is_pending: boolean;
+    is_complete: boolean;
+    employee?: Employee;
+}
