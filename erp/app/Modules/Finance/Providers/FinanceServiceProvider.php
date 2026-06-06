@@ -99,6 +99,9 @@ use App\Modules\Finance\Models\AdvancePayment;
 use App\Modules\Finance\Models\CustomerGroup;
 use App\Modules\Finance\Policies\AdvancePaymentPolicy;
 use App\Modules\Finance\Policies\CustomerGroupPolicy;
+use App\Modules\Finance\Models\DebitNote;
+use App\Modules\Finance\Models\DebitNoteItem;
+use App\Modules\Finance\Policies\DebitNotePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -175,7 +178,9 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(PettyCashTransaction::class, PettyCashPolicy::class);
         Gate::policy(BankTransfer::class, BankTransferPolicy::class);
         Gate::policy(CustomerGroup::class, CustomerGroupPolicy::class);
-        Gate::policy(AdvancePayment::class, AdvancePaymentPolicy::class);
+        Gate::policy(AdvancePayment::class,  AdvancePaymentPolicy::class);
+        Gate::policy(DebitNote::class,       DebitNotePolicy::class);
+        Gate::policy(DebitNoteItem::class,   DebitNotePolicy::class);
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
         }

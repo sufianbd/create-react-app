@@ -365,3 +365,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('advance-payments/{advancePayment}/refund', [AdvancePaymentController::class, 'refund'])->name('advance-payments.refund');
     Route::resource('advance-payments', AdvancePaymentController::class)->except(['create', 'edit', 'update']);
 });
+
+
+// Debit Notes — custom actions BEFORE resource
+use App\Modules\Finance\Http\Controllers\DebitNoteController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('debit-notes/{debitNote}/issue',  [DebitNoteController::class, 'issue'])->name('debit-notes.issue');
+    Route::post('debit-notes/{debitNote}/apply',  [DebitNoteController::class, 'apply'])->name('debit-notes.apply');
+    Route::post('debit-notes/{debitNote}/void',   [DebitNoteController::class, 'void'])->name('debit-notes.void');
+    Route::resource('debit-notes', DebitNoteController::class)->only(['index', 'store', 'show', 'destroy']);
+});
