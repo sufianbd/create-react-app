@@ -258,3 +258,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('overtime-requests/{overtimeRequest}/cancel',  [OvertimeRequestController::class, 'cancel'])->name('overtime-requests.cancel');
     Route::resource('overtime-requests', OvertimeRequestController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Employee Surveys
+use App\Modules\HR\Http\Controllers\EmployeeSurveyController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('surveys/{survey}/publish',  [EmployeeSurveyController::class, 'publish'])->name('surveys.publish');
+    Route::post('surveys/{survey}/close',    [EmployeeSurveyController::class, 'close'])->name('surveys.close');
+    Route::post('surveys/{survey}/respond',  [EmployeeSurveyController::class, 'respond'])->name('surveys.respond');
+    Route::resource('surveys', EmployeeSurveyController::class)->only(['index', 'store', 'show', 'destroy']);
+});
