@@ -88,6 +88,8 @@ use App\Modules\Finance\Models\VendorBillItem;
 use App\Modules\Finance\Policies\VendorBillPolicy;
 use App\Modules\Finance\Models\ExpenseItem;
 use App\Modules\Finance\Policies\ExpenseClaimPolicy;
+use App\Modules\Finance\Models\PaymentTerm;
+use App\Modules\Finance\Policies\PaymentTermPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -159,6 +161,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(VendorBill::class,     VendorBillPolicy::class);
         Gate::policy(VendorBillItem::class, VendorBillPolicy::class);
         Gate::policy(ExpenseItem::class,  ExpenseClaimPolicy::class);
+        Gate::policy(PaymentTerm::class, PaymentTermPolicy::class);
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
         }

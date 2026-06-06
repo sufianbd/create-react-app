@@ -942,3 +942,15 @@ export interface CreditNoteV2 {
     is_open: boolean;
     items?: CreditNoteItemV2[];
 }
+
+export interface PaymentTerm {
+    id: number;
+    name: string;
+    days: number;
+    discount_days: number;
+    discount_percent: number;
+    description: string | null;
+    is_active: boolean;
+    has_early_discount: boolean;
+    display_label: string;
+}

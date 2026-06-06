@@ -42,6 +42,7 @@ use App\Modules\Finance\Http\Controllers\LoyaltyProgramController;
 use App\Modules\Finance\Http\Controllers\LeadController;
 use App\Modules\Finance\Http\Controllers\SupportTicketController;
 use App\Modules\Finance\Http\Controllers\CurrencyController;
+use App\Modules\Finance\Http\Controllers\PaymentTermController;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -327,4 +328,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('vendor-bills/{vendorBill}/pay',     [VendorBillController::class, 'pay'])->name('vendor-bills.pay');
     Route::post('vendor-bills/{vendorBill}/cancel',  [VendorBillController::class, 'cancel'])->name('vendor-bills.cancel');
     Route::resource('vendor-bills', VendorBillController::class);
+});
+
+// Payment Terms
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::resource('payment-terms', PaymentTermController::class)->except(['create', 'edit']);
 });
