@@ -383,3 +383,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('write-offs/{writeOff}/reverse', [WriteOffController::class, 'reverse'])->name('write-offs.reverse');
     Route::resource('write-offs', WriteOffController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Intercompany Transactions — custom actions BEFORE resource
+use App\Modules\Finance\Http\Controllers\IntercompanyController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('intercompany/{intercompany}/post',       [IntercompanyController::class, 'post'])->name('intercompany.post');
+    Route::post('intercompany/{intercompany}/reconcile',  [IntercompanyController::class, 'reconcile'])->name('intercompany.reconcile');
+    Route::post('intercompany/{intercompany}/reverse',    [IntercompanyController::class, 'reverse'])->name('intercompany.reverse');
+    Route::resource('intercompany', IntercompanyController::class)->only(['index', 'store', 'show', 'destroy']);
+});
