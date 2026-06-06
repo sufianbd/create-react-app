@@ -409,3 +409,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('recurring-expenses/{recurring_expense}/cancel', [RecurringExpenseController::class, 'cancel'])->name('recurring-expenses.cancel');
     Route::resource('recurring-expenses', RecurringExpenseController::class);
 });
+
+// Vendor Payments
+use App\Modules\Finance\Http\Controllers\VendorPaymentController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('vendor-payments/{vendor_payment}/approve', [VendorPaymentController::class, 'approve'])->name('vendor-payments.approve');
+    Route::post('vendor-payments/{vendor_payment}/process', [VendorPaymentController::class, 'process'])->name('vendor-payments.process');
+    Route::post('vendor-payments/{vendor_payment}/reject',  [VendorPaymentController::class, 'reject'])->name('vendor-payments.reject');
+    Route::post('vendor-payments/{vendor_payment}/cancel',  [VendorPaymentController::class, 'cancel'])->name('vendor-payments.cancel');
+    Route::resource('vendor-payments', VendorPaymentController::class);
+});
