@@ -240,3 +240,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('products/{product}/tags',                  [ProductTagAssignmentController::class, 'attach'])->name('products.tags.attach');
     Route::delete('products/{product}/tags/{productTag}',   [ProductTagAssignmentController::class, 'detach'])->name('products.tags.detach');
 });
+
+// Product Substitutes (nested under products)
+use App\Modules\Inventory\Http\Controllers\ProductSubstituteController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::get(   'products/{product}/substitutes',                        [ProductSubstituteController::class, 'index'])->name('products.substitutes.index');
+    Route::post(  'products/{product}/substitutes',                        [ProductSubstituteController::class, 'store'])->name('products.substitutes.store');
+    Route::patch( 'products/{product}/substitutes/{productSubstitute}',    [ProductSubstituteController::class, 'update'])->name('products.substitutes.update');
+    Route::delete('products/{product}/substitutes/{productSubstitute}',    [ProductSubstituteController::class, 'destroy'])->name('products.substitutes.destroy');
+});

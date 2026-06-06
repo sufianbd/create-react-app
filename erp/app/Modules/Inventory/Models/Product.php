@@ -138,4 +138,16 @@ class Product extends Model
                     ->withTimestamps();
     }
 
+    public function substitutes(): HasMany
+    {
+        return $this->hasMany(ProductSubstitute::class, 'product_id')->orderBy('priority');
+    }
+
+    public function activeSubstitutes(): HasMany
+    {
+        return $this->hasMany(ProductSubstitute::class, 'product_id')
+                    ->where('is_active', true)
+                    ->orderBy('priority');
+    }
+
 }

@@ -609,3 +609,14 @@ export interface ProductTag {
     is_active: boolean;
     product_count: number;
 }
+
+export interface ProductSubstitute {
+    id: number;
+    product_id: number;
+    substitute_product_id: number;
+    priority: number;
+    is_bidirectional: boolean;
+    is_active: boolean;
+    notes: string | null;
+    substitute_product?: Product;
+}
