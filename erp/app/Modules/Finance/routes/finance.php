@@ -357,3 +357,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('bank-transfers/{bankTransfer}/cancel',   [BankTransferController::class, 'cancel'])->name('bank-transfers.cancel');
     Route::resource('bank-transfers', BankTransferController::class)->except(['create', 'edit', 'update']);
 });
+
+// Advance Payments — custom actions BEFORE resource
+use App\Modules\Finance\Http\Controllers\AdvancePaymentController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('advance-payments/{advancePayment}/apply',  [AdvancePaymentController::class, 'apply'])->name('advance-payments.apply');
+    Route::post('advance-payments/{advancePayment}/refund', [AdvancePaymentController::class, 'refund'])->name('advance-payments.refund');
+    Route::resource('advance-payments', AdvancePaymentController::class)->except(['create', 'edit', 'update']);
+});

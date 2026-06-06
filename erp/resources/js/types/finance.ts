@@ -1001,3 +1001,16 @@ export interface CustomerGroup {
     has_discount: boolean;
     member_count: number;
 }
+
+export interface AdvancePayment {
+    id: number;
+    contact_id: number | null;
+    reference: string | null;
+    amount: number;
+    applied_amount: number;
+    remaining_amount: number;
+    currency: string;
+    payment_date: string;
+    status: string;
+    is_available: boolean;
+}
