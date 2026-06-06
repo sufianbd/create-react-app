@@ -249,3 +249,12 @@ use App\Modules\HR\Http\Controllers\SalaryGradeController;
 Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
     Route::resource('salary-grades', SalaryGradeController::class)->except(['create', 'edit']);
 });
+
+// Overtime Requests
+use App\Modules\HR\Http\Controllers\OvertimeRequestController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('overtime-requests/{overtimeRequest}/approve', [OvertimeRequestController::class, 'approve'])->name('overtime-requests.approve');
+    Route::post('overtime-requests/{overtimeRequest}/reject',  [OvertimeRequestController::class, 'reject'])->name('overtime-requests.reject');
+    Route::post('overtime-requests/{overtimeRequest}/cancel',  [OvertimeRequestController::class, 'cancel'])->name('overtime-requests.cancel');
+    Route::resource('overtime-requests', OvertimeRequestController::class)->only(['index', 'store', 'show', 'destroy']);
+});
