@@ -59,6 +59,8 @@ use App\Modules\Inventory\Models\PriceListItem;
 use App\Modules\Inventory\Models\CustomerDiscount;
 use App\Modules\Inventory\Policies\PriceListPolicy;
 use App\Modules\Inventory\Models\UnitOfMeasure;
+use App\Modules\Inventory\Models\CycleCount;
+use App\Modules\Inventory\Policies\CycleCountPolicy;
 use App\Modules\Inventory\Policies\UnitOfMeasurePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -110,5 +112,6 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(PriceListItem::class,    PriceListPolicy::class);
         Gate::policy(CustomerDiscount::class, PriceListPolicy::class);
         Gate::policy(UnitOfMeasure::class, UnitOfMeasurePolicy::class);
+        Gate::policy(CycleCount::class, CycleCountPolicy::class);
     }
 }

@@ -581,3 +581,22 @@ export interface CustomerDiscount {
     valid_from: string | null;
     valid_to: string | null;
 }
+
+export interface CycleCountItem {
+    id: number;
+    product_id: number;
+    system_qty: number;
+    counted_qty: number | null;
+    variance: number;
+    is_counted: boolean;
+}
+export interface CycleCount {
+    id: number;
+    count_number: string;
+    warehouse_id: number;
+    count_date: string;
+    status: string;
+    total_variance: number;
+    items_counted: number;
+    items?: CycleCountItem[];
+}

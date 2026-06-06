@@ -221,3 +221,13 @@ use App\Modules\Inventory\Http\Controllers\UnitOfMeasureController;
 Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
     Route::resource('units-of-measure', UnitOfMeasureController::class)->names('units-of-measure');
 });
+
+// Cycle Counts — custom actions BEFORE resource
+use App\Modules\Inventory\Http\Controllers\CycleCountController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('cycle-counts/{cycleCount}/start',    [CycleCountController::class, 'start'])->name('cycle-counts.start');
+    Route::post('cycle-counts/{cycleCount}/complete', [CycleCountController::class, 'complete'])->name('cycle-counts.complete');
+    Route::post('cycle-counts/{cycleCount}/cancel',   [CycleCountController::class, 'cancel'])->name('cycle-counts.cancel');
+    Route::post('cycle-counts/{cycleCount}/counts',   [CycleCountController::class, 'updateCounts'])->name('cycle-counts.counts.update');
+    Route::resource('cycle-counts', CycleCountController::class)->names('cycle-counts');
+});
