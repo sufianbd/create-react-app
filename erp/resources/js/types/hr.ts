@@ -752,3 +752,18 @@ export interface EmployeeExit {
     is_complete: boolean;
     employee?: Employee;
 }
+
+export interface EmployeePositionChange {
+    id: number;
+    employee_id: number;
+    change_type: string;
+    from_title: string | null;
+    to_title: string | null;
+    from_salary: number | null;
+    to_salary: number | null;
+    salary_change: number;
+    effective_date: string;
+    is_approved: boolean;
+    reason: string | null;
+    employee?: Employee;
+}

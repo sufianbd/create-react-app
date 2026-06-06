@@ -236,3 +236,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('employee-exits/{employeeExit}/in-progress', [EmployeeExitController::class, 'markInProgress'])->name('employee-exits.in-progress');
     Route::resource('employee-exits', EmployeeExitController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Employee Position Changes
+use App\Modules\HR\Http\Controllers\EmployeePositionChangeController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('position-changes/{positionChange}/approve', [EmployeePositionChangeController::class, 'approve'])->name('position-changes.approve');
+    Route::resource('position-changes', EmployeePositionChangeController::class)->only(['index', 'store', 'show', 'destroy']);
+});

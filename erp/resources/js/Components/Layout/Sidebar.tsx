@@ -192,6 +192,7 @@ const navItems: NavItem[] = [
             { label: 'Skill Definitions', href: '/hr/skill-definitions', icon: <span /> },
             { label: 'Announcements', href: '/hr/announcements', icon: <span /> },
             { label: 'Exit Management', href: '/hr/employee-exits', icon: <span /> },
+            { label: 'Position Changes', href: '/hr/position-changes', icon: <span /> },
         ],
     },
     {
