@@ -11,14 +11,11 @@ class ProductBundleItem extends Model
     use BelongsToTenant;
 
     protected $fillable = [
-        'tenant_id',
-        'bundle_product_id',
-        'component_product_id',
-        'quantity',
+        'tenant_id', 'bundle_product_id', 'component_product_id', 'quantity',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:4',
+        'quantity' => 'float',
     ];
 
     public function bundleProduct(): BelongsTo

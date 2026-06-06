@@ -102,9 +102,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     // Product Bundles
     Route::post('product-bundles/{productBundle}/items', [ProductBundleController::class, 'addItem'])->name('product-bundles.items.add');
     Route::delete('product-bundles/{productBundle}/items/{item}', [ProductBundleController::class, 'removeItem'])->name('product-bundles.items.remove');
-    Route::resource('product-bundles', ProductBundleController::class)
-        ->except(['edit', 'update'])
-        ->parameters(['product-bundles' => 'productBundle']);
+    Route::resource('product-bundles', ProductBundleController::class)->only(['index', 'store', 'show', 'destroy']);
 
     // Warehouse Stock
     Route::resource('warehouse-stock', WarehouseStockController::class)->only(['index', 'show', 'update']);

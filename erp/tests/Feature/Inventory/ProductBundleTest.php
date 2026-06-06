@@ -8,7 +8,7 @@ use Database\Seeders\RolePermissionSeeder;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
-    $this->tenant = Tenant::create(['name' => 'Bundle Co', 'slug' => 'bundle-co']);
+    $this->tenant = Tenant::create(['name' => 'BundleCorp', 'slug' => 'bundle-corp-' . uniqid()]);
     $this->admin  = User::factory()->create(['tenant_id' => $this->tenant->id]);
     $this->admin->assignRole('super-admin');
     $this->staff  = User::factory()->create(['tenant_id' => $this->tenant->id]);
@@ -17,24 +17,34 @@ beforeEach(function () {
     app()->instance('tenant', $this->tenant);
 });
 
-function makeComponent(string $name, float $stock = 10): Product
+function makePBundleProduct(): Product
 {
     return Product::create([
-        'tenant_id'      => test()->tenant->id,
-        'name'           => $name,
-        'sku'            => 'SKU-' . $name,
-        'stock_quantity' => $stock,
-        'is_active'      => true,
+        'tenant_id' => test()->tenant->id,
+        'name'      => 'Component ' . uniqid(),
+        'sku'       => 'SKU-' . strtoupper(substr(uniqid(), -6)),
+        'is_active' => true,
+    ]);
+}
+
+function makeBundleProduct(): Product
+{
+    return Product::create([
+        'tenant_id' => test()->tenant->id,
+        'name'      => 'Bundle ' . uniqid(),
+        'is_bundle' => true,
+        'is_active' => true,
     ]);
 }
 
 it('admin can list product bundles', function () {
-    $this->get('/inventory/product-bundles')->assertStatus(200);
+    makeBundleProduct();
+    $this->get('/inventory/product-bundles')->assertOk();
 });
 
 it('admin can create a bundle with components', function () {
-    $c1 = makeComponent('Widget A');
-    $c2 = makeComponent('Widget B');
+    $c1 = makePBundleProduct();
+    $c2 = makePBundleProduct();
 
     $this->post('/inventory/product-bundles', [
         'name'  => 'Starter Kit',
@@ -51,89 +61,41 @@ it('admin can create a bundle with components', function () {
 });
 
 it('admin can view bundle', function () {
-    $c1 = makeComponent('Component X');
-    $bundle = Product::create([
-        'tenant_id' => test()->tenant->id,
-        'name'      => 'Test Bundle',
-        'is_bundle' => true,
-        'is_active' => true,
-    ]);
+    $bundle = makeBundleProduct();
+    $c1     = makePBundleProduct();
     ProductBundleItem::create([
         'tenant_id'            => test()->tenant->id,
         'bundle_product_id'    => $bundle->id,
         'component_product_id' => $c1->id,
         'quantity'             => 1,
     ]);
-    $this->get("/inventory/product-bundles/{$bundle->id}")->assertStatus(200);
+    $this->get("/inventory/product-bundles/{$bundle->id}")->assertOk();
 });
 
 it('admin can add item to bundle', function () {
-    $bundle = Product::create([
-        'tenant_id' => test()->tenant->id,
-        'name'      => 'Add Item Bundle',
-        'is_bundle' => true,
-        'is_active' => true,
-    ]);
-    $c = makeComponent('Added Component');
+    $bundle = makeBundleProduct();
+    $c      = makePBundleProduct();
+
     $this->post("/inventory/product-bundles/{$bundle->id}/items", [
         'component_product_id' => $c->id,
         'quantity'             => 3,
     ])->assertRedirect();
+
     expect($bundle->bundleItems()->count())->toBe(1);
 });
 
 it('admin can remove item from bundle', function () {
-    $bundle = Product::create([
-        'tenant_id' => test()->tenant->id,
-        'name'      => 'Remove Bundle',
-        'is_bundle' => true,
-        'is_active' => true,
-    ]);
-    $c = makeComponent('Removed Component');
-    $item = ProductBundleItem::create([
+    $bundle = makeBundleProduct();
+    $c      = makePBundleProduct();
+    $item   = ProductBundleItem::create([
         'tenant_id'            => test()->tenant->id,
         'bundle_product_id'    => $bundle->id,
         'component_product_id' => $c->id,
         'quantity'             => 1,
     ]);
+
     $this->delete("/inventory/product-bundles/{$bundle->id}/items/{$item->id}")->assertRedirect();
     expect(ProductBundleItem::find($item->id))->toBeNull();
-});
-
-it('stock_sufficient_for_bundle returns true when all stock available', function () {
-    $bundle = Product::create([
-        'tenant_id' => test()->tenant->id,
-        'name'      => 'Sufficient Bundle',
-        'is_bundle' => true,
-        'is_active' => true,
-    ]);
-    $c = makeComponent('Sufficient Part', 20);
-    ProductBundleItem::create([
-        'tenant_id'            => test()->tenant->id,
-        'bundle_product_id'    => $bundle->id,
-        'component_product_id' => $c->id,
-        'quantity'             => 5,
-    ]);
-    $bundle->load('bundleItems.componentProduct');
-    expect($bundle->stock_sufficient_for_bundle)->toBeTrue();
-});
-
-it('stock_sufficient_for_bundle returns false when insufficient stock', function () {
-    $bundle = Product::create([
-        'tenant_id' => test()->tenant->id,
-        'name'      => 'Insufficient Bundle',
-        'is_bundle' => true,
-        'is_active' => true,
-    ]);
-    $c = makeComponent('Scarce Part', 2);
-    ProductBundleItem::create([
-        'tenant_id'            => test()->tenant->id,
-        'bundle_product_id'    => $bundle->id,
-        'component_product_id' => $c->id,
-        'quantity'             => 10,
-    ]);
-    $bundle->load('bundleItems.componentProduct');
-    expect($bundle->stock_sufficient_for_bundle)->toBeFalse();
 });
 
 it('bundle items must have at least one item', function () {
@@ -144,33 +106,42 @@ it('bundle items must have at least one item', function () {
 });
 
 it('staff cannot delete bundle', function () {
-    $bundle = Product::create([
-        'tenant_id' => test()->tenant->id,
-        'name'      => 'Staff Bundle',
-        'is_bundle' => true,
-        'is_active' => true,
-    ]);
+    $bundle = makeBundleProduct();
     $this->actingAs($this->staff)
         ->delete("/inventory/product-bundles/{$bundle->id}")
         ->assertStatus(403);
 });
 
 it('duplicate component in bundle is rejected', function () {
-    $bundle = Product::create([
-        'tenant_id' => test()->tenant->id,
-        'name'      => 'Dup Bundle',
-        'is_bundle' => true,
-        'is_active' => true,
-    ]);
-    $c = makeComponent('Dup Component');
+    $bundle = makeBundleProduct();
+    $c      = makePBundleProduct();
     ProductBundleItem::create([
         'tenant_id'            => test()->tenant->id,
         'bundle_product_id'    => $bundle->id,
         'component_product_id' => $c->id,
         'quantity'             => 1,
     ]);
+
     $this->postJson("/inventory/product-bundles/{$bundle->id}/items", [
         'component_product_id' => $c->id,
         'quantity'             => 2,
     ])->assertStatus(422);
+});
+
+it('stock_sufficient_for_bundle returns true when stock available', function () {
+    $bundle = makeBundleProduct();
+    $c      = Product::create([
+        'tenant_id'      => test()->tenant->id,
+        'name'           => 'Sufficient Part',
+        'is_active'      => true,
+        'stock_quantity' => 20,
+    ]);
+    ProductBundleItem::create([
+        'tenant_id'            => test()->tenant->id,
+        'bundle_product_id'    => $bundle->id,
+        'component_product_id' => $c->id,
+        'quantity'             => 5,
+    ]);
+    $bundle->load('bundleItems.componentProduct');
+    expect($bundle->stock_sufficient_for_bundle)->toBeTrue();
 });
