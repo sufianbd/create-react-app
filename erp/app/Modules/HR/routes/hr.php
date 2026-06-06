@@ -302,3 +302,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('competency-frameworks/{competency_framework}/archive',  [CompetencyFrameworkController::class, 'archive'])->name('competency-frameworks.archive');
     Route::resource('competency-frameworks', CompetencyFrameworkController::class);
 });
+
+// Employee Goals
+use App\Modules\HR\Http\Controllers\EmployeeGoalController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('employee-goals/{employee_goal}/complete',        [EmployeeGoalController::class, 'complete'])->name('employee-goals.complete');
+    Route::post('employee-goals/{employee_goal}/miss',            [EmployeeGoalController::class, 'miss'])->name('employee-goals.miss');
+    Route::post('employee-goals/{employee_goal}/cancel',          [EmployeeGoalController::class, 'cancel'])->name('employee-goals.cancel');
+    Route::post('employee-goals/{employee_goal}/update-progress', [EmployeeGoalController::class, 'updateProgress'])->name('employee-goals.update-progress');
+    Route::resource('employee-goals', EmployeeGoalController::class);
+});

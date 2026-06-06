@@ -85,6 +85,8 @@ use App\Modules\HR\Policies\TrainingSessionPolicy;
 use App\Modules\HR\Models\CompetencyFramework;
 use App\Modules\HR\Models\Competency;
 use App\Modules\HR\Policies\CompetencyFrameworkPolicy;
+use App\Modules\HR\Models\EmployeeGoal;
+use App\Modules\HR\Policies\EmployeeGoalPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -147,5 +149,6 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(TrainingSession::class,           TrainingSessionPolicy::class);
         Gate::policy(CompetencyFramework::class,       CompetencyFrameworkPolicy::class);
         Gate::policy(Competency::class,                CompetencyFrameworkPolicy::class);
+        Gate::policy(EmployeeGoal::class,                EmployeeGoalPolicy::class);
     }
 }
