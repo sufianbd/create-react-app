@@ -149,6 +149,7 @@ const navItems: NavItem[] = [
             { label: 'Vendor Bills',     href: '/finance/vendor-bills',    icon: <span /> },
             { label: 'Payment Terms',    href: '/finance/payment-terms',   icon: <span /> },
             { label: 'Petty Cash',       href: '/finance/petty-cash',       icon: <span /> },
+            { label: 'Bank Transfers',    href: '/finance/bank-transfers',    icon: <span /> },
         ],
     },
     {

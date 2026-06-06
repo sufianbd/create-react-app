@@ -976,3 +976,16 @@ export interface PettyCashFund {
     utilization_percent: number;
     transactions?: PettyCashTransaction[];
 }
+
+export interface BankTransfer {
+    id: number;
+    from_account_id: number;
+    to_account_id: number;
+    amount: number;
+    currency: string;
+    transfer_date: string;
+    reference: string | null;
+    status: string;
+    is_pending: boolean;
+    is_completed: boolean;
+}

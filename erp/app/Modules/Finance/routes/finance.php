@@ -342,3 +342,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('petty-cash/{pettyCashFund}/expense',   [PettyCashFundController::class, 'expense'])->name('petty-cash.expense');
     Route::resource('petty-cash', PettyCashFundController::class)->except(['create', 'edit', 'update']);
 });
+
+// Bank Transfers — custom actions BEFORE resource
+use App\Modules\Finance\Http\Controllers\BankTransferController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('bank-transfers/{bankTransfer}/complete', [BankTransferController::class, 'complete'])->name('bank-transfers.complete');
+    Route::post('bank-transfers/{bankTransfer}/fail',     [BankTransferController::class, 'fail'])->name('bank-transfers.fail');
+    Route::post('bank-transfers/{bankTransfer}/cancel',   [BankTransferController::class, 'cancel'])->name('bank-transfers.cancel');
+    Route::resource('bank-transfers', BankTransferController::class)->except(['create', 'edit', 'update']);
+});
