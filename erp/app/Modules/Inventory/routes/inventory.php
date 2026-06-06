@@ -255,3 +255,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('backorders/{backorder}/cancel',  [BackorderController::class, 'cancel'])->name('backorders.cancel');
     Route::resource('backorders', BackorderController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Reorder Rules
+use App\Modules\Inventory\Http\Controllers\ReorderRuleController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('reorder-rules/{reorder_rule}/trigger', [ReorderRuleController::class, 'trigger'])->name('reorder-rules.trigger');
+    Route::post('reorder-rules/{reorder_rule}/pause',   [ReorderRuleController::class, 'pause'])->name('reorder-rules.pause');
+    Route::post('reorder-rules/{reorder_rule}/resume',  [ReorderRuleController::class, 'resume'])->name('reorder-rules.resume');
+    Route::resource('reorder-rules', ReorderRuleController::class);
+});

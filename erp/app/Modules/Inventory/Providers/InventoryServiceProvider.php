@@ -70,6 +70,8 @@ use App\Modules\Inventory\Models\ProductSubstitute;
 use App\Modules\Inventory\Policies\ProductSubstitutePolicy;
 use App\Modules\Inventory\Models\Backorder;
 use App\Modules\Inventory\Policies\BackorderPolicy;
+use App\Modules\Inventory\Models\ReorderRule;
+use App\Modules\Inventory\Policies\ReorderRulePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -125,5 +127,6 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(Backorder::class, BackorderPolicy::class);
         Gate::policy(ProductBundle::class,     ProductBundlePolicy::class);
         Gate::policy(ProductBundleItem::class, ProductBundlePolicy::class);
+        Gate::policy(ReorderRule::class, ReorderRulePolicy::class);
     }
 }
