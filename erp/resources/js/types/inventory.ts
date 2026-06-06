@@ -11,7 +11,16 @@ export interface Category {
     parent_id?: number | null; parent?: { id: number; name: string } | null;
     children?: Category[]; products_count?: number;
 }
-export interface UnitOfMeasure { id: number; name: string; abbreviation: string; }
+export interface UnitOfMeasure {
+    id: number;
+    name: string;
+    abbreviation: string;
+    type: string;
+    is_base: boolean;
+    conversion_factor: number;
+    is_active: boolean;
+    display_name: string;
+}
 export interface Supplier {
     id: number; name: string; contact_person?: string; email?: string;
     phone?: string; address?: string; is_active: boolean; created_at?: string;

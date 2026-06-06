@@ -215,3 +215,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::resource('price-lists', PriceListController::class)->only(['index', 'store', 'show', 'destroy']);
     Route::resource('customer-discounts', CustomerDiscountController::class)->only(['index', 'store', 'destroy']);
 });
+
+// Units of Measure
+use App\Modules\Inventory\Http\Controllers\UnitOfMeasureController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::resource('units-of-measure', UnitOfMeasureController::class)->names('units-of-measure');
+});
