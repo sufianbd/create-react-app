@@ -82,6 +82,9 @@ use App\Modules\HR\Models\JobOfferLetter;
 use App\Modules\HR\Policies\JobOfferPolicy;
 use App\Modules\HR\Models\TrainingSession;
 use App\Modules\HR\Policies\TrainingSessionPolicy;
+use App\Modules\HR\Models\CompetencyFramework;
+use App\Modules\HR\Models\Competency;
+use App\Modules\HR\Policies\CompetencyFrameworkPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -142,5 +145,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(FlexibleWorkArrangement::class,  FlexibleWorkPolicy::class);
         Gate::policy(JobOfferLetter::class,            JobOfferPolicy::class);
         Gate::policy(TrainingSession::class,           TrainingSessionPolicy::class);
+        Gate::policy(CompetencyFramework::class,       CompetencyFrameworkPolicy::class);
+        Gate::policy(Competency::class,                CompetencyFrameworkPolicy::class);
     }
 }

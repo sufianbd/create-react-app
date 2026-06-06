@@ -294,3 +294,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('training-sessions/{training_session}/cancel',   [TrainingSessionController::class, 'cancel'])->name('training-sessions.cancel');
     Route::resource('training-sessions', TrainingSessionController::class);
 });
+
+// Competency Frameworks
+use App\Modules\HR\Http\Controllers\CompetencyFrameworkController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('competency-frameworks/{competency_framework}/activate', [CompetencyFrameworkController::class, 'activate'])->name('competency-frameworks.activate');
+    Route::post('competency-frameworks/{competency_framework}/archive',  [CompetencyFrameworkController::class, 'archive'])->name('competency-frameworks.archive');
+    Route::resource('competency-frameworks', CompetencyFrameworkController::class);
+});
