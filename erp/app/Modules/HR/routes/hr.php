@@ -276,3 +276,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('flexible-work/{flexibleWork}/reject',  [FlexibleWorkController::class, 'reject'])->name('flexible-work.reject');
     Route::resource('flexible-work', FlexibleWorkController::class)->only(['index', 'store', 'show', 'destroy']);
 });
+
+// Job Offer Letters
+use App\Modules\HR\Http\Controllers\JobOfferController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('job-offers/{jobOffer}/send',    [JobOfferController::class, 'send'])->name('job-offers.send');
+    Route::post('job-offers/{jobOffer}/accept',  [JobOfferController::class, 'accept'])->name('job-offers.accept');
+    Route::post('job-offers/{jobOffer}/decline', [JobOfferController::class, 'decline'])->name('job-offers.decline');
+    Route::resource('job-offers', JobOfferController::class)->only(['index', 'store', 'show', 'destroy']);
+});
