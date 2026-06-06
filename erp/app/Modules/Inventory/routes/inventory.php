@@ -271,3 +271,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('supplier-scorecards/{supplier_scorecard}/publish', [SupplierScorecardController::class, 'publish'])->name('supplier-scorecards.publish');
     Route::resource('supplier-scorecards', SupplierScorecardController::class);
 });
+
+// Quality Alerts
+use App\Modules\Inventory\Http\Controllers\QualityAlertController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('quality-alerts/{quality_alert}/investigate', [QualityAlertController::class, 'investigate'])->name('quality-alerts.investigate');
+    Route::post('quality-alerts/{quality_alert}/resolve',    [QualityAlertController::class, 'resolve'])->name('quality-alerts.resolve');
+    Route::post('quality-alerts/{quality_alert}/close',      [QualityAlertController::class, 'close'])->name('quality-alerts.close');
+    Route::resource('quality-alerts', QualityAlertController::class);
+});

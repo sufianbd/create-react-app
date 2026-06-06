@@ -74,6 +74,8 @@ use App\Modules\Inventory\Models\ReorderRule;
 use App\Modules\Inventory\Policies\ReorderRulePolicy;
 use App\Modules\Inventory\Models\SupplierScorecard;
 use App\Modules\Inventory\Policies\SupplierScorecardPolicy;
+use App\Modules\Inventory\Models\QualityAlert;
+use App\Modules\Inventory\Policies\QualityAlertPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -131,5 +133,6 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(ProductBundleItem::class, ProductBundlePolicy::class);
         Gate::policy(ReorderRule::class, ReorderRulePolicy::class);
         Gate::policy(SupplierScorecard::class, SupplierScorecardPolicy::class);
+        Gate::policy(QualityAlert::class, QualityAlertPolicy::class);
     }
 }
