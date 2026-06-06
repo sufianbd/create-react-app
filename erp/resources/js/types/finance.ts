@@ -954,3 +954,25 @@ export interface PaymentTerm {
     has_early_discount: boolean;
     display_label: string;
 }
+
+// Phase 110 — Petty Cash Management
+export interface PettyCashTransaction {
+    id: number;
+    fund_id: number;
+    type: string;
+    amount: number;
+    description: string;
+    transaction_date: string;
+    is_debit: boolean;
+}
+export interface PettyCashFund {
+    id: number;
+    name: string;
+    authorized_amount: number;
+    current_balance: number;
+    currency: string;
+    is_active: boolean;
+    is_low_balance: boolean;
+    utilization_percent: number;
+    transactions?: PettyCashTransaction[];
+}

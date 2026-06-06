@@ -334,3 +334,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
     Route::resource('payment-terms', PaymentTermController::class)->except(['create', 'edit']);
 });
+
+// Petty Cash — custom actions BEFORE resource
+use App\Modules\Finance\Http\Controllers\PettyCashFundController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('petty-cash/{pettyCashFund}/replenish', [PettyCashFundController::class, 'replenish'])->name('petty-cash.replenish');
+    Route::post('petty-cash/{pettyCashFund}/expense',   [PettyCashFundController::class, 'expense'])->name('petty-cash.expense');
+    Route::resource('petty-cash', PettyCashFundController::class)->except(['create', 'edit', 'update']);
+});
