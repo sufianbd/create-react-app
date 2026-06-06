@@ -87,6 +87,9 @@ use App\Modules\HR\Models\Competency;
 use App\Modules\HR\Policies\CompetencyFrameworkPolicy;
 use App\Modules\HR\Models\EmployeeGoal;
 use App\Modules\HR\Policies\EmployeeGoalPolicy;
+use App\Modules\HR\Models\SuccessionPlan;
+use App\Modules\HR\Models\SuccessionCandidate;
+use App\Modules\HR\Policies\SuccessionPlanPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -150,5 +153,7 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(CompetencyFramework::class,       CompetencyFrameworkPolicy::class);
         Gate::policy(Competency::class,                CompetencyFrameworkPolicy::class);
         Gate::policy(EmployeeGoal::class,                EmployeeGoalPolicy::class);
+        Gate::policy(SuccessionPlan::class,              SuccessionPlanPolicy::class);
+        Gate::policy(SuccessionCandidate::class,         SuccessionPlanPolicy::class);
     }
 }

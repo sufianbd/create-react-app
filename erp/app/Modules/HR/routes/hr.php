@@ -312,3 +312,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('employee-goals/{employee_goal}/update-progress', [EmployeeGoalController::class, 'updateProgress'])->name('employee-goals.update-progress');
     Route::resource('employee-goals', EmployeeGoalController::class);
 });
+
+// Succession Plans
+use App\Modules\HR\Http\Controllers\SuccessionPlanController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('succession-plans/{succession_plan}/complete',   [SuccessionPlanController::class, 'complete'])->name('succession-plans.complete');
+    Route::post('succession-plans/{succession_plan}/deactivate', [SuccessionPlanController::class, 'deactivate'])->name('succession-plans.deactivate');
+    Route::resource('succession-plans', SuccessionPlanController::class);
+});
