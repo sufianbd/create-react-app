@@ -445,3 +445,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('expense-budgets/{expense_budget}/close',  [ExpenseBudgetController::class, 'close'])->name('expense-budgets.close');
     Route::resource('expense-budgets', ExpenseBudgetController::class);
 });
+
+// Profit Centers
+use App\Modules\Finance\Http\Controllers\ProfitCenterController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('profit-centers/{profit_center}/activate',   [ProfitCenterController::class, 'activate'])->name('profit-centers.activate');
+    Route::post('profit-centers/{profit_center}/deactivate', [ProfitCenterController::class, 'deactivate'])->name('profit-centers.deactivate');
+    Route::resource('profit-centers', ProfitCenterController::class);
+});
