@@ -92,6 +92,8 @@ use App\Modules\HR\Models\SuccessionCandidate;
 use App\Modules\HR\Policies\SuccessionPlanPolicy;
 use App\Modules\HR\Models\MentorshipProgram;
 use App\Modules\HR\Policies\MentorshipProgramPolicy;
+use App\Modules\HR\Models\InterviewSchedule;
+use App\Modules\HR\Policies\InterviewSchedulePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -158,5 +160,6 @@ class HRServiceProvider extends ServiceProvider
         Gate::policy(SuccessionPlan::class,              SuccessionPlanPolicy::class);
         Gate::policy(SuccessionCandidate::class,         SuccessionPlanPolicy::class);
         Gate::policy(MentorshipProgram::class,           MentorshipProgramPolicy::class);
+        Gate::policy(InterviewSchedule::class,           InterviewSchedulePolicy::class);
     }
 }

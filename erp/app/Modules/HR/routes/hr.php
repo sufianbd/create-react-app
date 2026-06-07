@@ -331,3 +331,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('mentorship-programs/{mentorship_program}/log-session',[MentorshipProgramController::class, 'logSession'])->name('mentorship-programs.log-session');
     Route::resource('mentorship-programs', MentorshipProgramController::class);
 });
+
+// Interview Schedules
+use App\Modules\HR\Http\Controllers\InterviewScheduleController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('interview-schedules/{interview_schedule}/confirm',  [InterviewScheduleController::class, 'confirm'])->name('interview-schedules.confirm');
+    Route::post('interview-schedules/{interview_schedule}/complete', [InterviewScheduleController::class, 'complete'])->name('interview-schedules.complete');
+    Route::post('interview-schedules/{interview_schedule}/cancel',   [InterviewScheduleController::class, 'cancel'])->name('interview-schedules.cancel');
+    Route::post('interview-schedules/{interview_schedule}/no-show',  [InterviewScheduleController::class, 'noShow'])->name('interview-schedules.no-show');
+    Route::resource('interview-schedules', InterviewScheduleController::class);
+});
