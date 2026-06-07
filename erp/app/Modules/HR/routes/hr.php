@@ -320,3 +320,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('succession-plans/{succession_plan}/deactivate', [SuccessionPlanController::class, 'deactivate'])->name('succession-plans.deactivate');
     Route::resource('succession-plans', SuccessionPlanController::class);
 });
+
+// Mentorship Programs
+use App\Modules\HR\Http\Controllers\MentorshipProgramController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('mentorship-programs/{mentorship_program}/complete',   [MentorshipProgramController::class, 'complete'])->name('mentorship-programs.complete');
+    Route::post('mentorship-programs/{mentorship_program}/pause',      [MentorshipProgramController::class, 'pause'])->name('mentorship-programs.pause');
+    Route::post('mentorship-programs/{mentorship_program}/resume',     [MentorshipProgramController::class, 'resume'])->name('mentorship-programs.resume');
+    Route::post('mentorship-programs/{mentorship_program}/cancel',     [MentorshipProgramController::class, 'cancel'])->name('mentorship-programs.cancel');
+    Route::post('mentorship-programs/{mentorship_program}/log-session',[MentorshipProgramController::class, 'logSession'])->name('mentorship-programs.log-session');
+    Route::resource('mentorship-programs', MentorshipProgramController::class);
+});
