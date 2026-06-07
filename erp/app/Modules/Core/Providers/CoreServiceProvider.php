@@ -3,7 +3,9 @@
 namespace App\Modules\Core\Providers;
 
 use App\Modules\Core\Models\AuditLog;
+use App\Modules\Core\Models\Company;
 use App\Modules\Core\Policies\AuditLogPolicy;
+use App\Modules\Core\Policies\CompanyPolicy;
 use App\Modules\Finance\Providers\FinanceServiceProvider;
 use App\Modules\HR\Providers\HRServiceProvider;
 use App\Modules\Inventory\Providers\InventoryServiceProvider;
@@ -23,5 +25,6 @@ class CoreServiceProvider extends ServiceProvider
     {
         $this->loadRoutesFrom(__DIR__ . '/../routes/core.php');
         Gate::policy(AuditLog::class, AuditLogPolicy::class);
+        Gate::policy(Company::class, CompanyPolicy::class);
     }
 }

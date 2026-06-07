@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Core\Http\Controllers\AuditLogController;
+use App\Modules\Core\Http\Controllers\CompanyController;
 use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AnalyticsController;
@@ -39,5 +40,6 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
 
     Route::middleware(['web', 'auth', 'verified'])->prefix('core')->name('core.')->group(function () {
         Route::resource('audit-logs', AuditLogController::class)->only(['index', 'show']);
+        Route::resource('companies', CompanyController::class);
     });
 });

@@ -360,3 +360,29 @@ Route::middleware(['web','auth','verified'])->prefix('inventory')->name('invento
     Route::post('put-away-rules/{put_away_rule}/deactivate', [PutAwayRuleController::class,'deactivate'])->name('put-away-rules.deactivate');
     Route::resource('put-away-rules', PutAwayRuleController::class);
 });
+
+// Stock Pickings
+use App\Modules\Inventory\Http\Controllers\StockPickingController;
+Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
+    Route::post('stock-pickings/{stock_picking}/confirm',  [StockPickingController::class,'confirm'])->name('stock-pickings.confirm');
+    Route::post('stock-pickings/{stock_picking}/start',    [StockPickingController::class,'startProcessing'])->name('stock-pickings.start');
+    Route::post('stock-pickings/{stock_picking}/validate', [StockPickingController::class,'validate'])->name('stock-pickings.validate');
+    Route::post('stock-pickings/{stock_picking}/cancel',   [StockPickingController::class,'cancel'])->name('stock-pickings.cancel');
+    Route::resource('stock-pickings', StockPickingController::class);
+});
+
+// Replenishment Orders
+use App\Modules\Inventory\Http\Controllers\ReplenishmentOrderController;
+Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
+    Route::post('replenishments/{replenishment}/confirm',  [ReplenishmentOrderController::class,'confirm'])->name('replenishments.confirm');
+    Route::post('replenishments/{replenishment}/start',    [ReplenishmentOrderController::class,'markInProgress'])->name('replenishments.start');
+    Route::post('replenishments/{replenishment}/complete', [ReplenishmentOrderController::class,'complete'])->name('replenishments.complete');
+    Route::post('replenishments/{replenishment}/cancel',   [ReplenishmentOrderController::class,'cancel'])->name('replenishments.cancel');
+    Route::resource('replenishments', ReplenishmentOrderController::class)->except(['edit','update']);
+});
+
+// Traceability
+use App\Modules\Inventory\Http\Controllers\TraceabilityController;
+Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
+    Route::get('traceability', [TraceabilityController::class,'index'])->name('traceability.index');
+});

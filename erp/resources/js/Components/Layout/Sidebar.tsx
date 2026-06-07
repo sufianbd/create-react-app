@@ -92,6 +92,12 @@ const navItems: NavItem[] = [
             { label: 'Product Tags',        href: '/inventory/product-tags',            icon: <span /> },
             { label: 'Shipments',           href: '/inventory/shipments',               icon: <span /> },
             { label: 'RMA Requests',        href: '/inventory/rma-requests',            icon: <span /> },
+            { label: 'Put-Away Rules',     href: '/inventory/put-away-rules',          icon: <span /> },
+            { label: 'Warranties',         href: '/inventory/warranties',              icon: <span /> },
+            { label: 'Warranty Claims',    href: '/inventory/warranty-claims',         icon: <span /> },
+            { label: 'Stock Pickings',     href: '/inventory/stock-pickings',          icon: <span /> },
+            { label: 'Replenishments',     href: '/inventory/replenishments',          icon: <span /> },
+            { label: 'Traceability',       href: '/inventory/traceability',            icon: <span /> },
         ],
     },
     {
