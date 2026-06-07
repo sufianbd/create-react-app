@@ -428,3 +428,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('payment-schedules/{payment_schedule}/cancel', [PaymentScheduleController::class, 'cancel'])->name('payment-schedules.cancel');
     Route::resource('payment-schedules', PaymentScheduleController::class);
 });
+
+// Customer Credits
+use App\Modules\Finance\Http\Controllers\CustomerCreditController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('customer-credits/{customer_credit}/issue',  [CustomerCreditController::class, 'issue'])->name('customer-credits.issue');
+    Route::post('customer-credits/{customer_credit}/expire', [CustomerCreditController::class, 'expire'])->name('customer-credits.expire');
+    Route::post('customer-credits/{customer_credit}/cancel', [CustomerCreditController::class, 'cancel'])->name('customer-credits.cancel');
+    Route::resource('customer-credits', CustomerCreditController::class);
+});
