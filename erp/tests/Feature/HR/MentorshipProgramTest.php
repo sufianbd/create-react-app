@@ -22,6 +22,7 @@ function makeMentorEmployee(array $attrs = []): Employee
         'first_name'      => 'Mentor',
         'last_name'       => 'Person ' . uniqid(),
         'employee_number' => 'EMP-M-' . uniqid(),
+        'start_date'      => now()->toDateString(),
         ...$attrs,
     ]);
 }
