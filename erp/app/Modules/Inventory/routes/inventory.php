@@ -309,3 +309,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('goods-receipts/{goods_receipt}/reject',  [GoodsReceiptController::class, 'reject'])->name('goods-receipts.reject');
     Route::resource('goods-receipts', GoodsReceiptController::class);
 });
+
+// Shipments
+use App\Modules\Inventory\Http\Controllers\ShipmentController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('shipments/{shipment}/dispatch', [ShipmentController::class, 'dispatch'])->name('shipments.dispatch');
+    Route::post('shipments/{shipment}/deliver',  [ShipmentController::class, 'deliver'])->name('shipments.deliver');
+    Route::post('shipments/{shipment}/return',   [ShipmentController::class, 'returnShipment'])->name('shipments.return');
+    Route::post('shipments/{shipment}/cancel',   [ShipmentController::class, 'cancel'])->name('shipments.cancel');
+    Route::resource('shipments', ShipmentController::class);
+});

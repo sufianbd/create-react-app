@@ -83,6 +83,9 @@ use App\Modules\Inventory\Models\GoodsReceiptItem;
 use App\Modules\Inventory\Policies\GoodsReceiptPolicy;
 use App\Modules\Inventory\Models\StockReservation;
 use App\Modules\Inventory\Policies\StockReservationPolicy;
+use App\Modules\Inventory\Models\Shipment;
+use App\Modules\Inventory\Models\ShipmentItem;
+use App\Modules\Inventory\Policies\ShipmentPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -145,5 +148,7 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(PurchaseRequest::class, PurchaseRequestPolicy::class);
         Gate::policy(GoodsReceipt::class,     GoodsReceiptPolicy::class);
         Gate::policy(GoodsReceiptItem::class, GoodsReceiptPolicy::class);
+        Gate::policy(Shipment::class,     ShipmentPolicy::class);
+        Gate::policy(ShipmentItem::class, ShipmentPolicy::class);
     }
 }
