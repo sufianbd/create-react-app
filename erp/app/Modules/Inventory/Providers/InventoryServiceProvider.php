@@ -78,6 +78,9 @@ use App\Modules\Inventory\Models\QualityAlert;
 use App\Modules\Inventory\Policies\QualityAlertPolicy;
 use App\Modules\Inventory\Models\PurchaseRequest;
 use App\Modules\Inventory\Policies\PurchaseRequestPolicy;
+use App\Modules\Inventory\Models\GoodsReceipt;
+use App\Modules\Inventory\Models\GoodsReceiptItem;
+use App\Modules\Inventory\Policies\GoodsReceiptPolicy;
 use App\Modules\Inventory\Models\StockReservation;
 use App\Modules\Inventory\Policies\StockReservationPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -140,5 +143,7 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(QualityAlert::class, QualityAlertPolicy::class);
         Gate::policy(StockReservation::class, StockReservationPolicy::class);
         Gate::policy(PurchaseRequest::class, PurchaseRequestPolicy::class);
+        Gate::policy(GoodsReceipt::class,     GoodsReceiptPolicy::class);
+        Gate::policy(GoodsReceiptItem::class, GoodsReceiptPolicy::class);
     }
 }

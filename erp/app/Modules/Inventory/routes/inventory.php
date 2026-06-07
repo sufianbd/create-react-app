@@ -300,3 +300,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('purchase-requests/{purchase_request}/cancel',       [PurchaseRequestController::class, 'cancel'])->name('purchase-requests.cancel');
     Route::resource('purchase-requests', PurchaseRequestController::class);
 });
+
+// Goods Receipts
+use App\Modules\Inventory\Http\Controllers\GoodsReceiptController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('goods-receipts/{goods_receipt}/confirm', [GoodsReceiptController::class, 'confirm'])->name('goods-receipts.confirm');
+    Route::post('goods-receipts/{goods_receipt}/post',    [GoodsReceiptController::class, 'post'])->name('goods-receipts.post');
+    Route::post('goods-receipts/{goods_receipt}/reject',  [GoodsReceiptController::class, 'reject'])->name('goods-receipts.reject');
+    Route::resource('goods-receipts', GoodsReceiptController::class);
+});
