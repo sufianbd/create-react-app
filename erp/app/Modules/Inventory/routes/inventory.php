@@ -289,3 +289,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('stock-reservations/{stock_reservation}/expire',  [StockReservationController::class, 'expire'])->name('stock-reservations.expire');
     Route::resource('stock-reservations', StockReservationController::class);
 });
+
+// Purchase Requests
+use App\Modules\Inventory\Http\Controllers\PurchaseRequestController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('purchase-requests/{purchase_request}/submit',       [PurchaseRequestController::class, 'submit'])->name('purchase-requests.submit');
+    Route::post('purchase-requests/{purchase_request}/approve',      [PurchaseRequestController::class, 'approve'])->name('purchase-requests.approve');
+    Route::post('purchase-requests/{purchase_request}/reject',       [PurchaseRequestController::class, 'reject'])->name('purchase-requests.reject');
+    Route::post('purchase-requests/{purchase_request}/mark-ordered', [PurchaseRequestController::class, 'markOrdered'])->name('purchase-requests.mark-ordered');
+    Route::post('purchase-requests/{purchase_request}/cancel',       [PurchaseRequestController::class, 'cancel'])->name('purchase-requests.cancel');
+    Route::resource('purchase-requests', PurchaseRequestController::class);
+});
