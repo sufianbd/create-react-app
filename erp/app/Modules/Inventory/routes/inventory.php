@@ -319,3 +319,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('shipments/{shipment}/cancel',   [ShipmentController::class, 'cancel'])->name('shipments.cancel');
     Route::resource('shipments', ShipmentController::class);
 });
+
+// RMA Requests
+use App\Modules\Inventory\Http\Controllers\RmaRequestController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('rma-requests/{rma_request}/approve', [RmaRequestController::class, 'approve'])->name('rma-requests.approve');
+    Route::post('rma-requests/{rma_request}/receive', [RmaRequestController::class, 'receive'])->name('rma-requests.receive');
+    Route::post('rma-requests/{rma_request}/inspect', [RmaRequestController::class, 'inspect'])->name('rma-requests.inspect');
+    Route::post('rma-requests/{rma_request}/close',   [RmaRequestController::class, 'close'])->name('rma-requests.close');
+    Route::post('rma-requests/{rma_request}/reject',  [RmaRequestController::class, 'reject'])->name('rma-requests.reject');
+    Route::resource('rma-requests', RmaRequestController::class);
+});
