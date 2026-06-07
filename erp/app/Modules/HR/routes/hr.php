@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\HR\Http\Controllers\HRDashboardController;
+
 use App\Modules\HR\Http\Controllers\AttendanceController;
 use App\Modules\HR\Http\Controllers\DisciplinaryCaseController;
 use App\Modules\HR\Http\Controllers\GrievanceController;
@@ -28,6 +30,11 @@ use App\Modules\HR\Http\Controllers\ShiftTemplateController;
 use App\Modules\HR\Http\Controllers\WorkScheduleController;
 use App\Modules\HR\Models\ExpenseClaimItem;
 use Illuminate\Support\Facades\Route;
+
+
+Route::middleware(['web','auth','verified'])->prefix('hr')->name('hr.')->group(function() {
+    Route::get('dashboard', [HRDashboardController::class, 'index'])->name('dashboard');
+});
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
 

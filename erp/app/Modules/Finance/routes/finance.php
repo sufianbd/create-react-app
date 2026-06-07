@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Finance\Http\Controllers\FinanceDashboardController;
+
 use App\Modules\Finance\Http\Controllers\AccountController;
 use App\Modules\Finance\Http\Controllers\BudgetController;
 use App\Modules\Finance\Http\Controllers\BudgetLineController;
@@ -44,6 +46,11 @@ use App\Modules\Finance\Http\Controllers\SupportTicketController;
 use App\Modules\Finance\Http\Controllers\CurrencyController;
 use App\Modules\Finance\Http\Controllers\PaymentTermController;
 use App\Modules\Finance\Http\Controllers\CustomerGroupController;
+
+
+Route::middleware(['web','auth','verified'])->prefix('finance')->name('finance.')->group(function() {
+    Route::get('dashboard', [FinanceDashboardController::class, 'index'])->name('dashboard');
+});
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
 

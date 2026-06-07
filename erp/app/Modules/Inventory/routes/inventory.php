@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Inventory\Http\Controllers\InventoryDashboardController;
+
 use App\Modules\Inventory\Http\Controllers\AssetController;
 use App\Modules\Inventory\Http\Controllers\CostingController;
 use App\Modules\Inventory\Http\Controllers\AssetMaintenanceController;
@@ -25,6 +27,11 @@ use App\Modules\Inventory\Http\Controllers\ProductAttributeController;
 use App\Modules\Inventory\Http\Controllers\ProductVariantController;
 use App\Modules\Inventory\Http\Controllers\StockTransferController;
 use Illuminate\Support\Facades\Route;
+
+
+Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
+    Route::get('dashboard', [InventoryDashboardController::class, 'index'])->name('dashboard');
+});
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
 

@@ -54,6 +54,7 @@ const navItems: NavItem[] = [
         icon: inventoryIcon,
         permission: 'inventory.view',
         children: [
+            { label: 'Dashboard',       href: '/inventory/dashboard',       icon: <span /> },
             { label: 'Products',        href: '/inventory/products',        icon: inventoryIcon },
             { label: 'Categories',          href: '/inventory/categories',          icon: inventoryIcon },
             { label: 'Product Categories', href: '/inventory/product-categories', icon: inventoryIcon },
@@ -89,6 +90,8 @@ const navItems: NavItem[] = [
             { label: 'Units of Measure',   href: '/inventory/units-of-measure',       icon: <span /> },
             { label: 'Cycle Counts',       href: '/inventory/cycle-counts',            icon: <span /> },
             { label: 'Product Tags',        href: '/inventory/product-tags',            icon: <span /> },
+            { label: 'Shipments',           href: '/inventory/shipments',               icon: <span /> },
+            { label: 'RMA Requests',        href: '/inventory/rma-requests',            icon: <span /> },
         ],
     },
     {
@@ -101,6 +104,7 @@ const navItems: NavItem[] = [
         ),
         permission: 'finance.view',
         children: [
+            { label: 'Dashboard',         href: '/finance/dashboard',                     icon: <span /> },
             { label: 'Invoices',          href: '/finance/invoices',                      icon: <span /> },
             { label: 'Recurring Invoices', href: '/finance/recurring-invoices',           icon: <span /> },
             { label: 'Quotes',            href: '/finance/quotes',                        icon: <span /> },
@@ -152,6 +156,8 @@ const navItems: NavItem[] = [
             { label: 'Petty Cash',       href: '/finance/petty-cash',       icon: <span /> },
             { label: 'Bank Transfers',    href: '/finance/bank-transfers',    icon: <span /> },
             { label: 'Advance Payments',  href: '/finance/advance-payments',  icon: <span /> },
+            { label: 'Profit Centers',   href: '/finance/profit-centers',     icon: <span /> },
+            { label: 'Expense Budgets',  href: '/finance/expense-budgets',    icon: <span /> },
         ],
     },
     {
@@ -164,6 +170,7 @@ const navItems: NavItem[] = [
         ),
         permission: 'hr.view',
         children: [
+            { label: 'Dashboard',   href: '/hr/dashboard',   icon: <span /> },
             { label: 'Employees',   href: '/hr/employees',   icon: <span /> },
             { label: 'Departments', href: '/hr/departments', icon: <span /> },
             { label: 'Leave Types',    href: '/hr/leave-types',    icon: <span /> },

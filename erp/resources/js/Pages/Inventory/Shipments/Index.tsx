@@ -1,5 +1,7 @@
-import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
+import AppLayout from '@/Layouts/AppLayout';
+import { Button } from '@/Components/Common/Button';
+import type { PageProps } from '@/types';
 
 interface Shipment {
     id: number;
@@ -12,89 +14,101 @@ interface Shipment {
     estimated_delivery: string | null;
 }
 
-interface Props {
+interface Props extends PageProps {
     shipments: { data: Shipment[]; current_page: number; last_page: number };
 }
 
-export default function Index({ shipments }: Props) {
-    const badge = (s: string) => {
-        const colors: Record<string, string> = {
-            pending:    'bg-yellow-100 text-yellow-800',
-            'in-transit': 'bg-blue-100 text-blue-800',
-            delivered:  'bg-green-100 text-green-800',
-            returned:   'bg-orange-100 text-orange-800',
-            cancelled:  'bg-red-100 text-red-800',
-        };
-        return colors[s] ?? 'bg-gray-100 text-gray-800';
-    };
+const STATUS_COLORS: Record<string, string> = {
+    pending:      'bg-yellow-100 text-yellow-800',
+    'in-transit': 'bg-blue-100 text-blue-700',
+    delivered:    'bg-green-100 text-green-700',
+    returned:     'bg-orange-100 text-orange-700',
+    cancelled:    'bg-red-100 text-red-700',
+};
 
+export default function ShipmentsIndex({ shipments }: Props) {
     return (
-        <>
+        <AppLayout>
             <Head title="Shipments" />
-            <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-bold">Shipments</h1>
-                    <Link href="/inventory/shipments/create" className="bg-blue-600 text-white px-4 py-2 rounded">
-                        New Shipment
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-semibold text-slate-900">Shipments</h1>
+                        <p className="text-sm text-slate-500 mt-1">{shipments.data.length} shipments</p>
+                    </div>
+                    <Link href="/inventory/shipments/create">
+                        <Button>New Shipment</Button>
                     </Link>
                 </div>
-                <table className="w-full border rounded">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="p-3 text-left">Number</th>
-                            <th className="p-3 text-left">Type</th>
-                            <th className="p-3 text-left">Status</th>
-                            <th className="p-3 text-left">Carrier</th>
-                            <th className="p-3 text-left">Tracking</th>
-                            <th className="p-3 text-left">Ship Date</th>
-                            <th className="p-3 text-left">Est. Delivery</th>
-                            <th className="p-3 text-left">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {shipments.data.map(s => (
-                            <tr key={s.id} className="border-t">
-                                <td className="p-3">
-                                    <Link href={`/inventory/shipments/${s.id}`} className="text-blue-600 hover:underline">
-                                        {s.shipment_number ?? `#${s.id}`}
-                                    </Link>
-                                </td>
-                                <td className="p-3 capitalize">{s.type}</td>
-                                <td className="p-3">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${badge(s.status)}`}>
-                                        {s.status}
-                                    </span>
-                                </td>
-                                <td className="p-3">{s.carrier ?? '—'}</td>
-                                <td className="p-3">{s.tracking_number ?? '—'}</td>
-                                <td className="p-3">{s.ship_date ?? '—'}</td>
-                                <td className="p-3">{s.estimated_delivery ?? '—'}</td>
-                                <td className="p-3 space-x-2">
-                                    {s.status === 'pending' && (
-                                        <button
-                                            onClick={() => router.post(`/inventory/shipments/${s.id}/dispatch`)}
-                                            className="text-blue-600 hover:underline text-sm"
-                                        >
-                                            Dispatch
-                                        </button>
-                                    )}
-                                    {s.status === 'in-transit' && (
-                                        <button
-                                            onClick={() => router.post(`/inventory/shipments/${s.id}/deliver`)}
-                                            className="text-green-600 hover:underline text-sm"
-                                        >
-                                            Mark Delivered
-                                        </button>
-                                    )}
-                                    <Link href={`/inventory/shipments/${s.id}/edit`} className="text-gray-600 hover:underline text-sm">
-                                        Edit
-                                    </Link>
-                                </td>
+
+                <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+                    <table className="min-w-full divide-y divide-slate-200">
+                        <thead className="bg-slate-50">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Number</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Type</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Carrier</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Tracking</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Ship Date</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Est. Delivery</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                            {shipments.data.length === 0 && (
+                                <tr>
+                                    <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        No shipments found.
+                                    </td>
+                                </tr>
+                            )}
+                            {shipments.data.map((s) => (
+                                <tr key={s.id} className="hover:bg-slate-50">
+                                    <td className="px-4 py-3">
+                                        <Link href={`/inventory/shipments/${s.id}`} className="font-medium text-indigo-600 hover:text-indigo-800">
+                                            {s.shipment_number ?? `#${s.id}`}
+                                        </Link>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-600 capitalize">{s.type}</td>
+                                    <td className="px-4 py-3">
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[s.status] ?? 'bg-slate-100 text-slate-600'}`}>
+                                            {s.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-600">{s.carrier ?? '—'}</td>
+                                    <td className="px-4 py-3 text-sm font-mono text-slate-500">{s.tracking_number ?? '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-slate-600">{s.ship_date ?? '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-slate-600">{s.estimated_delivery ?? '—'}</td>
+                                    <td className="px-4 py-3 text-right">
+                                        <div className="flex justify-end gap-3">
+                                            {s.status === 'pending' && (
+                                                <button
+                                                    onClick={() => router.post(`/inventory/shipments/${s.id}/dispatch`)}
+                                                    className="text-sm text-blue-600 hover:text-blue-800"
+                                                >
+                                                    Dispatch
+                                                </button>
+                                            )}
+                                            {s.status === 'in-transit' && (
+                                                <button
+                                                    onClick={() => router.post(`/inventory/shipments/${s.id}/deliver`)}
+                                                    className="text-sm text-green-600 hover:text-green-800"
+                                                >
+                                                    Delivered
+                                                </button>
+                                            )}
+                                            <Link href={`/inventory/shipments/${s.id}/edit`} className="text-sm text-slate-500 hover:text-slate-700">
+                                                Edit
+                                            </Link>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </>
+        </AppLayout>
     );
 }
