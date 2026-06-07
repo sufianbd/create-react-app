@@ -109,4 +109,9 @@ class Employee extends Model
               ->orWhere('employee_number', 'like', "%{$term}%");
         });
     }
+
+    public function emergencyContacts(): HasMany
+    {
+        return $this->hasMany(EmployeeEmergencyContact::class);
+    }
 }

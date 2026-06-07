@@ -341,3 +341,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('interview-schedules/{interview_schedule}/no-show',  [InterviewScheduleController::class, 'noShow'])->name('interview-schedules.no-show');
     Route::resource('interview-schedules', InterviewScheduleController::class);
 });
+
+// Employee Emergency Contacts
+use App\Modules\HR\Http\Controllers\EmployeeEmergencyContactController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('employees/{employee}/emergency-contacts/{emergency_contact}/mark-primary',
+        [EmployeeEmergencyContactController::class, 'markPrimary']
+    )->name('employees.emergency-contacts.mark-primary');
+    Route::resource('employees.emergency-contacts', EmployeeEmergencyContactController::class)
+        ->shallow();
+});
