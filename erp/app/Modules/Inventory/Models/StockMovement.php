@@ -18,6 +18,7 @@ class StockMovement extends Model
     protected $fillable = [
         'tenant_id', 'product_id', 'warehouse_id',
         'type', 'quantity', 'reference', 'notes', 'created_by',
+        'lot_id', 'serial_id',
     ];
 
     protected $casts = ['quantity' => 'decimal:2'];
@@ -35,6 +36,16 @@ class StockMovement extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function lot(): BelongsTo
+    {
+        return $this->belongsTo(LotNumber::class, 'lot_id');
+    }
+
+    public function serial(): BelongsTo
+    {
+        return $this->belongsTo(SerialNumber::class, 'serial_id');
     }
 
     /**

@@ -89,6 +89,11 @@ use App\Modules\Inventory\Policies\ShipmentPolicy;
 use App\Modules\Inventory\Models\RmaRequest;
 use App\Modules\Inventory\Models\RmaRequestItem;
 use App\Modules\Inventory\Policies\RmaRequestPolicy;
+use App\Modules\Inventory\Models\ProductWarranty;
+use App\Modules\Inventory\Models\WarrantyClaim;
+use App\Modules\Inventory\Policies\WarrantyPolicy;
+use App\Modules\Inventory\Models\PutAwayRule;
+use App\Modules\Inventory\Policies\PutAwayRulePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -155,5 +160,8 @@ class InventoryServiceProvider extends ServiceProvider
         Gate::policy(ShipmentItem::class, ShipmentPolicy::class);
         Gate::policy(RmaRequest::class,     RmaRequestPolicy::class);
         Gate::policy(RmaRequestItem::class, RmaRequestPolicy::class);
+        Gate::policy(ProductWarranty::class, WarrantyPolicy::class);
+        Gate::policy(WarrantyClaim::class,   WarrantyPolicy::class);
+        Gate::policy(PutAwayRule::class,     PutAwayRulePolicy::class);
     }
 }

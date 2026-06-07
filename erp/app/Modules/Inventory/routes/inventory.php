@@ -337,3 +337,26 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('rma-requests/{rma_request}/reject',  [RmaRequestController::class, 'reject'])->name('rma-requests.reject');
     Route::resource('rma-requests', RmaRequestController::class);
 });
+
+// Warranties
+use App\Modules\Inventory\Http\Controllers\ProductWarrantyController;
+Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
+    Route::resource('warranties', ProductWarrantyController::class);
+});
+
+// Warranty Claims
+use App\Modules\Inventory\Http\Controllers\WarrantyClaimController;
+Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
+    Route::post('warranty-claims/{warranty_claim}/approve', [WarrantyClaimController::class, 'approve'])->name('warranty-claims.approve');
+    Route::post('warranty-claims/{warranty_claim}/reject',  [WarrantyClaimController::class, 'reject'])->name('warranty-claims.reject');
+    Route::post('warranty-claims/{warranty_claim}/resolve', [WarrantyClaimController::class, 'resolve'])->name('warranty-claims.resolve');
+    Route::resource('warranty-claims', WarrantyClaimController::class)->except(['edit','update']);
+});
+
+// Put-Away Rules
+use App\Modules\Inventory\Http\Controllers\PutAwayRuleController;
+Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
+    Route::post('put-away-rules/{put_away_rule}/activate',   [PutAwayRuleController::class,'activate'])->name('put-away-rules.activate');
+    Route::post('put-away-rules/{put_away_rule}/deactivate', [PutAwayRuleController::class,'deactivate'])->name('put-away-rules.deactivate');
+    Route::resource('put-away-rules', PutAwayRuleController::class);
+});
