@@ -419,3 +419,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('vendor-payments/{vendor_payment}/cancel',  [VendorPaymentController::class, 'cancel'])->name('vendor-payments.cancel');
     Route::resource('vendor-payments', VendorPaymentController::class);
 });
+
+// Payment Schedules
+use App\Modules\Finance\Http\Controllers\PaymentScheduleController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('payment-schedules/{payment_schedule}/pause',  [PaymentScheduleController::class, 'pause'])->name('payment-schedules.pause');
+    Route::post('payment-schedules/{payment_schedule}/resume', [PaymentScheduleController::class, 'resume'])->name('payment-schedules.resume');
+    Route::post('payment-schedules/{payment_schedule}/cancel', [PaymentScheduleController::class, 'cancel'])->name('payment-schedules.cancel');
+    Route::resource('payment-schedules', PaymentScheduleController::class);
+});
