@@ -280,3 +280,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inven
     Route::post('quality-alerts/{quality_alert}/close',      [QualityAlertController::class, 'close'])->name('quality-alerts.close');
     Route::resource('quality-alerts', QualityAlertController::class);
 });
+
+// Stock Reservations
+use App\Modules\Inventory\Http\Controllers\StockReservationController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::post('stock-reservations/{stock_reservation}/fulfill', [StockReservationController::class, 'fulfill'])->name('stock-reservations.fulfill');
+    Route::post('stock-reservations/{stock_reservation}/cancel',  [StockReservationController::class, 'cancel'])->name('stock-reservations.cancel');
+    Route::post('stock-reservations/{stock_reservation}/expire',  [StockReservationController::class, 'expire'])->name('stock-reservations.expire');
+    Route::resource('stock-reservations', StockReservationController::class);
+});
