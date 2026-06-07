@@ -437,3 +437,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('customer-credits/{customer_credit}/cancel', [CustomerCreditController::class, 'cancel'])->name('customer-credits.cancel');
     Route::resource('customer-credits', CustomerCreditController::class);
 });
+
+// Expense Budgets
+use App\Modules\Finance\Http\Controllers\ExpenseBudgetController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
+    Route::post('expense-budgets/{expense_budget}/freeze', [ExpenseBudgetController::class, 'freeze'])->name('expense-budgets.freeze');
+    Route::post('expense-budgets/{expense_budget}/close',  [ExpenseBudgetController::class, 'close'])->name('expense-budgets.close');
+    Route::resource('expense-budgets', ExpenseBudgetController::class);
+});

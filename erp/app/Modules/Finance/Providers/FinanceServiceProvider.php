@@ -117,6 +117,8 @@ use App\Modules\Finance\Models\PaymentScheduleItem;
 use App\Modules\Finance\Policies\PaymentSchedulePolicy;
 use App\Modules\Finance\Models\CustomerCredit;
 use App\Modules\Finance\Policies\CustomerCreditPolicy;
+use App\Modules\Finance\Models\ExpenseBudget;
+use App\Modules\Finance\Policies\ExpenseBudgetPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -204,6 +206,7 @@ class FinanceServiceProvider extends ServiceProvider
         Gate::policy(PaymentSchedule::class,         PaymentSchedulePolicy::class);
         Gate::policy(PaymentScheduleItem::class,     PaymentSchedulePolicy::class);
         Gate::policy(CustomerCredit::class, CustomerCreditPolicy::class);
+        Gate::policy(ExpenseBudget::class, ExpenseBudgetPolicy::class);
         if ($this->app->runningInConsole()) {
             $this->commands([\App\Modules\Finance\Console\Commands\GenerateRecurringInvoices::class]);
         }
