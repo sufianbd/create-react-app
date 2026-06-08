@@ -386,3 +386,18 @@ use App\Modules\Inventory\Http\Controllers\TraceabilityController;
 Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
     Route::get('traceability', [TraceabilityController::class,'index'])->name('traceability.index');
 });
+
+// Inventory Reports
+use App\Modules\Inventory\Http\Controllers\InventoryReportController;
+Route::middleware(['web','auth','verified'])->prefix('inventory/reports')->name('inventory.reports.')->group(function() {
+    Route::get('stock-valuation', [InventoryReportController::class, 'stockValuation'])->name('stock-valuation');
+    Route::get('stock-movement',  [InventoryReportController::class, 'stockMovement'])->name('stock-movement');
+    Route::get('low-stock',       [InventoryReportController::class, 'lowStock'])->name('low-stock');
+    Route::get('abc-analysis',    [InventoryReportController::class, 'abcAnalysis'])->name('abc-analysis');
+});
+
+// Multi-Warehouse Overview
+use App\Modules\Inventory\Http\Controllers\MultiWarehouseController;
+Route::middleware(['web','auth','verified'])->prefix('inventory')->name('inventory.')->group(function() {
+    Route::get('multi-warehouse', [MultiWarehouseController::class, 'index'])->name('multi-warehouse.index');
+});

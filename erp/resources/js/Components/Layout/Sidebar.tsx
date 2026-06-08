@@ -98,6 +98,11 @@ const navItems: NavItem[] = [
             { label: 'Stock Pickings',     href: '/inventory/stock-pickings',          icon: <span /> },
             { label: 'Replenishments',     href: '/inventory/replenishments',          icon: <span /> },
             { label: 'Traceability',       href: '/inventory/traceability',            icon: <span /> },
+            { label: 'Multi-Warehouse',    href: '/inventory/multi-warehouse',          icon: <span /> },
+            { label: 'Reports: Stock Val', href: '/inventory/reports/stock-valuation',  icon: <span /> },
+            { label: 'Reports: Movement',  href: '/inventory/reports/stock-movement',   icon: <span /> },
+            { label: 'Reports: Low Stock', href: '/inventory/reports/low-stock',        icon: <span /> },
+            { label: 'Reports: ABC',       href: '/inventory/reports/abc-analysis',     icon: <span /> },
         ],
     },
     {
