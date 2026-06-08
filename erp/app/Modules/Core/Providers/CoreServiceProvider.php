@@ -13,6 +13,7 @@ use App\Modules\Manufacturing\Providers\ManufacturingServiceProvider;
 use App\Modules\CRM\Providers\CRMServiceProvider;
 use App\Modules\PM\Providers\PMServiceProvider;
 use App\Modules\POS\Providers\POSServiceProvider;
+use App\Modules\Helpdesk\Providers\HelpdeskServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +28,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(CRMServiceProvider::class);
         $this->app->register(PMServiceProvider::class);
         $this->app->register(POSServiceProvider::class);
+        $this->app->register(HelpdeskServiceProvider::class);
     }
 
     public function boot(): void
