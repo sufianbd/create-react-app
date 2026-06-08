@@ -11,6 +11,7 @@ use App\Modules\HR\Providers\HRServiceProvider;
 use App\Modules\Inventory\Providers\InventoryServiceProvider;
 use App\Modules\Manufacturing\Providers\ManufacturingServiceProvider;
 use App\Modules\CRM\Providers\CRMServiceProvider;
+use App\Modules\PM\Providers\PMServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,6 +24,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(HRServiceProvider::class);
         $this->app->register(ManufacturingServiceProvider::class);
         $this->app->register(CRMServiceProvider::class);
+        $this->app->register(PMServiceProvider::class);
     }
 
     public function boot(): void
