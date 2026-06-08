@@ -15,5 +15,6 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('pos')->name('pos.')->gro
 
     // Order actions
     Route::post('orders/{order}/refund', [PosOrderController::class, 'refund'])->name('orders.refund');
+    Route::get('orders/{order}/pdf',    [PosOrderController::class, 'pdf'])->name('orders.pdf');
     Route::resource('orders', PosOrderController::class)->only(['index', 'store', 'show']);
 });

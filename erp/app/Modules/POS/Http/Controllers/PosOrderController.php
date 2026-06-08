@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Modules\POS\Models\PosOrder;
 use App\Modules\POS\Models\PosOrderItem;
 use App\Modules\POS\Models\PosSession;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -181,5 +183,17 @@ class PosOrderController extends Controller
         }
 
         return redirect()->back()->with('success', 'Order refunded successfully.');
+    }
+
+    public function pdf(PosOrder $order): HttpResponse
+    {
+        $order->load(['items', 'servedBy', 'session.warehouse']);
+        $session = $order->session;
+        $pdf = Pdf::loadView('pdf.receipt', compact('order', 'session'));
+        $pdf->setPaper([0, 0, 226.77, 600], 'portrait'); // 80mm width
+        return response($pdf->output(), 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="receipt-' . $order->receipt_number . '.pdf"',
+        ]);
     }
 }
