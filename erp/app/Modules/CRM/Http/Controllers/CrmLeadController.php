@@ -152,4 +152,38 @@ class CrmLeadController extends Controller
 
         return redirect()->route('crm.leads.show', $lead)->with('success', 'Converted to opportunity.');
     }
+
+    public function kanban(Request $request): Response
+    {
+        $stages = \App\Modules\CRM\Models\CrmStage::orderBy('sequence')->get(['id', 'name', 'color']);
+        $leads  = CrmLead::with(['stage', 'assignee'])
+            ->where('type', 'opportunity')
+            ->whereNotIn('status', ['lost'])
+            ->get()
+            ->groupBy('stage_id');
+
+        $columns = $stages->map(fn ($stage) => [
+            'id'    => $stage->id,
+            'name'  => $stage->name,
+            'color' => $stage->color ?? '#6b7280',
+            'leads' => ($leads->get($stage->id) ?? collect())->map(fn ($l) => [
+                'id'               => $l->id,
+                'title'            => $l->title,
+                'contact_name'     => $l->contact_name,
+                'expected_revenue' => $l->expected_revenue,
+                'probability'      => $l->probability,
+                'priority'         => $l->priority,
+                'assignee'         => $l->assignee ? ['name' => $l->assignee->name] : null,
+            ])->values(),
+        ]);
+
+        return Inertia::render('CRM/Pipeline/Kanban', ['columns' => $columns]);
+    }
+
+    public function moveStage(Request $request, CrmLead $lead): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate(['stage_id' => 'required|exists:crm_stages,id']);
+        $lead->update(['stage_id' => $data['stage_id']]);
+        return response()->json(['ok' => true]);
+    }
 }

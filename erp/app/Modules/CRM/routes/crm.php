@@ -16,6 +16,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('crm')->name('crm.')->gro
     Route::delete('stages/{stage}', [CrmStageController::class, 'destroy'])->name('stages.destroy');
     Route::get('stages',            [CrmStageController::class, 'index'])->name('stages.index');
 
+    // Pipeline Kanban (before leads resource)
+    Route::get('pipeline/kanban', [CrmLeadController::class, 'kanban'])->name('pipeline.kanban');
+    Route::patch('leads/{lead}/move-stage', [CrmLeadController::class, 'moveStage'])->name('leads.move-stage');
+
     // Leads — action routes first
     Route::post('leads/{lead}/mark-won',  [CrmLeadController::class, 'markWon'])->name('leads.mark-won');
     Route::post('leads/{lead}/mark-lost', [CrmLeadController::class, 'markLost'])->name('leads.mark-lost');

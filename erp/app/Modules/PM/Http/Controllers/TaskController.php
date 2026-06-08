@@ -109,4 +109,64 @@ class TaskController extends Controller
 
         return redirect()->back()->with('success', 'Task marked as done.');
     }
+
+    public function kanban(Project $project): Response
+    {
+        $tasks = $project->tasks()
+            ->with('assignee')
+            ->orderBy('sequence')
+            ->get()
+            ->groupBy('status');
+
+        $columns = ['todo', 'in_progress', 'review', 'done', 'cancelled'];
+        $grouped = [];
+        foreach ($columns as $col) {
+            $grouped[$col] = $tasks->get($col, collect())->map(fn ($t) => [
+                'id'       => $t->id,
+                'title'    => $t->title,
+                'priority' => $t->priority,
+                'due_date' => $t->due_date?->toDateString(),
+                'assignee' => $t->assignee ? ['name' => $t->assignee->name] : null,
+                'is_overdue' => $t->isOverdue(),
+            ])->values();
+        }
+
+        return Inertia::render('PM/Tasks/Kanban', [
+            'project' => ['id' => $project->id, 'name' => $project->name],
+            'columns' => $grouped,
+        ]);
+    }
+
+    public function moveStatus(Request $request, Project $project, Task $task): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate(['status' => 'required|in:todo,in_progress,review,done,cancelled']);
+        $task->update(['status' => $data['status']]);
+        return response()->json(['ok' => true]);
+    }
+
+    public function calendar(Request $request, Project $project): Response
+    {
+        $year  = (int) ($request->year  ?? now()->year);
+        $month = (int) ($request->month ?? now()->month);
+
+        $tasks = $project->tasks()
+            ->whereNotNull('due_date')
+            ->whereYear('due_date', $year)
+            ->whereMonth('due_date', $month)
+            ->get(['id', 'title', 'status', 'priority', 'due_date'])
+            ->map(fn ($t) => [
+                'id'       => $t->id,
+                'title'    => $t->title,
+                'status'   => $t->status,
+                'priority' => $t->priority,
+                'due_date' => $t->due_date->toDateString(),
+            ]);
+
+        return Inertia::render('PM/Tasks/Calendar', [
+            'project' => ['id' => $project->id, 'name' => $project->name],
+            'tasks'   => $tasks,
+            'year'    => $year,
+            'month'   => $month,
+        ]);
+    }
 }
