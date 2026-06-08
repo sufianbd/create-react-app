@@ -20,6 +20,7 @@ use App\Modules\Marketing\Providers\MarketingServiceProvider;
 use App\Modules\FieldService\Providers\FieldServiceProvider;
 use App\Modules\Approvals\Providers\ApprovalsServiceProvider;
 use App\Modules\Ecommerce\Providers\EcommerceServiceProvider;
+use App\Modules\Discuss\Providers\DiscussServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -41,6 +42,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(FieldServiceProvider::class);
         $this->app->register(ApprovalsServiceProvider::class);
         $this->app->register(EcommerceServiceProvider::class);
+        $this->app->register(DiscussServiceProvider::class);
     }
 
     public function boot(): void
