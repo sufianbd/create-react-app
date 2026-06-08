@@ -358,3 +358,12 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::resource('employees.emergency-contacts', EmployeeEmergencyContactController::class)
         ->shallow();
 });
+
+// HR Reports
+use App\Modules\HR\Http\Controllers\HRReportController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr/reports')->name('hr.reports.')->group(function () {
+    Route::get('headcount',          [HRReportController::class, 'headcount'])->name('headcount');
+    Route::get('leave-summary',      [HRReportController::class, 'leaveSummary'])->name('leave-summary');
+    Route::get('department-summary', [HRReportController::class, 'departmentSummary'])->name('department-summary');
+    Route::get('employee-tenure',    [HRReportController::class, 'employeeTenure'])->name('employee-tenure');
+});

@@ -211,6 +211,10 @@ const navItems: NavItem[] = [
             { label: 'Exit Management', href: '/hr/employee-exits', icon: <span /> },
             { label: 'Position Changes', href: '/hr/position-changes', icon: <span /> },
             { label: 'Salary Grades', href: '/hr/salary-grades', icon: <span /> },
+            { label: 'Reports: Headcount',    href: '/hr/reports/headcount',          icon: <span /> },
+            { label: 'Reports: Leave',        href: '/hr/reports/leave-summary',      icon: <span /> },
+            { label: 'Reports: Departments',  href: '/hr/reports/department-summary', icon: <span /> },
+            { label: 'Reports: Tenure',       href: '/hr/reports/employee-tenure',    icon: <span /> },
         ],
     },
     {
@@ -229,6 +233,7 @@ const navItems: NavItem[] = [
         permission: 'finance.view',
         children: [
             { label: 'Audit Log', href: '/core/audit-logs', icon: <span /> },
+            { label: 'Companies',  href: '/core/companies',  icon: <span /> },
         ],
     },
     {

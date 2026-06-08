@@ -38,26 +38,28 @@ function makeTWarehouse(array $attrs = []): Warehouse
     ]);
 }
 
-function makeTLot(Product $product, array $attrs = []): LotNumber
+function makeTLot(Product $product, Warehouse $warehouse, array $attrs = []): LotNumber
 {
     return LotNumber::create([
-        'tenant_id'         => test()->tenant->id,
-        'product_id'        => $product->id,
-        'lot_number'        => 'LOT-' . uniqid(),
-        'quantity_received' => 100,
+        'tenant_id'          => test()->tenant->id,
+        'product_id'         => $product->id,
+        'warehouse_id'       => $warehouse->id,
+        'lot_number'         => 'LOT-' . uniqid(),
+        'quantity_received'  => 100,
         'quantity_remaining' => 100,
-        'status'            => 'active',
+        'status'             => 'active',
         ...$attrs,
     ]);
 }
 
-function makeTSerial(Product $product, array $attrs = []): SerialNumber
+function makeTSerial(Product $product, Warehouse $warehouse, array $attrs = []): SerialNumber
 {
     return SerialNumber::create([
-        'tenant_id'  => test()->tenant->id,
-        'product_id' => $product->id,
+        'tenant_id'    => test()->tenant->id,
+        'product_id'   => $product->id,
+        'warehouse_id' => $warehouse->id,
         'serial_number' => 'SN-' . uniqid(),
-        'status'     => 'in_stock',
+        'status'       => 'in_stock',
         ...$attrs,
     ]);
 }
@@ -87,7 +89,7 @@ it('admin can view traceability page with no filters', function () {
 it('traceability page shows movements for a specific lot_id', function () {
     $product   = makeTProduct();
     $warehouse = makeTWarehouse();
-    $lot       = makeTLot($product);
+    $lot       = makeTLot($product, $warehouse);
 
     makeTMovement($product, $warehouse, ['lot_id' => $lot->id]);
 
@@ -102,7 +104,7 @@ it('traceability page shows movements for a specific lot_id', function () {
 it('traceability page shows movements for a specific serial_id', function () {
     $product   = makeTProduct();
     $warehouse = makeTWarehouse();
-    $serial    = makeTSerial($product);
+    $serial    = makeTSerial($product, $warehouse);
 
     makeTMovement($product, $warehouse, ['serial_id' => $serial->id]);
 
@@ -116,7 +118,8 @@ it('traceability page shows movements for a specific serial_id', function () {
 
 it('traceability shows empty movements when lot has none', function () {
     $product = makeTProduct();
-    $lot     = makeTLot($product);
+    $warehouse = makeTWarehouse();
+    $lot     = makeTLot($product, $warehouse);
 
     $response = $this->get("/inventory/traceability?lot_id={$lot->id}");
     $response->assertOk();
@@ -135,7 +138,7 @@ it('StockMovement fillable includes lot_id and serial_id', function () {
 it('StockMovement lot() relation works', function () {
     $product   = makeTProduct();
     $warehouse = makeTWarehouse();
-    $lot       = makeTLot($product);
+    $lot       = makeTLot($product, $warehouse);
 
     $movement = makeTMovement($product, $warehouse, ['lot_id' => $lot->id]);
 
@@ -146,7 +149,7 @@ it('StockMovement lot() relation works', function () {
 it('StockMovement serial() relation works', function () {
     $product   = makeTProduct();
     $warehouse = makeTWarehouse();
-    $serial    = makeTSerial($product);
+    $serial    = makeTSerial($product, $warehouse);
 
     $movement = makeTMovement($product, $warehouse, ['serial_id' => $serial->id]);
 

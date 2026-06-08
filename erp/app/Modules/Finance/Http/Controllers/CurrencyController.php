@@ -25,6 +25,13 @@ class CurrencyController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        $this->authorize('create', Currency::class);
+
+        return Inertia::render('Finance/Currencies/Create');
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Currency::class);
@@ -34,6 +41,7 @@ class CurrencyController extends Controller
             'name'           => ['required', 'string', 'max:100'],
             'symbol'         => ['required', 'string', 'max:10'],
             'decimal_places' => ['sometimes', 'integer', 'min:0', 'max:4'],
+            'rounding'       => ['sometimes', 'numeric', 'min:0'],
             'is_base'        => ['sometimes', 'boolean'],
             'is_active'      => ['sometimes', 'boolean'],
         ]);
@@ -51,7 +59,16 @@ class CurrencyController extends Controller
             $currency->setAsBase();
         }
 
-        return redirect()->back()->with('success', 'Currency created.');
+        return redirect()->route('finance.currencies.index')->with('success', 'Currency created.');
+    }
+
+    public function edit(Currency $currency): Response
+    {
+        $this->authorize('update', $currency);
+
+        return Inertia::render('Finance/Currencies/Edit', [
+            'currency' => $currency,
+        ]);
     }
 
     public function update(Request $request, Currency $currency): RedirectResponse
@@ -63,6 +80,7 @@ class CurrencyController extends Controller
             'name'           => ['required', 'string', 'max:100'],
             'symbol'         => ['required', 'string', 'max:10'],
             'decimal_places' => ['sometimes', 'integer', 'min:0', 'max:4'],
+            'rounding'       => ['sometimes', 'numeric', 'min:0'],
             'is_base'        => ['sometimes', 'boolean'],
             'is_active'      => ['sometimes', 'boolean'],
         ]);
@@ -76,7 +94,7 @@ class CurrencyController extends Controller
             $currency->setAsBase();
         }
 
-        return redirect()->back()->with('success', 'Currency updated.');
+        return redirect()->route('finance.currencies.index')->with('success', 'Currency updated.');
     }
 
     public function destroy(Currency $currency): RedirectResponse
@@ -89,7 +107,7 @@ class CurrencyController extends Controller
 
         $currency->delete();
 
-        return redirect()->back()->with('success', 'Currency deleted.');
+        return redirect()->route('finance.currencies.index')->with('success', 'Currency deleted.');
     }
 
     public function setBase(Request $request, Currency $currency): RedirectResponse
@@ -98,6 +116,6 @@ class CurrencyController extends Controller
 
         $currency->setAsBase();
 
-        return redirect()->back()->with('success', 'Base currency updated.');
+        return redirect()->route('finance.currencies.index')->with('success', 'Base currency updated.');
     }
 }

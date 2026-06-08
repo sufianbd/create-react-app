@@ -162,7 +162,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
 
     // Currencies — set-base BEFORE resource
     Route::post('currencies/{currency}/set-base', [CurrencyController::class, 'setBase'])->name('currencies.set-base');
-    Route::resource('currencies', CurrencyController::class)->except(['show', 'create', 'edit']);
+    Route::resource('currencies', CurrencyController::class)->except(['show']);
 
     // Exchange Rates — convert and report BEFORE resource to avoid them being treated as IDs
     Route::get('exchange-rates/convert', [ExchangeRateController::class, 'convert'])->name('exchange-rates.convert');
