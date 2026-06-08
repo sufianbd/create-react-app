@@ -449,9 +449,11 @@ const navItems: NavItem[] = [
         ),
         permission: 'roles.manage',
         children: [
-            { label: 'Users', href: '/settings/users', icon: <span /> },
-            { label: 'Company', href: '/settings/company', icon: <span /> },
-            { label: 'Audit Log', href: '/settings/audit-log', icon: <span /> },
+            { label: 'Users',       href: '/settings/users',     icon: <span /> },
+            { label: 'Company',     href: '/settings/company',   icon: <span /> },
+            { label: 'Audit Log',   href: '/settings/audit-log', icon: <span /> },
+            { label: 'Webhooks',    href: '/settings/webhooks',  icon: <span /> },
+            { label: '2FA Setup',   href: '/2fa/setup',          icon: <span /> },
         ],
     },
 ];

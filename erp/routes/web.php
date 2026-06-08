@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CompanySettingsController;
+use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExecutiveDashboardController;
 use App\Http\Controllers\ImportController;
@@ -48,6 +50,27 @@ Route::prefix('settings')->middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/audit-logs', [CoreAuditLogController::class, 'index'])->name('audit-logs.index');
+});
+
+// Two-Factor Authentication
+Route::middleware(['web', 'auth'])->prefix('2fa')->name('2fa.')->group(function () {
+    Route::get('setup',     [TwoFactorController::class, 'setup'])->name('setup');
+    Route::post('enable',   [TwoFactorController::class, 'enable'])->name('enable');
+    Route::post('disable',  [TwoFactorController::class, 'disable'])->name('disable');
+    Route::get('challenge', [TwoFactorController::class, 'challenge'])->name('challenge');
+    Route::post('verify',   [TwoFactorController::class, 'verify'])->name('verify');
+});
+
+// Outbound Webhooks
+Route::middleware(['web', 'auth', 'verified'])->group(function () {
+    Route::get('settings/webhooks/{webhook}/deliveries', [WebhookController::class, 'deliveries'])->name('webhooks.deliveries');
+    Route::post('settings/webhooks/{webhook}/test',      [WebhookController::class, 'test'])->name('webhooks.test');
+    Route::resource('settings/webhooks', WebhookController::class)->names('webhooks');
+});
+
+// Audit Log UI (admin)
+Route::middleware(['web', 'auth', 'verified'])->group(function () {
+    Route::get('admin/audit-log/{log}', [\App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('admin.audit-log.show');
 });
 
 require __DIR__ . '/auth.php';
