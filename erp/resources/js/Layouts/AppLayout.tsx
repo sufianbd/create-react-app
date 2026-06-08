@@ -1,8 +1,7 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import { usePage } from '@inertiajs/react';
 import { Sidebar } from '@/Components/Layout/Sidebar';
 import { Topbar } from '@/Components/Layout/Topbar';
-import { CommandPalette } from '@/Components/Layout/CommandPalette';
 import { useSidebar } from '@/Hooks/useSidebar';
 import type { PageProps } from '@/types';
 
@@ -14,22 +13,9 @@ interface AppLayoutProps {
 export function AppLayout({ children, title }: AppLayoutProps) {
     const { collapsed, toggle } = useSidebar();
     const { flash } = usePage<PageProps>().props;
-    const [cmdOpen, setCmdOpen] = useState(false);
-
-    useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault();
-                setCmdOpen(true);
-            }
-        };
-        document.addEventListener('keydown', handler);
-        return () => document.removeEventListener('keydown', handler);
-    }, []);
 
     return (
         <>
-        <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
         <div className="flex h-screen overflow-hidden bg-slate-50">
             <Sidebar collapsed={collapsed} onToggle={toggle} />
 

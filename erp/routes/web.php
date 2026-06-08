@@ -80,3 +80,8 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::post('/import/employees',   [ImportController::class, 'employees'])->name('import.employees');
     Route::post('/import/contacts',    [ImportController::class, 'contacts'])->name('import.contacts');
 });
+
+// Global Search
+Route::get('/search', App\Http\Controllers\GlobalSearchController::class)
+    ->middleware(['web', 'auth', 'verified'])
+    ->name('search');

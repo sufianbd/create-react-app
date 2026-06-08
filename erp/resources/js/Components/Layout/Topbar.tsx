@@ -1,6 +1,7 @@
 import { Breadcrumbs } from '@/Components/Layout/Breadcrumbs';
 import { NotificationBell } from '@/Components/Layout/NotificationBell';
 import { UserDropdown } from '@/Components/Layout/UserDropdown';
+import GlobalSearch from '@/Components/Layout/GlobalSearch';
 
 interface TopbarProps {
     onToggleSidebar: () => void;
@@ -33,7 +34,8 @@ export function Topbar({ onToggleSidebar, sidebarCollapsed }: TopbarProps) {
                 <Breadcrumbs />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+                <GlobalSearch />
                 <NotificationBell />
                 <UserDropdown />
             </div>
