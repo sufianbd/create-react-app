@@ -11,7 +11,7 @@ class ProjectTask extends Model
 {
     use BelongsToTenant;
 
-    protected $table = 'project_tasks';
+    protected $table = 'finance_project_tasks';
 
     protected $fillable = [
         'tenant_id',

@@ -11,7 +11,7 @@ class ProjectTimeEntry extends Model
 {
     use BelongsToTenant;
 
-    protected $table = 'project_time_entries';
+    protected $table = 'finance_project_time_entries';
 
     protected $fillable = [
         'tenant_id',

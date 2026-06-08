@@ -13,6 +13,8 @@ class Project extends Model
     use BelongsToTenant;
     use SoftDeletes;
 
+    protected $table = 'finance_projects';
+
     protected $fillable = [
         'tenant_id',
         'name',
