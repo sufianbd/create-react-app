@@ -369,6 +369,23 @@ const navItems: NavItem[] = [
         ],
     },
     {
+        label: 'E-commerce',
+        href: '/ecommerce/dashboard',
+        icon: (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+            </svg>
+        ),
+        permission: 'inventory.view',
+        children: [
+            { label: 'Dashboard',   href: '/ecommerce/dashboard',    icon: <span /> },
+            { label: 'Orders',      href: '/ecommerce/orders',       icon: <span /> },
+            { label: 'Products',    href: '/ecommerce/products',     icon: <span /> },
+            { label: 'Categories',  href: '/ecommerce/categories',   icon: <span /> },
+            { label: 'Settings',    href: '/ecommerce/settings',     icon: <span /> },
+        ],
+    },
+    {
         label: 'CRM',
         href: '/crm/dashboard',
         icon: (
