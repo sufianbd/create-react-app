@@ -273,6 +273,21 @@ const navItems: NavItem[] = [
         ],
     },
     {
+        label: 'Approvals',
+        href: '/approvals/dashboard',
+        icon: (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        ),
+        children: [
+            { label: 'Dashboard',     href: '/approvals/dashboard',   icon: <span /> },
+            { label: 'My Pending',    href: '/approvals/my-pending',  icon: <span /> },
+            { label: 'All Requests',  href: '/approvals/requests',    icon: <span /> },
+            { label: 'Workflows',     href: '/approvals/workflows',   icon: <span /> },
+        ],
+    },
+    {
         label: 'Accounting',
         href: '/accounting/reports/trial-balance',
         icon: (
