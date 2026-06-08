@@ -223,6 +223,24 @@ const navItems: NavItem[] = [
         ],
     },
     {
+        label: 'Manufacturing',
+        href: '/manufacturing/dashboard',
+        icon: (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l5.654-4.654m5.546-4.046l1.583-2.398M11.42 15.17L8.686 9.386a2.548 2.548 0 00-3.587-.1L2.25 12" />
+            </svg>
+        ),
+        permission: 'inventory.view',
+        children: [
+            { label: 'Dashboard',          href: '/manufacturing/dashboard',                  icon: <span /> },
+            { label: 'Bills of Materials', href: '/manufacturing/boms',                       icon: <span /> },
+            { label: 'Work Centers',       href: '/manufacturing/work-centers',               icon: <span /> },
+            { label: 'Mfg Orders',         href: '/manufacturing/manufacturing-orders',       icon: <span /> },
+            { label: 'Reports: Output',    href: '/manufacturing/reports/production-output',  icon: <span /> },
+            { label: 'Reports: BOM Cost',  href: '/manufacturing/reports/bom-cost',           icon: <span /> },
+        ],
+    },
+    {
         label: 'Analytics',
         href: '/analytics',
         icon: analyticsIcon,

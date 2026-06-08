@@ -9,6 +9,7 @@ use App\Modules\Core\Policies\CompanyPolicy;
 use App\Modules\Finance\Providers\FinanceServiceProvider;
 use App\Modules\HR\Providers\HRServiceProvider;
 use App\Modules\Inventory\Providers\InventoryServiceProvider;
+use App\Modules\Manufacturing\Providers\ManufacturingServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -19,6 +20,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(InventoryServiceProvider::class);
         $this->app->register(FinanceServiceProvider::class);
         $this->app->register(HRServiceProvider::class);
+        $this->app->register(ManufacturingServiceProvider::class);
     }
 
     public function boot(): void
