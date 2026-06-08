@@ -14,6 +14,7 @@ use App\Modules\CRM\Providers\CRMServiceProvider;
 use App\Modules\PM\Providers\PMServiceProvider;
 use App\Modules\POS\Providers\POSServiceProvider;
 use App\Modules\Helpdesk\Providers\HelpdeskServiceProvider;
+use App\Modules\Accounting\Providers\AccountingServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,6 +30,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(PMServiceProvider::class);
         $this->app->register(POSServiceProvider::class);
         $this->app->register(HelpdeskServiceProvider::class);
+        $this->app->register(AccountingServiceProvider::class);
     }
 
     public function boot(): void

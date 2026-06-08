@@ -256,6 +256,25 @@ const navItems: NavItem[] = [
         ],
     },
     {
+        label: 'Accounting',
+        href: '/accounting/reports/trial-balance',
+        icon: (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+        ),
+        permission: 'finance.view',
+        children: [
+            { label: 'Dashboard',         href: '/accounting/reports/trial-balance',    icon: <span /> },
+            { label: 'Journal Entries',   href: '/accounting/journal-entries',           icon: <span /> },
+            { label: 'Chart of Accounts', href: '/accounting/accounts',                 icon: <span /> },
+            { label: 'Periods',           href: '/accounting/periods',                  icon: <span /> },
+            { label: 'Trial Balance',     href: '/accounting/reports/trial-balance',    icon: <span /> },
+            { label: 'Balance Sheet',     href: '/accounting/reports/balance-sheet',    icon: <span /> },
+            { label: 'Income Statement',  href: '/accounting/reports/income-statement', icon: <span /> },
+        ],
+    },
+    {
         label: 'Helpdesk',
         href: '/helpdesk/dashboard',
         icon: (
