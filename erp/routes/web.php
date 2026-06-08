@@ -3,6 +3,8 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExecutiveDashboardController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserManagementController;
 use App\Modules\Core\Http\Controllers\AuditLogController as CoreAuditLogController;
@@ -65,3 +67,16 @@ Route::post('/notifications/refresh', function (\Illuminate\Http\Request $reques
     \App\Services\NotificationService::clearCache($request->user()->tenant_id);
     return back();
 })->name('notifications.refresh')->middleware(['auth', 'verified']);
+
+// Executive Dashboard
+Route::get('/executive-dashboard', [ExecutiveDashboardController::class, 'index'])
+    ->name('executive.dashboard')
+    ->middleware(['web', 'auth', 'verified']);
+
+// Bulk Import
+Route::middleware(['web', 'auth', 'verified'])->group(function () {
+    Route::get('/import',              [ImportController::class, 'index'])->name('import.index');
+    Route::post('/import/products',    [ImportController::class, 'products'])->name('import.products');
+    Route::post('/import/employees',   [ImportController::class, 'employees'])->name('import.employees');
+    Route::post('/import/contacts',    [ImportController::class, 'contacts'])->name('import.contacts');
+});
