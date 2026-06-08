@@ -322,6 +322,21 @@ const navItems: NavItem[] = [
         ],
     },
     {
+        label: 'Field Service',
+        href: '/field-service/dashboard',
+        icon: (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l5.653-4.655m0 0l3.03-2.496c.14-.468.382-.891.766-1.208m0 0L16.5 4.5m0 0l-1.317 1.317M16.5 4.5l1.317-1.317M7.5 9a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0z" />
+            </svg>
+        ),
+        permission: 'inventory.view',
+        children: [
+            { label: 'Dashboard',   href: '/field-service/dashboard',   icon: <span /> },
+            { label: 'Orders',      href: '/field-service/orders',      icon: <span /> },
+            { label: 'Checklists',  href: '/field-service/checklists',  icon: <span /> },
+        ],
+    },
+    {
         label: 'CRM',
         href: '/crm/dashboard',
         icon: (
