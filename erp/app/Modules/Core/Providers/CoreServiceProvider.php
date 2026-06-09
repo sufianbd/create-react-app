@@ -21,6 +21,8 @@ use App\Modules\FieldService\Providers\FieldServiceProvider;
 use App\Modules\Approvals\Providers\ApprovalsServiceProvider;
 use App\Modules\Ecommerce\Providers\EcommerceServiceProvider;
 use App\Modules\Discuss\Providers\DiscussServiceProvider;
+use App\Modules\Subcontracting\Providers\SubcontractingServiceProvider;
+use App\Modules\Rental\Providers\RentalServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -43,6 +45,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(ApprovalsServiceProvider::class);
         $this->app->register(EcommerceServiceProvider::class);
         $this->app->register(DiscussServiceProvider::class);
+        $this->app->register(SubcontractingServiceProvider::class);
     }
 
     public function boot(): void
