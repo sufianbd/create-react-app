@@ -23,6 +23,7 @@ use App\Modules\Ecommerce\Providers\EcommerceServiceProvider;
 use App\Modules\Discuss\Providers\DiscussServiceProvider;
 use App\Modules\Subcontracting\Providers\SubcontractingServiceProvider;
 use App\Modules\Rental\Providers\RentalServiceProvider;
+use App\Modules\Subscriptions\Providers\SubscriptionsServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -46,6 +47,8 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(EcommerceServiceProvider::class);
         $this->app->register(DiscussServiceProvider::class);
         $this->app->register(SubcontractingServiceProvider::class);
+        $this->app->register(RentalServiceProvider::class);
+        $this->app->register(SubscriptionsServiceProvider::class);
     }
 
     public function boot(): void
