@@ -251,6 +251,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::resource('position-changes', EmployeePositionChangeController::class)->only(['index', 'store', 'show', 'destroy']);
 });
 
+// Salary Structures
+use App\Modules\HR\Http\Controllers\SalaryStructureController;
+Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {
+    Route::post('salary-structures/{salaryStructure}/rules', [SalaryStructureController::class, 'storeRule'])->name('salary-structures.rules.store');
+    Route::delete('salary-structures/{salaryStructure}/rules/{rule}', [SalaryStructureController::class, 'destroyRule'])->name('salary-structures.rules.destroy');
+    Route::resource('salary-structures', SalaryStructureController::class)->except(['create', 'edit']);
+});
+
 // Salary Grades
 use App\Modules\HR\Http\Controllers\SalaryGradeController;
 Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group(function () {

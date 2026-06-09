@@ -143,31 +143,43 @@ class PayrollRun extends Model
             ->where('tenant_id', $this->tenant_id)
             ->where('status', 'active')
             ->where('salary_amount', '>', 0)
+            ->with('salaryStructure.rules')
             ->get();
 
         $count = 0;
         foreach ($employees as $employee) {
             $gross      = (float) $employee->salary_amount;
-            $tax        = round($gross * 0.10, 2);
-            $deductions = $tax;
-            $net        = $gross - $deductions;
+            $lines      = [];
+            $deductions = 0.0;
 
-            Payslip::updateOrCreate(
-                [
-                    'payroll_run_id' => $this->id,
-                    'employee_id'    => $employee->id,
-                ],
-                [
-                    'tenant_id'        => $this->tenant_id,
-                    'gross_amount'     => $gross,
-                    'tax_amount'       => $tax,
-                    'total_deductions' => $deductions,
-                    'net_amount'       => $net,
-                ]
+            if ($employee->salaryStructure) {
+                $lines      = $employee->salaryStructure->compute($employee);
+                $gross      = collect($lines)->where('category', 'earnings')->sum('amount');
+                $deductions = collect($lines)->where('category', 'deductions')->sum('amount');
+            } else {
+                $tax        = round($gross * 0.10, 2);
+                $deductions = $tax;
+                $lines      = [
+                    ['salary_rule_id' => null, 'code' => 'BASIC', 'name' => 'Basic Salary', 'category' => 'earnings',   'sequence' => 10, 'amount' => $gross],
+                    ['salary_rule_id' => null, 'code' => 'TAX',   'name' => 'Income Tax',   'category' => 'deductions', 'sequence' => 20, 'amount' => $tax],
+                ];
+            }
+
+            $net    = $gross - $deductions;
+            $taxLine = collect($lines)->firstWhere('code', 'TAX');
+            $tax    = $taxLine ? (float) $taxLine['amount'] : $deductions;
+
+            $payslip = Payslip::updateOrCreate(
+                ['payroll_run_id' => $this->id, 'employee_id' => $employee->id],
+                ['tenant_id' => $this->tenant_id, 'gross_amount' => $gross, 'tax_amount' => $tax, 'total_deductions' => $deductions, 'net_amount' => $net]
             );
+
+            $payslip->lines()->delete();
+            foreach ($lines as $line) {
+                $payslip->lines()->create($line);
+            }
             $count++;
         }
-
         return $count;
     }
 }

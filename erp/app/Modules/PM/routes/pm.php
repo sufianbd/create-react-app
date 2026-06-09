@@ -12,6 +12,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('pm')->name('pm.')->group
 
     // Task complete action BEFORE resource
     Route::post('projects/{project}/tasks/{task}/complete', [TaskController::class, 'complete'])->name('tasks.complete');
+    Route::get('projects/{project}/tasks/kanban', [TaskController::class, 'kanban'])->name('projects.tasks.kanban');
+    Route::patch('projects/{project}/tasks/{task}/move-status', [TaskController::class, 'moveStatus'])->name('projects.tasks.move-status');
+    Route::get('projects/{project}/tasks/calendar', [TaskController::class, 'calendar'])->name('projects.tasks.calendar');
 
     // Kanban and Calendar views (must be before resource routes)
     Route::get('projects/{project}/tasks/kanban', [TaskController::class, 'kanban'])->name('projects.tasks.kanban');

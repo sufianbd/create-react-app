@@ -24,6 +24,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('crm')->name('crm.')->gro
     Route::post('leads/{lead}/mark-won',  [CrmLeadController::class, 'markWon'])->name('leads.mark-won');
     Route::post('leads/{lead}/mark-lost', [CrmLeadController::class, 'markLost'])->name('leads.mark-lost');
     Route::post('leads/{lead}/convert',   [CrmLeadController::class, 'convert'])->name('leads.convert');
+    Route::get('pipeline/kanban', [CrmLeadController::class, 'kanban'])->name('pipeline.kanban');
+    Route::patch('leads/{lead}/move-stage', [CrmLeadController::class, 'moveStage'])->name('leads.move-stage');
     Route::resource('leads', CrmLeadController::class);
 
     // Activities (nested under leads + standalone actions)

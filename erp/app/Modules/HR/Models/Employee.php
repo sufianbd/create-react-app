@@ -18,7 +18,7 @@ class Employee extends Model
         'tenant_id', 'user_id', 'department_id', 'employee_number',
         'first_name', 'last_name', 'email', 'phone', 'position',
         'employment_type', 'status', 'start_date', 'hire_date', 'end_date',
-        'salary_type', 'salary_amount', 'salary_grade_id',
+        'salary_type', 'salary_amount', 'salary_grade_id', 'salary_structure_id',
     ];
 
     protected $casts = [
@@ -40,6 +40,11 @@ class Employee extends Model
     public function salaryGrade(): BelongsTo
     {
         return $this->belongsTo(SalaryGrade::class);
+    }
+
+    public function salaryStructure(): BelongsTo
+    {
+        return $this->belongsTo(SalaryStructure::class, 'salary_structure_id');
     }
 
     public function leaveRequests(): HasMany

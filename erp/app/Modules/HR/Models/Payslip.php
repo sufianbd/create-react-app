@@ -5,6 +5,7 @@ namespace App\Modules\HR\Models;
 use App\Modules\Core\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payslip extends Model
 {
@@ -38,6 +39,11 @@ class Payslip extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function lines(): HasMany
+    {
+        return $this->hasMany(PayslipLine::class)->orderBy('sequence');
     }
 
     public function getEffectiveTaxRateAttribute(): float
