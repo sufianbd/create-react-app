@@ -215,9 +215,48 @@ export default function StorefrontCheckout({ store, cartItems }: Props) {
                                     </div>
                                 ))}
                             </div>
-                            <div className="border-t border-gray-100 pt-3 flex justify-between font-semibold text-gray-900">
-                                <span>Total</span>
-                                <span>{store.currency_code} {subtotal.toFixed(2)}</span>
+                            <div className="space-y-1 border-t border-gray-100 pt-3 text-sm">
+                                <div className="flex justify-between text-gray-600">
+                                    <span>Subtotal</span>
+                                    <span>{store.currency_code} {subtotal.toFixed(2)}</span>
+                                </div>
+                                {couponResult?.valid && (
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Coupon Discount</span>
+                                        <span>-{store.currency_code} {discount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between font-semibold text-gray-900 pt-1 border-t border-gray-100">
+                                    <span>Total</span>
+                                    <span>{store.currency_code} {total.toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            {/* Coupon Code */}
+                            <div className="mt-4">
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Coupon Code</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={couponCode}
+                                        onChange={e => setCouponCode(e.target.value)}
+                                        placeholder="Enter code"
+                                        className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={applyCoupon}
+                                        disabled={applyingCoupon || !couponCode}
+                                        className="px-3 py-1.5 bg-gray-800 text-white text-sm rounded hover:bg-gray-700 disabled:opacity-50"
+                                    >
+                                        Apply
+                                    </button>
+                                </div>
+                                {couponResult && (
+                                    <p className={`mt-1 text-xs ${couponResult.valid ? 'text-green-600' : 'text-red-600'}`}>
+                                        {couponResult.message}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
