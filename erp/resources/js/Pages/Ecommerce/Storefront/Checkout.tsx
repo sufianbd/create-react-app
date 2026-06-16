@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 
@@ -22,6 +23,10 @@ interface Props {
 }
 
 export default function StorefrontCheckout({ store, cartItems }: Props) {
+    const [couponCode, setCouponCode] = useState('');
+    const [couponResult, setCouponResult] = useState<{ valid: boolean; discount_amount: number; message: string } | null>(null);
+    const [applyingCoupon, setApplyingCoupon] = useState(false);
+
     const { data, setData, post, processing, errors } = useForm({
         customer_name:    '',
         customer_email:   '',
@@ -30,6 +35,8 @@ export default function StorefrontCheckout({ store, cartItems }: Props) {
         billing_address:  '',
         notes:            '',
         payment_method:   'cash_on_delivery' as string,
+        coupon_code:      '',
+        discount_amount:  0,
         items: cartItems.length > 0 ? cartItems : [
             {
                 store_product_id: undefined as number | undefined,
@@ -43,6 +50,33 @@ export default function StorefrontCheckout({ store, cartItems }: Props) {
     });
 
     const subtotal = data.items.reduce((sum, item) => sum + item.line_total, 0);
+    const discount = couponResult?.valid ? couponResult.discount_amount : 0;
+    const total = subtotal - discount;
+
+    const applyCoupon = async () => {
+        setApplyingCoupon(true);
+        try {
+            const response = await fetch(`/store/${store.store_slug}/coupon/validate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ code: couponCode, subtotal }),
+            });
+            const result = await response.json();
+            setCouponResult(result);
+            if (result.valid) {
+                setData('coupon_code', couponCode);
+                setData('discount_amount', result.discount_amount);
+            }
+        } catch {
+            setCouponResult({ valid: false, discount_amount: 0, message: 'Error applying coupon.' });
+        } finally {
+            setApplyingCoupon(false);
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

@@ -1,4 +1,5 @@
-import { Link } from '@inertiajs/react';
+import { useState } from 'react';
+import { Link, useForm } from '@inertiajs/react';
 
 interface Store {
     store_name: string;
@@ -20,13 +21,50 @@ interface StoreProductDetail {
     category: { name: string } | null;
 }
 
+interface Review {
+    id: number;
+    reviewer_name: string;
+    rating: number;
+    title: string | null;
+    body: string | null;
+    created_at: string;
+}
+
 interface Props {
     store: Store;
     storeProduct: StoreProductDetail;
+    reviews?: Review[];
 }
 
-export default function StorefrontProduct({ store, storeProduct }: Props) {
+function StarRating({ rating }: { rating: number }) {
+    return (
+        <span className="text-yellow-400">
+            {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
+        </span>
+    );
+}
+
+export default function StorefrontProduct({ store, storeProduct, reviews = [] }: Props) {
     const productName = storeProduct.product?.name ?? 'Product';
+    const [showReviewForm, setShowReviewForm] = useState(false);
+
+    const { data, setData, post, processing, errors, reset, wasSuccessful } = useForm({
+        reviewer_name: '',
+        reviewer_email: '',
+        rating: '5',
+        title: '',
+        body: '',
+    });
+
+    const handleReviewSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(`/store/${store.store_slug}/products/${storeProduct.id}/reviews`, {
+            onSuccess: () => {
+                reset();
+                setShowReviewForm(false);
+            },
+        });
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -103,6 +141,108 @@ export default function StorefrontProduct({ store, storeProduct }: Props) {
                             </div>
                         </div>
                     )}
+
+                    {/* Reviews Section */}
+                    <div className="p-8 border-t border-gray-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                Customer Reviews {reviews.length > 0 && <span className="text-gray-400 font-normal text-sm">({reviews.length})</span>}
+                            </h2>
+                            <button
+                                onClick={() => setShowReviewForm(!showReviewForm)}
+                                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                            >
+                                {showReviewForm ? 'Cancel' : 'Write a Review'}
+                            </button>
+                        </div>
+
+                        {showReviewForm && (
+                            <div className="bg-gray-50 rounded-lg p-5 mb-6 border border-gray-200">
+                                <h3 className="font-medium text-gray-900 mb-3">Write a Review</h3>
+                                <form onSubmit={handleReviewSubmit} className="space-y-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                                            <input
+                                                type="text"
+                                                value={data.reviewer_name}
+                                                onChange={e => setData('reviewer_name', e.target.value)}
+                                                className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                                                required
+                                            />
+                                            {errors.reviewer_name && <p className="text-red-500 text-xs mt-1">{errors.reviewer_name}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                            <input
+                                                type="email"
+                                                value={data.reviewer_email}
+                                                onChange={e => setData('reviewer_email', e.target.value)}
+                                                className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Rating *</label>
+                                        <select
+                                            value={data.rating}
+                                            onChange={e => setData('rating', e.target.value)}
+                                            className="rounded border border-gray-300 px-3 py-2 text-sm"
+                                        >
+                                            {[5, 4, 3, 2, 1].map(r => (
+                                                <option key={r} value={r}>{r} Star{r !== 1 ? 's' : ''}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                        <input
+                                            type="text"
+                                            value={data.title}
+                                            onChange={e => setData('title', e.target.value)}
+                                            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                                            placeholder="Summarize your experience"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Review</label>
+                                        <textarea
+                                            value={data.body}
+                                            onChange={e => setData('body', e.target.value)}
+                                            rows={3}
+                                            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                                            placeholder="Tell others about your experience..."
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50"
+                                    >
+                                        {processing ? 'Submitting...' : 'Submit Review'}
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+
+                        {reviews.length === 0 ? (
+                            <p className="text-gray-400 text-sm">No reviews yet. Be the first to review this product.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {reviews.map((review) => (
+                                    <div key={review.id} className="border-b border-gray-100 pb-4 last:border-0">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <StarRating rating={review.rating} />
+                                            <span className="font-medium text-sm text-gray-900">{review.reviewer_name}</span>
+                                            <span className="text-xs text-gray-400">{new Date(review.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        {review.title && <p className="font-medium text-sm text-gray-800 mb-1">{review.title}</p>}
+                                        {review.body && <p className="text-sm text-gray-600">{review.body}</p>}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
