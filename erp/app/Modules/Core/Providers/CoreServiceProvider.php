@@ -27,6 +27,8 @@ use App\Modules\Subscriptions\Providers\SubscriptionsServiceProvider;
 use App\Modules\Survey\Providers\SurveyServiceProvider;
 use App\Modules\Documents\Providers\DocumentsServiceProvider;
 use App\Modules\Events\Providers\EventsServiceProvider;
+use App\Modules\KnowledgeBase\Providers\KnowledgeBaseServiceProvider;
+use App\Modules\Planning\Providers\PlanningServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -55,6 +57,8 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(SurveyServiceProvider::class);
         $this->app->register(DocumentsServiceProvider::class);
         $this->app->register(EventsServiceProvider::class);
+        $this->app->register(KnowledgeBaseServiceProvider::class);
+        $this->app->register(PlanningServiceProvider::class);
     }
 
     public function boot(): void
