@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CrmApiController;
+use App\Http\Controllers\Api\V1\CurrencyApiController;
 use App\Http\Controllers\Api\V1\CustomerApiController;
 use App\Http\Controllers\Api\V1\DashboardApiController;
 use App\Http\Controllers\Api\V1\HelpdeskApiController;
@@ -66,5 +67,9 @@ Route::prefix('v1')->group(function () {
         Route::get('pos/sessions/{session}/orders', [PosApiController::class, 'sessionOrders']);
         Route::post('pos/orders',                   [PosApiController::class, 'createOrder']);
         Route::get('pos/orders/{order}',            [PosApiController::class, 'showOrder']);
+
+        // Currencies
+        Route::get('currencies', [CurrencyApiController::class, 'index']);
+        Route::get('currencies/convert', [CurrencyApiController::class, 'convert']);
     });
 });

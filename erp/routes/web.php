@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CompanySettingsController;
+use App\Http\Controllers\QueueMonitorController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\DashboardController;
@@ -9,10 +10,12 @@ use App\Http\Controllers\ExecutiveDashboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\Api\ApiDocsController;
 use App\Modules\Core\Http\Controllers\AuditLogController as CoreAuditLogController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Modules\Core\Http\Controllers\NotificationRuleController;
+use App\Modules\Core\Http\Controllers\SsoController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -108,3 +111,29 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
 Route::get('/search', App\Http\Controllers\GlobalSearchController::class)
     ->middleware(['web', 'auth', 'verified'])
     ->name('search');
+
+// Queue Monitor
+Route::middleware(['web', 'auth', 'verified'])->prefix('queue')->name('queue.')->group(function () {
+    Route::get('monitor',                      [QueueMonitorController::class, 'index'])->name('monitor');
+    Route::post('failed/{uuid}/retry',         [QueueMonitorController::class, 'retryFailed'])->name('failed.retry');
+    Route::delete('failed',                    [QueueMonitorController::class, 'clearFailed'])->name('failed.clear');
+});
+
+// SSO Configuration (auth required)
+Route::middleware(['web', 'auth', 'verified'])->prefix('settings')->name('sso.')->group(function () {
+    Route::get('sso', [SsoController::class, 'configure'])->name('configure');
+    Route::post('sso', [SsoController::class, 'store'])->name('store');
+    Route::patch('sso/{provider}', [SsoController::class, 'update'])->name('update');
+    Route::delete('sso/{provider}', [SsoController::class, 'destroy'])->name('destroy');
+});
+
+// SAML endpoints (public — no auth middleware)
+Route::prefix('sso/saml')->name('sso.saml.')->group(function () {
+    Route::get('{provider}/initiate', [SsoController::class, 'initiate'])->name('initiate');
+    Route::post('{provider}/acs', [SsoController::class, 'acs'])->name('acs');
+    Route::get('{provider}/metadata', [SsoController::class, 'metadata'])->name('metadata');
+});
+
+// API Documentation (public — Swagger UI served via CDN)
+Route::get('/api/docs', [ApiDocsController::class, 'ui'])->name('api.docs');
+Route::get('/api-docs/openapi.yaml', [ApiDocsController::class, 'spec'])->name('api.docs.spec');

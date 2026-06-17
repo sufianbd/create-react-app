@@ -46,6 +46,7 @@ use App\Modules\Finance\Http\Controllers\SupportTicketController;
 use App\Modules\Finance\Http\Controllers\CurrencyController;
 use App\Modules\Finance\Http\Controllers\PaymentTermController;
 use App\Modules\Finance\Http\Controllers\CustomerGroupController;
+use App\Modules\Finance\Http\Controllers\MultiCurrencyReportController;
 
 
 Route::middleware(['web','auth','verified'])->prefix('finance')->name('finance.')->group(function() {
@@ -319,6 +320,10 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('finance')->name('finance
     Route::post('customer-groups/{customerGroup}/members',              [CustomerGroupController::class, 'addMember'])->name('finance.customer-groups.members.add');
     Route::delete('customer-groups/{customerGroup}/members/{contact}',  [CustomerGroupController::class, 'removeMember'])->name('finance.customer-groups.members.remove');
     Route::resource('customer-groups', CustomerGroupController::class)->except(['create', 'edit']);
+
+    // Multi-Currency Consolidation
+    Route::get('multi-currency/report', [MultiCurrencyReportController::class, 'index'])->name('multi-currency.report');
+    Route::get('multi-currency/convert', [MultiCurrencyReportController::class, 'convertPreview'])->name('multi-currency.convert');
 
 });
 
