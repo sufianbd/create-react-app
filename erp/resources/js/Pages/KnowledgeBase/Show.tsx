@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 interface Category {
     id: number;
@@ -144,11 +145,11 @@ export default function Show({ article }: Props) {
                             className="border rounded px-3 py-2 w-full text-sm"
                         />
                         {errors.title && <p className="text-red-500 text-xs">{errors.title}</p>}
-                        <textarea
-                            value={data.content}
-                            onChange={(e) => setData('content', e.target.value)}
-                            placeholder="Content"
-                            className="border rounded px-3 py-2 w-full text-sm h-40"
+                        <RichTextEditor
+                            content={data.content}
+                            onChange={(html) => setData('content', html)}
+                            placeholder="Write article content…"
+                            minHeight="250px"
                         />
                         {errors.content && <p className="text-red-500 text-xs">{errors.content}</p>}
                         <input

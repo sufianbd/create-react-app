@@ -21,6 +21,7 @@ use App\Modules\HR\Http\Controllers\OnboardingChecklistController;
 use App\Modules\HR\Http\Controllers\OnboardingTemplateController;
 use App\Modules\HR\Http\Controllers\PayrollController;
 use App\Modules\HR\Http\Controllers\PayrollRunController;
+use App\Modules\HR\Http\Controllers\PayslipController;
 use App\Modules\HR\Http\Controllers\PerformanceReviewController;
 use App\Modules\HR\Http\Controllers\TrainingCourseController;
 use App\Modules\HR\Http\Controllers\TrainingEnrollmentController;
@@ -81,6 +82,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('hr')->name('hr.')->group
     Route::post('payroll-runs/{payrollRun}/process', [PayrollRunController::class, 'process'])
         ->name('payroll-runs.process');
     Route::resource('payroll-runs', PayrollRunController::class)->except(['edit', 'update']);
+
+    // Payslips — PDF download
+    Route::get('payslips/{payslip}/pdf',            [PayslipController::class, 'pdf'])->name('payslips.pdf');
+    Route::get('payroll-runs/{payrollRun}/payslips', [PayslipController::class, 'index'])->name('payroll-runs.payslips.index');
+    Route::get('payslips/{payslip}',                [PayslipController::class, 'show'])->name('payslips.show');
 
     // Payroll — custom actions BEFORE resource
     Route::post('payroll/{payrollRun}/generate',   [PayrollController::class, 'generate'])->name('payroll.generate');

@@ -5,8 +5,10 @@ namespace App\Modules\Documents\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Documents\Models\Document;
 use App\Modules\Documents\Models\DocumentFolder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -103,6 +105,49 @@ class DocumentController extends Controller
         ]);
 
         return redirect()->route('documents.show', $document)->with('success', 'Document uploaded.');
+    }
+
+    public function uploadPage(): Response
+    {
+        $folders = DocumentFolder::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Documents/Upload', [
+            'folders' => $folders,
+        ]);
+    }
+
+    public function upload(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file'      => 'required|file|max:51200',
+            'folder_id' => 'nullable|exists:document_folders,id',
+        ]);
+
+        $file      = $request->file('file');
+        $tenant    = auth()->user()->tenant_id;
+        $directory = "documents/{$tenant}/" . date('Y/m');
+        $fileName  = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $path      = $file->storeAs($directory, $fileName, 'public');
+
+        $document = Document::create([
+            'tenant_id'   => $tenant,
+            'title'       => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+            'folder_id'   => $request->folder_id,
+            'file_path'   => $path,
+            'file_name'   => $file->getClientOriginalName(),
+            'file_size'   => $file->getSize(),
+            'mime_type'   => $file->getMimeType(),
+            'version'     => 1,
+            'uploaded_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'id'       => $document->id,
+            'title'    => $document->title,
+            'file_name' => $document->file_name,
+            'file_size' => $document->file_size,
+            'url'      => route('documents.show', $document),
+        ]);
     }
 
     public function update(Request $request, Document $document): RedirectResponse

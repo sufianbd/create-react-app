@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { router, Link } from '@inertiajs/react';
+import RichTextEditor from '@/Components/RichTextEditor';
 
 interface Step { id: number; step_number: number; subject: string; body: string; delay_days: number; }
 interface Enrollment { id: number; current_step: number; status: string; next_send_at: string | null; lead: { id: number; contact_name: string; email: string; company_name: string | null; }; }
@@ -89,8 +90,12 @@ export default function EmailSequenceShow({
                         </div>
                         <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">Body</label>
-                            <textarea value={stepForm.body} onChange={e => setStepForm(f => ({ ...f, body: e.target.value }))} rows={3}
-                                className="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
+                            <RichTextEditor
+                                content={stepForm.body}
+                                onChange={(html) => setStepForm(f => ({ ...f, body: html }))}
+                                placeholder="Write email body…"
+                                minHeight="150px"
+                            />
                         </div>
                         <div className="flex gap-2">
                             <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Add Step</button>
