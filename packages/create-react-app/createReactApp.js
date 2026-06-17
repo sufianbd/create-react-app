@@ -53,9 +53,41 @@ function isUsingYarn() {
   return (process.env.npm_config_user_agent || '').indexOf('yarn') === 0;
 }
 
+function hasGivenWarning() {
+  const localWarningFilePath = path.join(
+    __dirname,
+    'given-deprecation-warning'
+  );
+  return fs.existsSync(localWarningFilePath);
+}
+
+function writeWarningFile() {
+  const localWarningFilePath = path.join(
+    __dirname,
+    'given-deprecation-warning'
+  );
+  fs.writeFileSync(localWarningFilePath, 'true');
+}
+
 let projectName;
 
 function init() {
+  if (!hasGivenWarning()) {
+    console.log(chalk.yellow.bold('create-react-app is deprecated.'));
+    console.log('');
+    console.log(
+      'You can find a list of up-to-date React frameworks on react.dev'
+    );
+    console.log(
+      'For more info see:' + chalk.underline('https://react.dev/link/cra')
+    );
+    console.log('');
+    console.log(
+      chalk.grey('This error message will only be shown once per install.')
+    );
+    writeWarningFile();
+  }
+
   const program = new commander.Command(packageJson.name)
     .version(packageJson.version)
     .arguments('<project-directory>')
@@ -209,14 +241,8 @@ function init() {
         console.error(
           chalk.yellow(
             `You are running \`create-react-app\` ${packageJson.version}, which is behind the latest release (${latest}).\n\n` +
-              'We no longer support global installation of Create React App.'
+              'We recommend always using the latest version of create-react-app if possible.'
           )
-        );
-        console.log();
-        console.log(
-          'Please remove any global installs with one of the following commands:\n' +
-            '- npm uninstall -g create-react-app\n' +
-            '- yarn global remove create-react-app'
         );
         console.log();
         console.log(
@@ -224,7 +250,6 @@ function init() {
             'https://create-react-app.dev/docs/getting-started/'
         );
         console.log();
-        process.exit(1);
       } else {
         const useYarn = isUsingYarn();
         createApp(
@@ -322,23 +347,6 @@ function createApp(name, verbose, version, template, useYarn, usePnp) {
         // 2 supports PnP by default and breaks when trying to use the flag
         usePnp = false;
       }
-    }
-  }
-
-  if (useYarn) {
-    let yarnUsesDefaultRegistry = true;
-    try {
-      yarnUsesDefaultRegistry =
-        execSync('yarnpkg config get registry').toString().trim() ===
-        'https://registry.yarnpkg.com';
-    } catch (e) {
-      // ignore
-    }
-    if (yarnUsesDefaultRegistry) {
-      fs.copySync(
-        require.resolve('./yarn.lock.cached'),
-        path.join(root, 'yarn.lock')
-      );
     }
   }
 
@@ -540,11 +548,7 @@ function run(
         console.log();
 
         // On 'exit' we will delete these files from target directory.
-        const knownGeneratedFiles = [
-          'package.json',
-          'yarn.lock',
-          'node_modules',
-        ];
+        const knownGeneratedFiles = ['package.json', 'node_modules'];
         const currentFiles = fs.readdirSync(path.join(root));
         currentFiles.forEach(file => {
           knownGeneratedFiles.forEach(fileToMatch => {

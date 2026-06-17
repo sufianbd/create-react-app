@@ -7,6 +7,7 @@
 
 import React from 'react';
 import Link from '@docusaurus/Link';
+import Head from '@docusaurus/Head';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
@@ -44,6 +45,19 @@ function Home() {
       permalink={'/'}
       description={'Set up a modern web app by running one command.'}
     >
+      <Head>
+        <meta name="robots" content="noindex" />
+        <title>Create React App is deprecated.</title>
+        <meta
+          name="description"
+          content="Create React App is deprecated. Please see react.dev for modern options."
+        />
+        <meta property="og:title" content="Create React App is deprecated." />
+        <meta
+          property="og:description"
+          content="Create React App is deprecated. Please see react.dev for modern options."
+        />
+      </Head>
       <div className={clsx('hero hero--dark', styles.heroBanner)}>
         <div className="container">
           <img
@@ -68,10 +82,7 @@ function Home() {
           <div className="container">
             <div className="row">
               {features.map(({ title, content }, idx) => (
-                <div
-                  key={idx}
-                  className={clsx('col col--4', styles.feature)}
-                >
+                <div key={idx} className={clsx('col col--4', styles.feature)}>
                   <h2>{title}</h2>
                   <p>{content}</p>
                 </div>
