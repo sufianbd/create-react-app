@@ -3,6 +3,9 @@
 use App\Modules\Accounting\Http\Controllers\AccountController;
 use App\Modules\Accounting\Http\Controllers\AccountingPeriodController;
 use App\Modules\Accounting\Http\Controllers\AccountingReportController;
+use App\Modules\Accounting\Http\Controllers\AutoPostingRuleController;
+use App\Modules\Accounting\Http\Controllers\BankAccountController;
+use App\Modules\Accounting\Http\Controllers\BankReconciliationController;
 use App\Modules\Accounting\Http\Controllers\JournalEntryController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,4 +28,19 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('accounting')->name('acco
     // Periods
     Route::post('periods/{period}/close', [AccountingPeriodController::class, 'close'])->name('periods.close');
     Route::resource('periods', AccountingPeriodController::class)->except(['show', 'edit', 'update']);
+
+    // Bank Accounts
+    Route::resource('bank-accounts', BankAccountController::class)->except(['show', 'create', 'edit']);
+
+    // Reconciliation
+    Route::get('bank-accounts/{bankAccount}/reconcile',                               [BankReconciliationController::class, 'index'])->name('bank-accounts.reconcile');
+    Route::get('bank-accounts/{bankAccount}/transactions',                            [BankReconciliationController::class, 'transactions'])->name('bank-accounts.transactions');
+    Route::post('bank-accounts/{bankAccount}/transactions',                           [BankReconciliationController::class, 'importTransaction'])->name('bank-accounts.transactions.import');
+    Route::post('bank-accounts/{bankAccount}/transactions/{transaction}/reconcile',   [BankReconciliationController::class, 'reconcile'])->name('bank-accounts.transactions.reconcile');
+    Route::post('bank-accounts/{bankAccount}/transactions/{transaction}/unreconcile', [BankReconciliationController::class, 'unreconcile'])->name('bank-accounts.transactions.unreconcile');
+
+    // Auto-posting Rules
+    Route::get('bank-accounts/{bankAccount}/rules',  [AutoPostingRuleController::class, 'index'])->name('bank-accounts.rules.index');
+    Route::post('bank-accounts/{bankAccount}/rules', [AutoPostingRuleController::class, 'store'])->name('bank-accounts.rules.store');
+    Route::delete('bank-accounts/{bankAccount}/rules/{rule}', [AutoPostingRuleController::class, 'destroy'])->name('bank-accounts.rules.destroy');
 });

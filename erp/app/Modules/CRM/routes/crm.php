@@ -5,6 +5,8 @@ use App\Modules\CRM\Http\Controllers\CrmLeadController;
 use App\Modules\CRM\Http\Controllers\CrmActivityController;
 use App\Modules\CRM\Http\Controllers\CrmDashboardController;
 use App\Modules\CRM\Http\Controllers\CrmReportController;
+use App\Modules\CRM\Http\Controllers\EmailSequenceController;
+use App\Modules\CRM\Http\Controllers\LeadScoringController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->prefix('crm')->name('crm.')->group(function () {
@@ -37,4 +39,21 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('crm')->name('crm.')->gro
     Route::get('reports/pipeline', [CrmReportController::class, 'pipeline'])->name('reports.pipeline');
     Route::get('reports/win-loss', [CrmReportController::class, 'winLoss'])->name('reports.win-loss');
     Route::get('reports/source',   [CrmReportController::class, 'source'])->name('reports.source');
+
+    // Email Sequences
+    Route::post('sequences/{sequence}/steps',                    [EmailSequenceController::class, 'storeStep'])->name('sequences.steps.store');
+    Route::post('sequences/{sequence}/enroll',                   [EmailSequenceController::class, 'enroll'])->name('sequences.enroll');
+    Route::post('sequences/{sequence}/pause',                    [EmailSequenceController::class, 'pause'])->name('sequences.pause');
+    Route::post('sequences/{sequence}/activate',                 [EmailSequenceController::class, 'activate'])->name('sequences.activate');
+    Route::post('enrollments/{enrollment}/unsubscribe',          [EmailSequenceController::class, 'unsubscribe'])->name('enrollments.unsubscribe');
+    Route::get('sequences/{sequence}',                           [EmailSequenceController::class, 'show'])->name('sequences.show');
+    Route::get('sequences',                                      [EmailSequenceController::class, 'index'])->name('sequences.index');
+    Route::post('sequences',                                     [EmailSequenceController::class, 'store'])->name('sequences.store');
+
+    // Lead Scoring
+    Route::get('scoring/rules',                                  [LeadScoringController::class, 'rules'])->name('scoring.rules');
+    Route::post('scoring/rules',                                 [LeadScoringController::class, 'storeRule'])->name('scoring.rules.store');
+    Route::delete('scoring/rules/{rule}',                        [LeadScoringController::class, 'destroyRule'])->name('scoring.rules.destroy');
+    Route::get('scoring/scores',                                 [LeadScoringController::class, 'scores'])->name('scoring.scores');
+    Route::get('leads/{lead}/score',                             [LeadScoringController::class, 'scoreForLead'])->name('leads.score');
 });
