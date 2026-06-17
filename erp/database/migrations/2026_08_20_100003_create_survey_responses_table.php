@@ -8,12 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('survey_responses', function (Blueprint $table) {
+        Schema::dropIfExists('employee_survey_responses');
+        Schema::create('employee_survey_responses', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
             $table->unsignedBigInteger('employee_survey_id');
-            $table->unsignedBigInteger('employee_id')->nullable(); // null if anonymous
-            $table->json('answers'); // [{question_id: X, answer: "..."}]
+            $table->unsignedBigInteger('employee_id')->nullable();
+            $table->json('answers');
             $table->timestamp('submitted_at')->nullable();
             $table->timestamps();
         });
@@ -21,6 +22,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('survey_responses');
+        Schema::dropIfExists('employee_survey_responses');
     }
 };

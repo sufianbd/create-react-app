@@ -30,6 +30,7 @@ use App\Modules\Events\Providers\EventsServiceProvider;
 use App\Modules\KnowledgeBase\Providers\KnowledgeBaseServiceProvider;
 use App\Modules\Planning\Providers\PlanningServiceProvider;
 use App\Modules\Sign\Providers\SignServiceProvider;
+use App\Modules\Maintenance\Providers\MaintenanceServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -61,6 +62,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(KnowledgeBaseServiceProvider::class);
         $this->app->register(PlanningServiceProvider::class);
         $this->app->register(SignServiceProvider::class);
+        $this->app->register(MaintenanceServiceProvider::class);
     }
 
     public function boot(): void

@@ -2,6 +2,7 @@
 
 use App\Modules\Marketing\Http\Controllers\EmailCampaignController;
 use App\Modules\Marketing\Http\Controllers\MailingListController;
+use App\Modules\Marketing\Http\Controllers\MarketingAnalyticsController;
 use App\Modules\Marketing\Http\Controllers\MarketingDashboardController;
 use App\Modules\Marketing\Http\Controllers\SubscriberController;
 use Illuminate\Support\Facades\Route;
@@ -20,4 +21,11 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('marketing')->name('marke
     Route::post('campaigns/{campaign}/send', [EmailCampaignController::class, 'send'])->name('campaigns.send');
     Route::post('campaigns/{campaign}/cancel', [EmailCampaignController::class, 'cancel'])->name('campaigns.cancel');
     Route::resource('campaigns', EmailCampaignController::class);
+
+    // Analytics
+    Route::get('analytics', [MarketingAnalyticsController::class, 'index'])->name('analytics');
+    Route::get('analytics/{campaign}/stats', [MarketingAnalyticsController::class, 'campaignStats'])->name('analytics.campaign');
+    Route::post('analytics/track', [MarketingAnalyticsController::class, 'trackEvent'])->name('analytics.track');
+    Route::post('campaigns/{campaign}/ab-variants', [MarketingAnalyticsController::class, 'storeAbVariant'])->name('campaigns.ab-variants.store');
+    Route::post('campaigns/{campaign}/ab-variants/{variant}/winner', [MarketingAnalyticsController::class, 'declareWinner'])->name('campaigns.ab-variants.winner');
 });

@@ -25,7 +25,6 @@ function makeBankTransferAccount(array $attrs = []): BankAccount
         'bank_name'       => 'Test Bank',
         'account_number'  => 'ACC' . uniqid(),
         'currency'        => 'USD',
-        'opening_balance' => 10000.00,
         'current_balance' => 10000.00,
         'is_active'       => true,
         ...$attrs,

@@ -62,6 +62,21 @@ class EmailCampaign extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function events(): HasMany
+    {
+        return $this->hasMany(CampaignEvent::class, 'campaign_id');
+    }
+
+    public function abVariants(): HasMany
+    {
+        return $this->hasMany(AbTestVariant::class, 'campaign_id');
+    }
+
+    public function totalSent(): int
+    {
+        return $this->events()->where('event_type', 'sent')->count();
+    }
+
     public function openRate(): float
     {
         return $this->sent_count > 0

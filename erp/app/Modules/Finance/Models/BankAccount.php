@@ -14,12 +14,10 @@ class BankAccount extends Model
 
     protected $fillable = [
         'tenant_id', 'name', 'account_number', 'bank_name',
-        'currency_code', 'opening_balance',
-        'currency', 'current_balance', 'is_active',
+        'currency_code', 'currency', 'current_balance', 'is_active',
     ];
 
     protected $casts = [
-        'opening_balance' => 'float',
         'current_balance' => 'float',
         'is_active'       => 'boolean',
     ];
@@ -36,7 +34,7 @@ class BankAccount extends Model
 
     public function getBalanceAttribute(): float
     {
-        return $this->opening_balance + $this->transactions()->sum('amount');
+        return (float) $this->current_balance;
     }
 
     public function getUnreconciledCountAttribute(): int
@@ -46,7 +44,7 @@ class BankAccount extends Model
 
     public function updateBalance(): void
     {
-        $this->current_balance = $this->opening_balance + $this->transactions()->sum('amount');
+        $this->current_balance = $this->transactions()->sum('amount');
         $this->save();
     }
 }

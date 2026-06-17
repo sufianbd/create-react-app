@@ -15,28 +15,21 @@ class Subscription extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'tenant_id', 'contact_id', 'subscription_plan_id', 'status',
-        'started_at', 'trial_ends_at', 'current_period_start', 'current_period_end',
-        'cancelled_at', 'next_invoice_date', 'notes',
+        'tenant_id', 'plan_id', 'customer_name', 'customer_email', 'status',
+        'trial_ends_at', 'current_period_start', 'current_period_end',
+        'cancelled_at', 'notes',
     ];
 
     protected $casts = [
-        'started_at'           => 'date',
         'trial_ends_at'        => 'date',
         'current_period_start' => 'date',
         'current_period_end'   => 'date',
         'cancelled_at'         => 'datetime',
-        'next_invoice_date'    => 'date',
     ];
-
-    public function contact(): BelongsTo
-    {
-        return $this->belongsTo(Contact::class);
-    }
 
     public function plan(): BelongsTo
     {
-        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+        return $this->belongsTo(SubscriptionPlan::class, 'plan_id');
     }
 
     public function activate(): void
@@ -45,7 +38,6 @@ class Subscription extends Model
         $this->status                = 'active';
         $this->current_period_start  = $today;
         $this->current_period_end    = $this->plan->getNextBillingDate($today);
-        $this->next_invoice_date     = $today;
         $this->save();
     }
 
@@ -79,7 +71,6 @@ class Subscription extends Model
         $invoice = DB::transaction(function () use ($today, $plan, $period) {
             $inv = Invoice::create([
                 'tenant_id'  => $this->tenant_id,
-                'contact_id' => $this->contact_id,
                 'status'     => 'draft',
                 'issue_date' => $today,
                 'due_date'   => Carbon::today()->addDays(30)->toDateString(),
@@ -95,9 +86,6 @@ class Subscription extends Model
 
             return $inv;
         });
-
-        $this->next_invoice_date = $plan->getNextBillingDate($today);
-        $this->save();
 
         return $invoice;
     }

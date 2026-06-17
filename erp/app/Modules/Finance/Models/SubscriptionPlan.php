@@ -15,7 +15,7 @@ class SubscriptionPlan extends Model
 
     protected $fillable = [
         'tenant_id', 'name', 'description', 'billing_cycle',
-        'price', 'currency_code', 'trial_days', 'is_active',
+        'price', 'trial_days', 'is_active',
     ];
 
     protected $casts = [
@@ -33,6 +33,7 @@ class SubscriptionPlan extends Model
         return match ($this->billing_cycle) {
             'monthly'   => Carbon::parse($from)->addMonth()->toDateString(),
             'quarterly' => Carbon::parse($from)->addMonths(3)->toDateString(),
+            'annual'    => Carbon::parse($from)->addYear()->toDateString(),
             'annually'  => Carbon::parse($from)->addYear()->toDateString(),
             default     => Carbon::parse($from)->addMonth()->toDateString(),
         };

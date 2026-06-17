@@ -10,6 +10,8 @@ class SurveyResponse extends Model
 {
     use BelongsToTenant;
 
+    protected $table = 'employee_survey_responses';
+
     protected $fillable = [
         'tenant_id', 'employee_survey_id', 'employee_id', 'answers', 'submitted_at',
     ];

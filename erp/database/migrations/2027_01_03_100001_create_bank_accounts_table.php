@@ -15,12 +15,13 @@ return new class extends Migration
             $table->foreignId('account_id')->nullable()->constrained('chart_of_accounts')->nullOnDelete();
             $table->string('name');
             $table->string('bank_name');
-            $table->string('account_number');
+            $table->string('account_number')->nullable();
             $table->string('currency', 3)->default('USD');
             $table->decimal('current_balance', 18, 2)->default(0);
             $table->date('last_reconciled_at')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

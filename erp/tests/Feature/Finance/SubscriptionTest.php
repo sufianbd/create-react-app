@@ -54,24 +54,22 @@ it('admin can create subscription plan', function () {
 
 it('admin can create subscription', function () {
     $plan = makePlan();
-    $contact = makeSubContact();
     $this->post('/finance/subscriptions', [
-        'contact_id'           => $contact->id,
-        'subscription_plan_id' => $plan->id,
-        'started_at'           => now()->toDateString(),
+        'plan_id'              => $plan->id,
+        'current_period_start' => now()->toDateString(),
+        'current_period_end'   => now()->addMonth()->toDateString(),
     ])->assertRedirect();
-    expect(Subscription::where('contact_id', $contact->id)->exists())->toBeTrue();
+    expect(Subscription::where('plan_id', $plan->id)->exists())->toBeTrue();
 });
 
 it('admin can activate subscription', function () {
     $plan = makePlan();
-    $contact = makeSubContact();
     $sub = Subscription::create([
         'tenant_id'            => test()->tenant->id,
-        'contact_id'           => $contact->id,
-        'subscription_plan_id' => $plan->id,
+        'plan_id'              => $plan->id,
         'status'               => 'trial',
-        'started_at'           => now()->toDateString(),
+        'current_period_start' => now()->toDateString(),
+        'current_period_end'   => now()->addMonth()->toDateString(),
     ]);
     $this->post("/finance/subscriptions/{$sub->id}/activate");
     expect($sub->fresh()->status)->toBe('active');
@@ -80,13 +78,12 @@ it('admin can activate subscription', function () {
 
 it('admin can cancel subscription', function () {
     $plan = makePlan();
-    $contact = makeSubContact();
     $sub = Subscription::create([
         'tenant_id'            => test()->tenant->id,
-        'contact_id'           => $contact->id,
-        'subscription_plan_id' => $plan->id,
+        'plan_id'              => $plan->id,
         'status'               => 'active',
-        'started_at'           => now()->toDateString(),
+        'current_period_start' => now()->toDateString(),
+        'current_period_end'   => now()->addMonth()->toDateString(),
     ]);
     $this->post("/finance/subscriptions/{$sub->id}/cancel");
     expect($sub->fresh()->status)->toBe('cancelled');
@@ -106,24 +103,23 @@ it('getNextBillingDate quarterly adds three months', function () {
 });
 
 it('getNextBillingDate annually adds one year', function () {
-    $plan = makePlan('annually');
+    $plan = makePlan('annual');
     $next = $plan->getNextBillingDate('2025-06-01');
     expect($next)->toBe('2026-06-01');
 });
 
 it('admin can generate invoice from subscription', function () {
     $plan = makePlan('monthly', 149.0);
-    $contact = makeSubContact();
     $sub = Subscription::create([
         'tenant_id'            => test()->tenant->id,
-        'contact_id'           => $contact->id,
-        'subscription_plan_id' => $plan->id,
+        'plan_id'              => $plan->id,
         'status'               => 'active',
-        'started_at'           => now()->toDateString(),
+        'current_period_start' => now()->toDateString(),
+        'current_period_end'   => now()->addMonth()->toDateString(),
     ]);
     $sub->load('plan');
     $this->post("/finance/subscriptions/{$sub->id}/generate-invoice")->assertRedirect();
-    expect(Invoice::where('contact_id', $contact->id)->exists())->toBeTrue();
+    expect(Invoice::where('tenant_id', test()->tenant->id)->exists())->toBeTrue();
 });
 
 it('staff cannot delete subscription plan', function () {

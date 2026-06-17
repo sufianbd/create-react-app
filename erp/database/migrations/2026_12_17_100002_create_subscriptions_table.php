@@ -13,12 +13,12 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('tenant_id');
             $table->foreignId('plan_id')->constrained('subscription_plans')->cascadeOnDelete();
-            $table->string('customer_name');
-            $table->string('customer_email');
+            $table->string('customer_name')->nullable();
+            $table->string('customer_email')->nullable();
             $table->enum('status', ['trial', 'active', 'past_due', 'cancelled', 'expired'])->default('active');
             $table->timestamp('trial_ends_at')->nullable();
-            $table->date('current_period_start');
-            $table->date('current_period_end');
+            $table->date('current_period_start')->nullable();
+            $table->date('current_period_end')->nullable();
             $table->timestamp('cancelled_at')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();

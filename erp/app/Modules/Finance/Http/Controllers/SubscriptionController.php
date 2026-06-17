@@ -19,7 +19,7 @@ class SubscriptionController extends Controller
     {
         $this->authorize('viewAny', Subscription::class);
 
-        $subscriptions = Subscription::with(['contact', 'plan'])
+        $subscriptions = Subscription::with(['plan'])
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->latest()
             ->paginate(15)
@@ -55,28 +55,33 @@ class SubscriptionController extends Controller
         $this->authorize('create', Subscription::class);
 
         $data = $request->validate([
-            'contact_id'           => ['required', Rule::exists('contacts', 'id')],
-            'subscription_plan_id' => ['required', Rule::exists('subscription_plans', 'id')],
-            'started_at'           => ['required', 'date'],
+            'plan_id'              => ['required', Rule::exists('subscription_plans', 'id')],
+            'customer_name'        => ['nullable', 'string', 'max:255'],
+            'customer_email'       => ['nullable', 'email', 'max:255'],
+            'current_period_start' => ['nullable', 'date'],
+            'current_period_end'   => ['nullable', 'date'],
             'notes'                => ['nullable', 'string'],
         ]);
 
-        $plan = SubscriptionPlan::find($data['subscription_plan_id']);
+        $plan = SubscriptionPlan::find($data['plan_id']);
 
         $trialEndsAt = null;
         $status      = 'active';
+        $today       = Carbon::today()->toDateString();
 
         if ($plan && $plan->trial_days > 0) {
             $status      = 'trial';
-            $trialEndsAt = Carbon::parse($data['started_at'])->addDays($plan->trial_days)->toDateString();
+            $trialEndsAt = Carbon::today()->addDays($plan->trial_days)->toDateString();
         }
 
         $subscription = Subscription::create([
             'tenant_id'            => auth()->user()->tenant_id,
-            'contact_id'           => $data['contact_id'],
-            'subscription_plan_id' => $data['subscription_plan_id'],
+            'plan_id'              => $data['plan_id'],
+            'customer_name'        => $data['customer_name'] ?? null,
+            'customer_email'       => $data['customer_email'] ?? null,
             'status'               => $status,
-            'started_at'           => $data['started_at'],
+            'current_period_start' => $data['current_period_start'] ?? $today,
+            'current_period_end'   => $data['current_period_end'] ?? ($plan ? $plan->getNextBillingDate($today) : null),
             'trial_ends_at'        => $trialEndsAt,
             'notes'                => $data['notes'] ?? null,
         ]);
@@ -89,7 +94,7 @@ class SubscriptionController extends Controller
     {
         $this->authorize('view', $subscription);
 
-        $subscription->load(['contact', 'plan']);
+        $subscription->load(['plan']);
 
         return Inertia::render('Finance/Subscriptions/Show', [
             'subscription' => $subscription,

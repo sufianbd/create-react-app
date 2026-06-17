@@ -1,8 +1,10 @@
 <?php
 
+use App\Modules\PM\Http\Controllers\GanttController;
 use App\Modules\PM\Http\Controllers\MilestoneController;
 use App\Modules\PM\Http\Controllers\PMDashboardController;
 use App\Modules\PM\Http\Controllers\ProjectController;
+use App\Modules\PM\Http\Controllers\SprintController;
 use App\Modules\PM\Http\Controllers\TaskController;
 use App\Modules\PM\Http\Controllers\TimeEntryController;
 use Illuminate\Support\Facades\Route;
@@ -37,4 +39,14 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('pm')->name('pm.')->group
 
     // Project resource
     Route::resource('projects', ProjectController::class);
+
+    // Sprints
+    Route::get('projects/{project}/sprints', [SprintController::class, 'index'])->name('projects.sprints.index');
+    Route::post('projects/{project}/sprints', [SprintController::class, 'store'])->name('projects.sprints.store');
+    Route::post('projects/{project}/sprints/{sprint}/activate', [SprintController::class, 'activate'])->name('projects.sprints.activate');
+    Route::post('projects/{project}/sprints/{sprint}/complete', [SprintController::class, 'complete'])->name('projects.sprints.complete');
+
+    // Gantt
+    Route::get('projects/{project}/gantt', [GanttController::class, 'show'])->name('projects.gantt');
+    Route::get('projects/{project}/gantt/data', [GanttController::class, 'data'])->name('projects.gantt.data');
 });

@@ -16,15 +16,18 @@ class Task extends Model
     protected $table = 'tasks';
 
     protected $fillable = [
-        'tenant_id', 'project_id', 'title', 'description',
-        'status', 'priority', 'assignee_id', 'due_date',
-        'estimated_hours', 'actual_hours', 'sequence', 'created_by',
+        'tenant_id', 'project_id', 'sprint_id', 'title', 'description',
+        'status', 'priority', 'assignee_id', 'start_date', 'due_date',
+        'estimated_hours', 'actual_hours', 'story_points', 'sequence',
+        'created_by', 'parent_task_id',
     ];
 
     protected $casts = [
+        'start_date'      => 'date',
         'due_date'        => 'date',
         'estimated_hours' => 'float',
         'actual_hours'    => 'float',
+        'story_points'    => 'integer',
     ];
 
     public function project(): BelongsTo
@@ -45,6 +48,31 @@ class Task extends Model
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
+    }
+
+    public function sprint(): BelongsTo
+    {
+        return $this->belongsTo(ProjectSprint::class, 'sprint_id');
+    }
+
+    public function dependencies(): HasMany
+    {
+        return $this->hasMany(TaskDependency::class, 'task_id');
+    }
+
+    public function blockedBy(): HasMany
+    {
+        return $this->hasMany(TaskDependency::class, 'depends_on_id');
+    }
+
+    public function addDependency(Task $depends_on, string $type = 'finish_to_start'): TaskDependency
+    {
+        return TaskDependency::create([
+            'tenant_id'       => $this->tenant_id,
+            'task_id'         => $this->id,
+            'depends_on_id'   => $depends_on->id,
+            'dependency_type' => $type,
+        ]);
     }
 
     public function complete(): void

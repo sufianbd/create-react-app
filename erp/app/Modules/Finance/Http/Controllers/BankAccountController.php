@@ -40,16 +40,13 @@ class BankAccountController extends Controller
             'bank_name'       => 'required|string|max:255',
             'account_number'  => 'nullable|string|max:255',
             'currency'        => 'nullable|string|max:10',
-            'opening_balance' => 'nullable|numeric',
         ]);
 
         $account = BankAccount::create([
             ...$data,
-            'tenant_id'       => $request->user()->tenant_id,
-            'currency'        => $data['currency'] ?? 'USD',
-            'opening_balance' => $data['opening_balance'] ?? 0,
+            'tenant_id' => $request->user()->tenant_id,
+            'currency'  => $data['currency'] ?? 'USD',
         ]);
-        $account->updateBalance();
 
         return redirect()->back()
             ->with('success', 'Bank account created.');
@@ -86,15 +83,13 @@ class BankAccountController extends Controller
         $this->authorize('update', $bankAccount);
 
         $data = $request->validate([
-            'name'            => 'required|string|max:255',
-            'bank_name'       => 'required|string|max:255',
-            'account_number'  => 'nullable|string|max:255',
-            'currency'        => 'nullable|string|max:10',
-            'opening_balance' => 'nullable|numeric',
+            'name'           => 'required|string|max:255',
+            'bank_name'      => 'required|string|max:255',
+            'account_number' => 'nullable|string|max:255',
+            'currency'       => 'nullable|string|max:10',
         ]);
 
         $bankAccount->update($data);
-        $bankAccount->updateBalance();
 
         return redirect()->back()
             ->with('success', 'Bank account updated.');

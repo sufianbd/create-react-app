@@ -49,20 +49,23 @@ class SubscriptionPlanController extends Controller
 
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
-            'billing_cycle' => ['required', Rule::in(['monthly', 'quarterly', 'annually'])],
+            'billing_cycle' => ['required', Rule::in(['monthly', 'quarterly', 'annual', 'annually'])],
             'price'         => ['required', 'numeric', 'min:0'],
-            'currency_code' => ['nullable', 'string', 'size:3'],
             'trial_days'    => ['nullable', 'integer', 'min:0'],
             'description'   => ['nullable', 'string'],
             'is_active'     => ['nullable', 'boolean'],
         ]);
+
+        // Normalize 'annually' to 'annual' for DB compatibility
+        if (($data['billing_cycle'] ?? '') === 'annually') {
+            $data['billing_cycle'] = 'annual';
+        }
 
         $plan = SubscriptionPlan::create([
             'tenant_id'     => auth()->user()->tenant_id,
             'name'          => $data['name'],
             'billing_cycle' => $data['billing_cycle'],
             'price'         => $data['price'],
-            'currency_code' => $data['currency_code'] ?? 'USD',
             'trial_days'    => $data['trial_days'] ?? 0,
             'description'   => $data['description'] ?? null,
             'is_active'     => $data['is_active'] ?? true,

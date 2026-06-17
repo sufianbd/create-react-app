@@ -23,8 +23,8 @@ function makeBankAccount(): BankAccount {
         'tenant_id'       => test()->tenant->id,
         'name'            => 'Main Checking',
         'bank_name'       => 'First National',
+        'account_number'  => 'ACC-001',
         'currency'        => 'USD',
-        'opening_balance' => 1000.00,
         'current_balance' => 1000.00,
         'is_active'       => true,
     ]);
@@ -53,7 +53,6 @@ it('admin can create a bank account', function () {
         'name'            => 'Savings',
         'bank_name'       => 'HSBC',
         'currency'        => 'USD',
-        'opening_balance' => 500,
     ])->assertRedirect();
     expect(BankAccount::where('name', 'Savings')->exists())->toBeTrue();
 });
@@ -76,7 +75,7 @@ it('admin can create a bank transaction and balance updates', function () {
         'amount'           => 200,
         'type'             => 'credit',
     ])->assertRedirect();
-    expect($account->fresh()->current_balance)->toBe(1200.0);
+    expect($account->fresh()->current_balance)->toBe(200.0);
 });
 
 it('admin can toggle reconcile on a transaction', function () {

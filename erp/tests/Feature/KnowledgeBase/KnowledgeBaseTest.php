@@ -29,7 +29,7 @@ function makeArticle(array $attrs = []): KbArticle
 }
 
 // Helper to create a category
-function makeCategory(array $attrs = []): KbCategory
+function makeKbCategory(array $attrs = []): KbCategory
 {
     return KbCategory::create(array_merge([
         'tenant_id' => test()->tenant->id,
@@ -46,7 +46,7 @@ it('lists articles', function () {
 
 // 2. Lists categories
 it('lists categories', function () {
-    makeCategory();
+    makeKbCategory();
     $this->get('/kb/categories')->assertOk();
 });
 

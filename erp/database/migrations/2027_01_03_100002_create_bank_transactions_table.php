@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('type', ['debit', 'credit']);
             $table->decimal('amount', 18, 2);
             $table->enum('status', ['unreconciled', 'reconciled'])->default('unreconciled');
+            $table->boolean('is_reconciled')->default(false);
             $table->timestamp('reconciled_at')->nullable();
             $table->timestamps();
         });

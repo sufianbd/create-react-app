@@ -58,6 +58,16 @@ class Project extends Model
         return $this->hasMany(Milestone::class);
     }
 
+    public function sprints(): HasMany
+    {
+        return $this->hasMany(ProjectSprint::class);
+    }
+
+    public function activeSprint(): ?ProjectSprint
+    {
+        return $this->sprints()->where('status', 'active')->first();
+    }
+
     public function timeEntries(): HasManyThrough
     {
         return $this->hasManyThrough(TimeEntry::class, Task::class);
