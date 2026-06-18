@@ -35,6 +35,10 @@ use App\Modules\LiveChat\Providers\LiveChatServiceProvider;
 use App\Modules\Repairs\Providers\RepairsServiceProvider;
 use App\Modules\SocialMarketing\Providers\SocialMarketingServiceProvider;
 use App\Modules\Frontdesk\Providers\FrontdeskServiceProvider;
+use App\Modules\Website\Providers\WebsiteServiceProvider;
+use App\Modules\Appointments\Providers\AppointmentsServiceProvider;
+use App\Modules\Lunch\Providers\LunchServiceProvider;
+use App\Modules\Purchase\Providers\PurchaseServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -71,6 +75,10 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(RepairsServiceProvider::class);
         $this->app->register(SocialMarketingServiceProvider::class);
         $this->app->register(FrontdeskServiceProvider::class);
+        $this->app->register(LunchServiceProvider::class);
+        $this->app->register(WebsiteServiceProvider::class);
+        $this->app->register(AppointmentsServiceProvider::class);
+        $this->app->register(PurchaseServiceProvider::class);
     }
 
     public function boot(): void
