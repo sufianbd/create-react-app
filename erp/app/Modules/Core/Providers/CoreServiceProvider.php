@@ -31,6 +31,7 @@ use App\Modules\KnowledgeBase\Providers\KnowledgeBaseServiceProvider;
 use App\Modules\Planning\Providers\PlanningServiceProvider;
 use App\Modules\Sign\Providers\SignServiceProvider;
 use App\Modules\Maintenance\Providers\MaintenanceServiceProvider;
+use App\Modules\QualityControl\Providers\QualityControlServiceProvider;
 use App\Modules\LiveChat\Providers\LiveChatServiceProvider;
 use App\Modules\Repairs\Providers\RepairsServiceProvider;
 use App\Modules\SocialMarketing\Providers\SocialMarketingServiceProvider;
@@ -71,6 +72,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->register(PlanningServiceProvider::class);
         $this->app->register(SignServiceProvider::class);
         $this->app->register(MaintenanceServiceProvider::class);
+        $this->app->register(QualityControlServiceProvider::class);
         $this->app->register(LiveChatServiceProvider::class);
         $this->app->register(RepairsServiceProvider::class);
         $this->app->register(SocialMarketingServiceProvider::class);
