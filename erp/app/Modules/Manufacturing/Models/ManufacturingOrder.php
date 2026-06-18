@@ -84,11 +84,13 @@ class ManufacturingOrder extends Model
         $this->save();
     }
 
-    public function complete(): void
+    public function complete(float $qtyProduced = 0): void
     {
-        $this->status      = 'done';
-        $this->finish_date = now()->toDateString();
+        $this->status       = 'done';
+        $this->qty_produced = $qtyProduced > 0 ? $qtyProduced : $this->qty_to_produce;
+        $this->finish_date  = now()->toDateString();
         $this->save();
+        event(new \App\Events\Manufacturing\ManufacturingOrderCompleted($this));
     }
 
     public function cancel(): void

@@ -65,6 +65,7 @@ class CrmLead extends Model
         $this->probability = 100;
         $this->won_at      = now();
         $this->save();
+        event(new \App\Events\CRM\CrmDealWon($this));
     }
 
     public function markLost(string $reason = ''): void

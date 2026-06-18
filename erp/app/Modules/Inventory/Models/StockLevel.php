@@ -34,4 +34,21 @@ class StockLevel extends Model
     {
         return (float) $this->quantity - (float) $this->reserved_quantity;
     }
+
+    public function checkReorderRules(): void
+    {
+        $rules = \App\Modules\Inventory\Models\ReorderRule::where('product_id', $this->product_id)
+            ->where('is_active', true)
+            ->where('status', 'active')
+            ->get();
+
+        foreach ($rules as $rule) {
+            if ((float) $this->quantity <= (float) $rule->reorder_point) {
+                $product = $this->product ?? \App\Modules\Inventory\Models\Product::find($this->product_id);
+                if ($product) {
+                    event(new \App\Events\Inventory\InventoryStockLow($product, $this, $rule));
+                }
+            }
+        }
+    }
 }

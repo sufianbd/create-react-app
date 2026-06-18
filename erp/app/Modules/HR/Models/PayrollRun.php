@@ -104,12 +104,13 @@ class PayrollRun extends Model
     /**
      * Approve the payroll run.
      */
-    public function approve(User $user): void
+    public function approve(int|User $user): void
     {
         $this->status      = 'approved';
-        $this->approved_by = $user->id;
+        $this->approved_by = $user instanceof User ? $user->id : $user;
         $this->approved_at = now();
         $this->save();
+        event(new \App\Events\HR\PayrollRunApproved($this));
     }
 
     /**

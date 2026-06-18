@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('goods_receipt_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('goods_receipt_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
             $table->decimal('quantity_expected', 15, 2)->default(0);
             $table->decimal('quantity_received', 15, 2)->default(0);
             $table->decimal('unit_cost', 15, 2)->default(0);

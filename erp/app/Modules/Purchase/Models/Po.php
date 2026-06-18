@@ -57,6 +57,7 @@ class Po extends Model
             'status'       => 'confirmed',
             'confirmed_at' => now(),
         ]);
+        event(new \App\Events\Purchase\PurchaseOrderConfirmed($this));
     }
 
     public function receive(): void

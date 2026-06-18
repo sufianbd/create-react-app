@@ -67,9 +67,12 @@ class Subscription extends Model
             'period_end'   => $newEnd,
         ]);
 
+        $this->status               = 'active';
         $this->current_period_start = $newStart;
         $this->current_period_end   = $newEnd;
         $this->save();
+
+        event(new \App\Events\Subscriptions\SubscriptionRenewed($this));
 
         return $invoice;
     }
