@@ -11,6 +11,10 @@ class UpdateInventoryForManufacturingOrder
     {
         $order = $event->order;
 
+        if (! $order->warehouse_id) {
+            return;
+        }
+
         StockMovement::create([
             'tenant_id'    => $order->tenant_id,
             'product_id'   => $order->product_id,
