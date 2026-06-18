@@ -60,6 +60,7 @@ test('list purchase orders returns paginated data', function () {
 
     Po::create([
         'tenant_id'    => $this->tenant->id,
+        'po_number'    => 'PO-TEST-001',
         'po_vendor_id' => $vendor->id,
         'status'       => 'draft',
         'order_date'   => now()->toDateString(),
@@ -82,6 +83,7 @@ test('filters purchase orders by status', function () {
 
     Po::create([
         'tenant_id'    => $this->tenant->id,
+        'po_number'    => 'PO-TEST-002',
         'po_vendor_id' => $vendor->id,
         'status'       => 'confirmed',
         'order_date'   => now()->toDateString(),

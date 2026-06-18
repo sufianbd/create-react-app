@@ -18,7 +18,7 @@ it('returns surveys for authenticated user', function () {
     Survey::create([
         'tenant_id'  => $this->tenant->id,
         'title'      => 'Customer Satisfaction',
-        'status'     => 'active',
+        'status'     => 'draft',
         'created_by' => $this->user->id,
     ]);
 

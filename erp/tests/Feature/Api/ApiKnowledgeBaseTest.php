@@ -19,6 +19,7 @@ it('returns articles for authenticated user', function () {
     KbArticle::create([
         'tenant_id' => $this->tenant->id,
         'title'     => 'Test Article',
+        'slug'      => 'test-article',
         'content'   => 'Article content here',
         'status'    => 'published',
         'author_id' => $this->user->id,

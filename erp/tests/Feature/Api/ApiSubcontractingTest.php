@@ -18,8 +18,10 @@ it('returns subcontracting orders for authenticated user', function () {
     SubcontractOrder::create([
         'tenant_id'        => $this->tenant->id,
         'vendor_id'        => 1,
+        'reference'        => 'SC-TEST-001',
         'finished_product' => 'Widget A',
         'finished_qty'     => 100,
+        'unit_price'       => 0,
         'status'           => 'draft',
     ]);
 

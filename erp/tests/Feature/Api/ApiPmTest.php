@@ -42,7 +42,7 @@ test('creates a project', function () {
     $response = $this->withToken($this->token)->postJson('/api/v1/pm/projects', [
         'name'        => 'New Project',
         'description' => 'Project description',
-        'status'      => 'planning',
+        'status'      => 'draft',
     ]);
 
     $response->assertStatus(201)

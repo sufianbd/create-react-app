@@ -45,7 +45,7 @@ class PmApiController extends ApiController
             'name'        => 'required|string|max:255',
             'code'        => 'nullable|string|max:50',
             'description' => 'nullable|string',
-            'status'      => 'nullable|string|in:planning,active,on_hold,completed,cancelled',
+            'status'      => 'nullable|string|in:draft,active,on_hold,completed,cancelled',
             'priority'    => 'nullable|string|in:low,medium,high,critical',
             'budget'      => 'nullable|numeric|min:0',
             'start_date'  => 'nullable|date',

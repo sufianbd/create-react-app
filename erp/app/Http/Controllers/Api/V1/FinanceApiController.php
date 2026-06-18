@@ -46,7 +46,7 @@ class FinanceApiController extends ApiController
     {
         $validated = $request->validate([
             'contact_id' => 'required|integer|exists:contacts,id',
-            'bill_date'  => 'required|date',
+            'issue_date' => 'required|date',
             'due_date'   => 'nullable|date',
             'notes'      => 'nullable|string',
         ]);

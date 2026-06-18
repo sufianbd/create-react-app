@@ -25,7 +25,7 @@ test('list bills returns paginated data', function () {
     Bill::create([
         'tenant_id'  => $this->tenant->id,
         'contact_id' => $contact->id,
-        'bill_date'  => now()->toDateString(),
+        'issue_date' => now()->toDateString(),
     ]);
 
     $response = $this->withToken($this->token)->getJson('/api/v1/finance/bills');
@@ -52,7 +52,7 @@ test('creates a bill', function () {
 
     $response = $this->withToken($this->token)->postJson('/api/v1/finance/bills', [
         'contact_id' => $contact->id,
-        'bill_date'  => now()->toDateString(),
+        'issue_date' => now()->toDateString(),
     ]);
 
     $response->assertStatus(201)
@@ -69,7 +69,7 @@ test('cannot delete a paid bill', function () {
     $bill = Bill::create([
         'tenant_id'  => $this->tenant->id,
         'contact_id' => $contact->id,
-        'bill_date'  => now()->toDateString(),
+        'issue_date' => now()->toDateString(),
         'status'     => 'paid',
     ]);
 
