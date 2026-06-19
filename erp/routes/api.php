@@ -333,5 +333,12 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
             Route::post('/mark-all-read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
         });
+
+        // Reports
+        Route::prefix('reports')->group(function () {
+            Route::get('/financial', [\App\Http\Controllers\Api\V1\ReportsController::class, 'financial']);
+            Route::get('/inventory', [\App\Http\Controllers\Api\V1\ReportsController::class, 'inventory']);
+            Route::get('/hr',        [\App\Http\Controllers\Api\V1\ReportsController::class, 'hr']);
+        });
     });
 });
