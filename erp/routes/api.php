@@ -347,6 +347,25 @@ Route::prefix('v1')->group(function () {
         // System Metrics (auth required)
         Route::get('/metrics', [\App\Http\Controllers\Api\V1\HealthController::class, 'metrics']);
 
+        // Dashboard Widgets
+        Route::prefix('dashboard-widgets')->group(function () {
+            Route::get('/',                   [\App\Http\Controllers\Api\V1\DashboardWidgetController::class, 'index']);
+            Route::post('/',                  [\App\Http\Controllers\Api\V1\DashboardWidgetController::class, 'store']);
+            Route::put('/{dashboardWidget}',  [\App\Http\Controllers\Api\V1\DashboardWidgetController::class, 'update']);
+            Route::post('/reorder',           [\App\Http\Controllers\Api\V1\DashboardWidgetController::class, 'reorder']);
+            Route::delete('/{dashboardWidget}', [\App\Http\Controllers\Api\V1\DashboardWidgetController::class, 'destroy']);
+        });
+
+        // Email Templates
+        Route::prefix('email-templates')->group(function () {
+            Route::get('/',                        [\App\Http\Controllers\Api\V1\EmailTemplateController::class, 'index']);
+            Route::post('/',                       [\App\Http\Controllers\Api\V1\EmailTemplateController::class, 'store']);
+            Route::get('/{emailTemplate}',         [\App\Http\Controllers\Api\V1\EmailTemplateController::class, 'show']);
+            Route::put('/{emailTemplate}',         [\App\Http\Controllers\Api\V1\EmailTemplateController::class, 'update']);
+            Route::delete('/{emailTemplate}',      [\App\Http\Controllers\Api\V1\EmailTemplateController::class, 'destroy']);
+            Route::post('/{emailTemplate}/preview',[\App\Http\Controllers\Api\V1\EmailTemplateController::class, 'preview']);
+        });
+
         // Report Schedules
         Route::prefix('report-schedules')->group(function () {
             Route::get('/',             [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'index']);
