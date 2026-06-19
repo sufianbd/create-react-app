@@ -448,6 +448,12 @@ Route::prefix('v1')->group(function () {
         });
         Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
 
+        // Inventory Reorder Suggestions
+        Route::prefix('reorder')->group(function () {
+            Route::get('/suggestions', [\App\Http\Controllers\Api\V1\ReorderController::class, 'suggestions']);
+            Route::get('/summary',     [\App\Http\Controllers\Api\V1\ReorderController::class, 'summary']);
+        });
+
         // API Token Management
         Route::prefix('tokens')->group(function () {
             Route::get('/',           [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'index']);
