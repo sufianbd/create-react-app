@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AccountingApiController;
+use App\Http\Controllers\Api\V1\ImportExportController;
 use App\Http\Controllers\Api\V1\AppointmentsApiController;
 use App\Http\Controllers\Api\V1\ApprovalsApiController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\Api\V1\RentalApiController;
 use App\Http\Controllers\Api\V1\RepairsApiController;
 use App\Http\Controllers\Api\V1\SignApiController;
 use App\Http\Controllers\Api\V1\SocialMarketingApiController;
+use App\Http\Controllers\Api\V1\PdfController;
 use App\Http\Controllers\Api\V1\SubcontractingApiController;
 use App\Http\Controllers\Api\V1\SubscriptionsApiController;
 use App\Http\Controllers\Api\V1\SurveyApiController;
@@ -297,5 +299,23 @@ Route::prefix('v1')->group(function () {
         Route::get('subcontracting/orders/{id}', [SubcontractingApiController::class, 'show']);
         Route::post('subcontracting/orders',     [SubcontractingApiController::class, 'store']);
         Route::put('subcontracting/orders/{id}', [SubcontractingApiController::class, 'update']);
+
+        // Import / Export
+        Route::prefix('export')->group(function () {
+            Route::get('/products', [ImportExportController::class, 'exportProducts']);
+            Route::get('/contacts', [ImportExportController::class, 'exportContacts']);
+            Route::get('/invoices', [ImportExportController::class, 'exportInvoices']);
+        });
+        Route::prefix('import')->group(function () {
+            Route::post('/products', [ImportExportController::class, 'importProducts']);
+            Route::post('/contacts', [ImportExportController::class, 'importContacts']);
+        });
+
+        // PDF Downloads
+        Route::prefix('pdf')->group(function () {
+            Route::get('/invoices/{id}',        [PdfController::class, 'invoice']);
+            Route::get('/purchase-orders/{id}', [PdfController::class, 'purchaseOrder']);
+            Route::get('/payslips/{id}',        [PdfController::class, 'payslip']);
+        });
     });
 });
