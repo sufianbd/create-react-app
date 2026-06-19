@@ -319,5 +319,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/purchase-orders/{id}', [PdfController::class, 'purchaseOrder']);
             Route::get('/payslips/{id}',        [PdfController::class, 'payslip']);
         });
+
+        // Global Search
+        Route::get('/search', [\App\Http\Controllers\Api\V1\SearchController::class, 'search']);
     });
 });
