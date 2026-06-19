@@ -346,6 +346,17 @@ Route::prefix('v1')->group(function () {
             Route::post('/mark-all-read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
         });
 
+        // Budget Management API
+        Route::prefix('budgets')->group(function () {
+            Route::get('/',                     [\App\Http\Controllers\Api\V1\BudgetApiController::class, 'index']);
+            Route::post('/',                    [\App\Http\Controllers\Api\V1\BudgetApiController::class, 'store']);
+            Route::get('/{budget}',             [\App\Http\Controllers\Api\V1\BudgetApiController::class, 'show']);
+            Route::delete('/{budget}',          [\App\Http\Controllers\Api\V1\BudgetApiController::class, 'destroy']);
+            Route::post('/{budget}/activate',   [\App\Http\Controllers\Api\V1\BudgetApiController::class, 'activate']);
+            Route::post('/{budget}/close',      [\App\Http\Controllers\Api\V1\BudgetApiController::class, 'close']);
+            Route::get('/{budget}/variance',    [\App\Http\Controllers\Api\V1\BudgetApiController::class, 'variance']);
+        });
+
         // Smart Alert Rules
         Route::prefix('alert-rules')->group(function () {
             Route::get('/',                        [\App\Http\Controllers\Api\V1\AlertRuleController::class, 'index']);
