@@ -346,6 +346,12 @@ Route::prefix('v1')->group(function () {
             Route::post('/mark-all-read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
         });
 
+        // Financial Forecasting
+        Route::prefix('forecast')->group(function () {
+            Route::get('/revenue',   [\App\Http\Controllers\Api\V1\ForecastController::class, 'revenue']);
+            Route::get('/cash-flow', [\App\Http\Controllers\Api\V1\ForecastController::class, 'cashFlow']);
+        });
+
         // Reports
         Route::prefix('reports')->group(function () {
             Route::get('/financial', [\App\Http\Controllers\Api\V1\ReportsController::class, 'financial']);
