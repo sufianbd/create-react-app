@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('invoices:generate-recurring')->dailyAt('02:00');
+Schedule::command('reports:send-scheduled')->hourly();

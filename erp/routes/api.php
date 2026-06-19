@@ -45,6 +45,9 @@ use App\Http\Controllers\Api\V1\WebsiteApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // Health checks (public)
+    Route::get('health', [\App\Http\Controllers\Api\V1\HealthController::class, 'check']);
+
     // Auth (public) — stricter rate limit
     Route::middleware('throttle:auth')->group(function () {
         Route::post('auth/login', [AuthController::class, 'login']);
@@ -339,6 +342,19 @@ Route::prefix('v1')->group(function () {
             Route::get('/financial', [\App\Http\Controllers\Api\V1\ReportsController::class, 'financial']);
             Route::get('/inventory', [\App\Http\Controllers\Api\V1\ReportsController::class, 'inventory']);
             Route::get('/hr',        [\App\Http\Controllers\Api\V1\ReportsController::class, 'hr']);
+        });
+
+        // System Metrics (auth required)
+        Route::get('/metrics', [\App\Http\Controllers\Api\V1\HealthController::class, 'metrics']);
+
+        // Report Schedules
+        Route::prefix('report-schedules')->group(function () {
+            Route::get('/',             [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'index']);
+            Route::post('/',            [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'store']);
+            Route::get('/{reportSchedule}',        [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'show']);
+            Route::put('/{reportSchedule}',        [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'update']);
+            Route::delete('/{reportSchedule}',     [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'destroy']);
+            Route::post('/{reportSchedule}/send',  [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'sendNow']);
         });
     });
 });
