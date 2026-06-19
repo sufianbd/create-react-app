@@ -173,6 +173,7 @@ beforeEach(function () {
 | 39    | Inventory Reorder Suggestions — deficit calc + urgency levels    | ✅     |
 | 40    | HR Leave Balance API — allocation, team view, year filters       | ✅     |
 | 41    | CRM Pipeline Analytics — funnel, win rate, velocity, leaderboard | ✅     |
+| 42    | Project Time Tracking API — log hours, project summaries by user | ✅     |
 
 ## File Locations Reference
 

@@ -448,6 +448,15 @@ Route::prefix('v1')->group(function () {
         });
         Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
 
+        // Time Tracking
+        Route::prefix('time-entries')->group(function () {
+            Route::get('/',                  [\App\Http\Controllers\Api\V1\TimeTrackingController::class, 'index']);
+            Route::post('/',                 [\App\Http\Controllers\Api\V1\TimeTrackingController::class, 'store']);
+            Route::put('/{timeEntry}',       [\App\Http\Controllers\Api\V1\TimeTrackingController::class, 'update']);
+            Route::delete('/{timeEntry}',    [\App\Http\Controllers\Api\V1\TimeTrackingController::class, 'destroy']);
+        });
+        Route::get('projects/{project}/time', [\App\Http\Controllers\Api\V1\TimeTrackingController::class, 'projectSummary']);
+
         // CRM Pipeline Analytics
         Route::prefix('crm/pipeline')->group(function () {
             Route::get('/funnel',      [\App\Http\Controllers\Api\V1\CrmPipelineController::class, 'funnel']);
