@@ -3,8 +3,11 @@
 namespace App\Listeners\Inventory;
 
 use App\Events\Inventory\InventoryStockLow;
+use App\Jobs\ProcessLowStockAlertJob;
+use App\Mail\LowStockAlertMail;
 use App\Modules\Purchase\Models\PurchaseRfq;
 use App\Modules\Purchase\Models\PurchaseRfqLine;
+use Illuminate\Support\Facades\Mail;
 
 class CreatePurchaseRfqFromLowStock
 {
@@ -45,5 +48,13 @@ class CreatePurchaseRfqFromLowStock
         ]);
 
         $reorderRule->trigger();
+
+        ProcessLowStockAlertJob::dispatch($product, (int) ($event->stockLevel->quantity ?? 0));
+
+        Mail::to('purchasing@example.com')->queue(new LowStockAlertMail(
+            $product->name,
+            (float) ($event->stockLevel->quantity ?? 0),
+            (float) $reorderRule->reorder_point,
+        ));
     }
 }

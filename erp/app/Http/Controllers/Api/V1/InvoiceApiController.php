@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Jobs\SendInvoiceNotificationJob;
 use App\Modules\Finance\Models\Invoice;
 use App\Modules\Finance\Models\InvoiceItem;
 use Illuminate\Http\JsonResponse;
@@ -94,6 +95,8 @@ class InvoiceApiController extends ApiController
                 'tax_rate'    => $item['tax_rate'] ?? 0,
             ]);
         }
+
+        SendInvoiceNotificationJob::dispatch($invoice);
 
         return $this->success($invoice->load('items'), 201);
     }

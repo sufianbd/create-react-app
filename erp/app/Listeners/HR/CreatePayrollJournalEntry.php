@@ -3,8 +3,11 @@
 namespace App\Listeners\HR;
 
 use App\Events\HR\PayrollRunApproved;
+use App\Jobs\GeneratePayslipJob;
+use App\Mail\PayrollApprovedMail;
 use App\Modules\Accounting\Models\JournalEntry;
 use App\Modules\Accounting\Models\JournalEntryLine;
+use Illuminate\Support\Facades\Mail;
 
 class CreatePayrollJournalEntry
 {
@@ -42,6 +45,10 @@ class CreatePayrollJournalEntry
             'debit'            => 0,
             'credit'           => $payrollRun->total_net,
         ]);
+
+        GeneratePayslipJob::dispatch($payrollRun);
+
+        Mail::to('payroll@example.com')->queue(new PayrollApprovedMail($payrollRun));
     }
 
     private function findOrCreateAccount(int $tenantId, string $code, string $name, string $type, string $normalBalance): \App\Modules\Accounting\Models\Account
