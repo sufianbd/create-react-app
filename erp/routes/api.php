@@ -356,6 +356,20 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{dashboardWidget}', [\App\Http\Controllers\Api\V1\DashboardWidgetController::class, 'destroy']);
         });
 
+        // User Preferences
+        Route::prefix('preferences')->group(function () {
+            Route::get('/',    [\App\Http\Controllers\Api\V1\UserPreferenceController::class, 'index']);
+            Route::put('/',    [\App\Http\Controllers\Api\V1\UserPreferenceController::class, 'update']);
+            Route::delete('/', [\App\Http\Controllers\Api\V1\UserPreferenceController::class, 'reset']);
+        });
+
+        // Tenant Feature Flags
+        Route::prefix('features')->group(function () {
+            Route::get('/',                   [\App\Http\Controllers\Api\V1\TenantFeatureController::class, 'index']);
+            Route::post('/toggle',            [\App\Http\Controllers\Api\V1\TenantFeatureController::class, 'toggle']);
+            Route::get('/{feature}/check',    [\App\Http\Controllers\Api\V1\TenantFeatureController::class, 'check']);
+        });
+
         // Email Templates
         Route::prefix('email-templates')->group(function () {
             Route::get('/',                        [\App\Http\Controllers\Api\V1\EmailTemplateController::class, 'index']);
