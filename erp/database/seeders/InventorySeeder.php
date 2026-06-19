@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Modules\Core\Models\Tenant;
-use App\Modules\Inventory\Models\Category;
+use App\Modules\Inventory\Models\ProductCategory;
 use App\Modules\Inventory\Models\Product;
 use App\Modules\Inventory\Models\StockLevel;
 use App\Modules\Inventory\Models\Supplier;
@@ -33,11 +33,11 @@ class InventorySeeder extends Seeder
         $ltr  = UnitOfMeasure::create(['tenant_id' => $tenant->id, 'name' => 'Litres',    'abbreviation' => 'ltr']);
 
         // Categories
-        $electronics = Category::create(['tenant_id' => $tenant->id, 'name' => 'Electronics',       'slug' => 'electronics']);
-        $computers   = Category::create(['tenant_id' => $tenant->id, 'name' => 'Computers',         'slug' => 'computers',   'parent_id' => $electronics->id]);
-        $peripherals = Category::create(['tenant_id' => $tenant->id, 'name' => 'Peripherals',       'slug' => 'peripherals', 'parent_id' => $electronics->id]);
-        $office      = Category::create(['tenant_id' => $tenant->id, 'name' => 'Office Supplies',   'slug' => 'office-supplies']);
-        $consumables = Category::create(['tenant_id' => $tenant->id, 'name' => 'Consumables',       'slug' => 'consumables']);
+        $electronics = ProductCategory::create(['tenant_id' => $tenant->id, 'name' => 'Electronics',     'slug' => 'electronics']);
+        $computers   = ProductCategory::create(['tenant_id' => $tenant->id, 'name' => 'Computers',       'slug' => 'computers']);
+        $peripherals = ProductCategory::create(['tenant_id' => $tenant->id, 'name' => 'Peripherals',     'slug' => 'peripherals']);
+        $office      = ProductCategory::create(['tenant_id' => $tenant->id, 'name' => 'Office Supplies', 'slug' => 'office-supplies']);
+        $consumables = ProductCategory::create(['tenant_id' => $tenant->id, 'name' => 'Consumables',     'slug' => 'consumables']);
 
         // Suppliers
         $supplier1 = Supplier::create(['tenant_id' => $tenant->id, 'name' => 'TechWorld Distributors', 'contact_person' => 'Alice Nguyen',  'email' => 'alice@techworld.example', 'phone' => '+1-555-0100']);
