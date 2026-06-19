@@ -167,6 +167,7 @@ beforeEach(function () {
 | 33    | Smart Alert Rules — threshold monitoring + notifications      | ✅     |
 | 34    | Budget Management REST API — CRUD + activate + variance       | ✅     |
 | 35    | Customer Credit Limits — per-contact limits, hold, check API  | ✅     |
+| 36    | Product Variants REST API — attributes, variants, matrix view | ✅     |
 
 ## File Locations Reference
 

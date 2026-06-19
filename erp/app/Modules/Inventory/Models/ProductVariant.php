@@ -39,4 +39,9 @@ class ProductVariant extends Model
         $this->stock_quantity = max(0, $this->stock_quantity + $delta);
         $this->save();
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
 }

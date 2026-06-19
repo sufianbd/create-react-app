@@ -152,4 +152,9 @@ class Product extends Model
                     ->orderBy('priority');
     }
 
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
 }

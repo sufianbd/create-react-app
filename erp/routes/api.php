@@ -432,5 +432,20 @@ Route::prefix('v1')->group(function () {
         Route::get('/contacts/{contact}/credit',        [\App\Http\Controllers\Api\V1\CreditLimitController::class, 'show']);
         Route::put('/contacts/{contact}/credit',        [\App\Http\Controllers\Api\V1\CreditLimitController::class, 'update']);
         Route::post('/contacts/{contact}/credit/check', [\App\Http\Controllers\Api\V1\CreditLimitController::class, 'check']);
+
+        // Product Variants & Attributes
+        Route::prefix('product-attributes')->group(function () {
+            Route::get('/',                          [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'indexAttributes']);
+            Route::post('/',                         [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'storeAttribute']);
+            Route::put('/{productAttribute}',        [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'updateAttribute']);
+            Route::delete('/{productAttribute}',     [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'destroyAttribute']);
+        });
+        Route::prefix('products/{product}/variants')->group(function () {
+            Route::get('/',            [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'index']);
+            Route::post('/',           [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'store']);
+            Route::put('/{variant}',   [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'update']);
+            Route::delete('/{variant}',[\App\Http\Controllers\Api\V1\ProductVariantController::class, 'destroy']);
+        });
+        Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
     });
 });
