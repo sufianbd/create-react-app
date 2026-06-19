@@ -5,6 +5,7 @@ namespace App\Modules\Finance\Models;
 use App\Models\User;
 use App\Modules\Core\Traits\BelongsToTenant;
 use App\Modules\Core\Traits\HasAuditLog;
+use App\Traits\LogsActivity;
 use App\Modules\Finance\Traits\HasLineItemTotals;
 use App\Modules\Finance\Traits\HasAttachments;
 use App\Modules\Finance\Traits\HasStatusTransitions;
@@ -17,6 +18,7 @@ class Invoice extends Model
 {
     use BelongsToTenant;
     use HasAuditLog;
+    use LogsActivity;
     use SoftDeletes;
     use HasLineItemTotals;
     use HasAttachments;

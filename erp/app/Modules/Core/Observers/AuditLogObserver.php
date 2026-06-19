@@ -30,14 +30,14 @@ class AuditLogObserver
         $this->log('deleted', $model, $model->getOriginal(), []);
     }
 
-    private function log(string $event, Model $model, array $old, array $new): void
+    private function log(string $action, Model $model, array $old, array $new): void
     {
         $tenantId = $this->resolveTenantId($model);
 
         AuditLog::create([
             'user_id'        => Auth::id(),
             'tenant_id'      => $tenantId,
-            'event'          => $event,
+            'action'         => $action,
             'auditable_type' => get_class($model),
             'auditable_id'   => $model->getKey(),
             'old_values'     => $old ?: null,

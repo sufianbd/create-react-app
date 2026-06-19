@@ -325,5 +325,13 @@ Route::prefix('v1')->group(function () {
 
         // Audit Logs
         Route::get('/audit-logs', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'index']);
+
+        // Notifications
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
+            Route::get('/unread-count', [\App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
+            Route::post('/{id}/read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
+            Route::post('/mark-all-read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
+        });
     });
 });

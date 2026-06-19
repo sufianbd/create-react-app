@@ -4,6 +4,7 @@ namespace App\Modules\Inventory\Models;
 
 use App\Modules\Core\Traits\BelongsToTenant;
 use App\Modules\Core\Traits\HasAuditLog;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,6 +15,7 @@ class Product extends Model
 {
     use BelongsToTenant;
     use HasAuditLog;
+    use LogsActivity;
     use SoftDeletes;
 
     protected $fillable = [

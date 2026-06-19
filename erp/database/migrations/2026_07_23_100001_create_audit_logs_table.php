@@ -8,18 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('audit_logs', function (Blueprint $table) {
-            $table->string('action')->nullable()->after('event');
-            $table->string('auditable_label')->nullable()->after('auditable_id');
-            $table->string('url')->nullable()->after('user_agent');
-            $table->string('module')->nullable()->after('url');
-        });
+        // No-op: columns added here (action, auditable_label, url, module)
+        // are handled by the 2026_06_19_000001_create_audit_logs_table migration
+        // which drops and recreates the table with the new schema.
     }
 
     public function down(): void
     {
-        Schema::table('audit_logs', function (Blueprint $table) {
-            $table->dropColumn(['action', 'auditable_label', 'url', 'module']);
-        });
+        // No-op
     }
 };
