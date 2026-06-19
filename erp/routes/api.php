@@ -456,6 +456,33 @@ Route::prefix('v1')->group(function () {
             Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
         });
 
+        // Tenant Settings API
+        Route::prefix('settings')->group(function () {
+            Route::get('/',          [\App\Http\Controllers\Api\V1\TenantSettingsController::class, 'index']);
+            Route::put('/',          [\App\Http\Controllers\Api\V1\TenantSettingsController::class, 'update']);
+            Route::get('/schema',    [\App\Http\Controllers\Api\V1\TenantSettingsController::class, 'schema']);
+            Route::get('/{key}',     [\App\Http\Controllers\Api\V1\TenantSettingsController::class, 'get']);
+            Route::put('/{key}',     [\App\Http\Controllers\Api\V1\TenantSettingsController::class, 'set']);
+        });
+
+        // Bulk Operations
+        Route::prefix('bulk')->group(function () {
+            Route::post('/status', [\App\Http\Controllers\Api\V1\BulkOperationController::class, 'updateStatus']);
+            Route::post('/delete', [\App\Http\Controllers\Api\V1\BulkOperationController::class, 'delete']);
+            Route::post('/assign', [\App\Http\Controllers\Api\V1\BulkOperationController::class, 'assign']);
+            Route::post('/export', [\App\Http\Controllers\Api\V1\BulkOperationController::class, 'export']);
+        });
+
+        // Custom Fields
+        Route::prefix('custom-fields')->group(function () {
+            Route::get('/definitions',              [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'indexDefinitions']);
+            Route::post('/definitions',             [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'storeDefinition']);
+            Route::put('/definitions/{definition}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'updateDefinition']);
+            Route::delete('/definitions/{definition}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'destroyDefinition']);
+            Route::get('/{modelType}/{modelId}',    [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'getValues']);
+            Route::put('/{modelType}/{modelId}',    [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'setValues']);
+        });
+
         // Expense Claims Workflow
         Route::prefix('expense-claims')->group(function () {
             Route::get('/',                          [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'index']);
