@@ -169,6 +169,7 @@ beforeEach(function () {
 | 35    | Customer Credit Limits — per-contact limits, hold, check API  | ✅     |
 | 36    | Product Variants REST API — attributes, variants, matrix view | ✅     |
 | 37    | Webhook Management REST API — CRUD, delivery log, ping, HMAC  | ✅     |
+| 38    | API Token Management — named tokens with abilities and expiry | ✅     |
 
 ## File Locations Reference
 

@@ -448,6 +448,14 @@ Route::prefix('v1')->group(function () {
         });
         Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
 
+        // API Token Management
+        Route::prefix('tokens')->group(function () {
+            Route::get('/',           [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'index']);
+            Route::post('/',          [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'store']);
+            Route::delete('/all',     [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroyAll']);
+            Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
+        });
+
         // Webhook Management
         Route::get('/webhooks/events', [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'events']);
         Route::prefix('webhooks')->group(function () {
