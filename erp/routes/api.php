@@ -448,6 +448,14 @@ Route::prefix('v1')->group(function () {
         });
         Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
 
+        // Leave Balance Management
+        Route::prefix('leave')->group(function () {
+            Route::get('/types',                        [\App\Http\Controllers\Api\V1\LeaveBalanceController::class, 'types']);
+            Route::get('/employees/{employee}/balance', [\App\Http\Controllers\Api\V1\LeaveBalanceController::class, 'employee']);
+            Route::post('/allocate',                    [\App\Http\Controllers\Api\V1\LeaveBalanceController::class, 'allocate']);
+            Route::get('/team',                         [\App\Http\Controllers\Api\V1\LeaveBalanceController::class, 'team']);
+        });
+
         // Inventory Reorder Suggestions
         Route::prefix('reorder')->group(function () {
             Route::get('/suggestions', [\App\Http\Controllers\Api\V1\ReorderController::class, 'suggestions']);

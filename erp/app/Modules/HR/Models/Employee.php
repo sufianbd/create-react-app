@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Modules\HR\Models\LeaveBalance;
 
 class Employee extends Model
 {
@@ -120,5 +121,10 @@ class Employee extends Model
     public function emergencyContacts(): HasMany
     {
         return $this->hasMany(EmployeeEmergencyContact::class);
+    }
+
+    public function leaveBalances(): HasMany
+    {
+        return $this->hasMany(LeaveBalance::class);
     }
 }

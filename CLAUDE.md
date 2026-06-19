@@ -171,6 +171,7 @@ beforeEach(function () {
 | 37    | Webhook Management REST API — CRUD, delivery log, ping, HMAC  | ✅     |
 | 38    | API Token Management — named tokens with abilities and expiry | ✅     |
 | 39    | Inventory Reorder Suggestions — deficit calc + urgency levels | ✅     |
+| 40    | HR Leave Balance API — allocation, team view, year filters    | ✅     |
 
 ## File Locations Reference
 
