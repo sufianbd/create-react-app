@@ -448,6 +448,14 @@ Route::prefix('v1')->group(function () {
         });
         Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
 
+        // CRM Pipeline Analytics
+        Route::prefix('crm/pipeline')->group(function () {
+            Route::get('/funnel',      [\App\Http\Controllers\Api\V1\CrmPipelineController::class, 'funnel']);
+            Route::get('/win-rate',    [\App\Http\Controllers\Api\V1\CrmPipelineController::class, 'winRate']);
+            Route::get('/velocity',    [\App\Http\Controllers\Api\V1\CrmPipelineController::class, 'velocity']);
+            Route::get('/leaderboard', [\App\Http\Controllers\Api\V1\CrmPipelineController::class, 'leaderboard']);
+        });
+
         // Leave Balance Management
         Route::prefix('leave')->group(function () {
             Route::get('/types',                        [\App\Http\Controllers\Api\V1\LeaveBalanceController::class, 'types']);
