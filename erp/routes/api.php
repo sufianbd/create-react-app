@@ -329,6 +329,12 @@ Route::prefix('v1')->group(function () {
         // Audit Logs
         Route::get('/audit-logs', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'index']);
 
+        // Activity Feed
+        Route::prefix('activity')->group(function () {
+            Route::get('/',      [\App\Http\Controllers\Api\V1\ActivityFeedController::class, 'index']);
+            Route::get('/stats', [\App\Http\Controllers\Api\V1\ActivityFeedController::class, 'stats']);
+        });
+
         // Notifications
         Route::prefix('notifications')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
