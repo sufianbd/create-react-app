@@ -30,6 +30,7 @@ trait LogsActivity
         AuditLog::create([
             'tenant_id'      => $tenantId,
             'user_id'        => Auth::id(),
+            'event'          => $action,
             'action'         => $action,
             'auditable_type' => get_class($model),
             'auditable_id'   => $model->id,

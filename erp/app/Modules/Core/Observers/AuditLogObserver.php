@@ -37,6 +37,7 @@ class AuditLogObserver
         AuditLog::create([
             'user_id'        => Auth::id(),
             'tenant_id'      => $tenantId,
+            'event'          => $action,
             'action'         => $action,
             'auditable_type' => get_class($model),
             'auditable_id'   => $model->getKey(),
