@@ -448,6 +448,18 @@ Route::prefix('v1')->group(function () {
         });
         Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
 
+        // Expense Claims Workflow
+        Route::prefix('expense-claims')->group(function () {
+            Route::get('/',                          [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'index']);
+            Route::post('/',                         [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'store']);
+            Route::get('/{expenseClaim}',            [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'show']);
+            Route::delete('/{expenseClaim}',         [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'destroy']);
+            Route::post('/{expenseClaim}/submit',    [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'submit']);
+            Route::post('/{expenseClaim}/approve',   [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'approve']);
+            Route::post('/{expenseClaim}/reject',    [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'reject']);
+            Route::post('/{expenseClaim}/mark-paid', [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'markPaid']);
+        });
+
         // Time Tracking
         Route::prefix('time-entries')->group(function () {
             Route::get('/',                  [\App\Http\Controllers\Api\V1\TimeTrackingController::class, 'index']);
