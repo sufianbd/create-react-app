@@ -166,6 +166,7 @@ beforeEach(function () {
 | 32    | Financial Forecasting — revenue + cash-flow projections       | ✅     |
 | 33    | Smart Alert Rules — threshold monitoring + notifications      | ✅     |
 | 34    | Budget Management REST API — CRUD + activate + variance       | ✅     |
+| 35    | Customer Credit Limits — per-contact limits, hold, check API  | ✅     |
 
 ## File Locations Reference
 

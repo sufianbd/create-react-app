@@ -21,9 +21,15 @@ class Contact extends Model
     protected $fillable = [
         'tenant_id', 'name', 'email', 'phone',
         'address', 'type', 'price_list_id', 'notes', 'is_active',
+        'credit_limit', 'credit_terms_days', 'credit_hold',
     ];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active'         => 'boolean',
+        'credit_hold'       => 'boolean',
+        'credit_limit'      => 'decimal:2',
+        'credit_terms_days' => 'integer',
+    ];
 
     public function invoices(): HasMany
     {

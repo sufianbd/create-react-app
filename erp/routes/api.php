@@ -426,5 +426,11 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{reportSchedule}',     [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'destroy']);
             Route::post('/{reportSchedule}/send',  [\App\Http\Controllers\Api\V1\ReportScheduleController::class, 'sendNow']);
         });
+
+        // Customer Credit Limits
+        Route::get('/credit-alerts', [\App\Http\Controllers\Api\V1\CreditLimitController::class, 'alerts']);
+        Route::get('/contacts/{contact}/credit',        [\App\Http\Controllers\Api\V1\CreditLimitController::class, 'show']);
+        Route::put('/contacts/{contact}/credit',        [\App\Http\Controllers\Api\V1\CreditLimitController::class, 'update']);
+        Route::post('/contacts/{contact}/credit/check', [\App\Http\Controllers\Api\V1\CreditLimitController::class, 'check']);
     });
 });
