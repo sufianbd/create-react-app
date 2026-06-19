@@ -448,6 +448,14 @@ Route::prefix('v1')->group(function () {
         });
         Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
 
+        // Vendor Performance Scoring
+        Route::prefix('vendor-performance')->group(function () {
+            Route::get('/scorecard',                  [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'scorecard']);
+            Route::get('/',                           [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'index']);
+            Route::get('/{contact}',                  [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'show']);
+            Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
+        });
+
         // Expense Claims Workflow
         Route::prefix('expense-claims')->group(function () {
             Route::get('/',                          [\App\Http\Controllers\Api\V1\ExpenseClaimApiController::class, 'index']);
