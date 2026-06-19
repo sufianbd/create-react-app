@@ -168,6 +168,7 @@ beforeEach(function () {
 | 34    | Budget Management REST API — CRUD + activate + variance       | ✅     |
 | 35    | Customer Credit Limits — per-contact limits, hold, check API  | ✅     |
 | 36    | Product Variants REST API — attributes, variants, matrix view | ✅     |
+| 37    | Webhook Management REST API — CRUD, delivery log, ping, HMAC  | ✅     |
 
 ## File Locations Reference
 

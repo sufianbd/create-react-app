@@ -447,5 +447,18 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{variant}',[\App\Http\Controllers\Api\V1\ProductVariantController::class, 'destroy']);
         });
         Route::get('products/{product}/matrix', [\App\Http\Controllers\Api\V1\ProductVariantController::class, 'matrix']);
+
+        // Webhook Management
+        Route::get('/webhooks/events', [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'events']);
+        Route::prefix('webhooks')->group(function () {
+            Route::get('/',                         [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'index']);
+            Route::post('/',                        [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'store']);
+            Route::get('/{webhook}',                [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'show']);
+            Route::put('/{webhook}',                [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'update']);
+            Route::delete('/{webhook}',             [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'destroy']);
+            Route::get('/{webhook}/deliveries',     [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'deliveries']);
+            Route::post('/{webhook}/ping',          [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'ping']);
+            Route::post('/{webhook}/rotate-secret', [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'rotateSecret']);
+        });
     });
 });
