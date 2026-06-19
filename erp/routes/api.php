@@ -346,6 +346,17 @@ Route::prefix('v1')->group(function () {
             Route::post('/mark-all-read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
         });
 
+        // Smart Alert Rules
+        Route::prefix('alert-rules')->group(function () {
+            Route::get('/',                        [\App\Http\Controllers\Api\V1\AlertRuleController::class, 'index']);
+            Route::post('/',                       [\App\Http\Controllers\Api\V1\AlertRuleController::class, 'store']);
+            Route::get('/{alertRule}',             [\App\Http\Controllers\Api\V1\AlertRuleController::class, 'show']);
+            Route::put('/{alertRule}',             [\App\Http\Controllers\Api\V1\AlertRuleController::class, 'update']);
+            Route::delete('/{alertRule}',          [\App\Http\Controllers\Api\V1\AlertRuleController::class, 'destroy']);
+            Route::post('/{alertRule}/run',        [\App\Http\Controllers\Api\V1\AlertRuleController::class, 'run']);
+            Route::get('/{alertRule}/events',      [\App\Http\Controllers\Api\V1\AlertRuleController::class, 'events']);
+        });
+
         // Financial Forecasting
         Route::prefix('forecast')->group(function () {
             Route::get('/revenue',   [\App\Http\Controllers\Api\V1\ForecastController::class, 'revenue']);
