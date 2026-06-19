@@ -2,7 +2,8 @@ import { Head, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import type { PageProps } from '@/types';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useEchoPrivateChannel } from '@/Hooks/useEchoChannel';
 
 interface Agent {
     id: number;
@@ -44,20 +45,23 @@ interface Props extends PageProps {
 }
 
 const statusColors: Record<string, string> = {
-    open:     'bg-blue-100 text-blue-700',
+    open: 'bg-blue-100 text-blue-700',
     assigned: 'bg-indigo-100 text-indigo-700',
     resolved: 'bg-green-100 text-green-700',
-    missed:   'bg-red-100 text-red-700',
+    missed: 'bg-red-100 text-red-700',
 };
 
 function StarDisplay({ rating }: { rating: number | null }) {
-    if (!rating) return <span className="text-slate-400 text-xs">Not rated</span>;
+    if (!rating)
+        return <span className="text-slate-400 text-xs">Not rated</span>;
     return (
         <div className="flex items-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((star) => (
+            {[1, 2, 3, 4, 5].map(star => (
                 <svg
                     key={star}
-                    className={`h-4 w-4 ${star <= rating ? 'text-yellow-400' : 'text-slate-200'}`}
+                    className={`h-4 w-4 ${
+                        star <= rating ? 'text-yellow-400' : 'text-slate-200'
+                    }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                 >
@@ -72,13 +76,49 @@ function formatTime(ts: string) {
     return new Date(ts).toLocaleString();
 }
 
+interface BroadcastMessage {
+    id: number;
+    session_id: number;
+    sender_type: 'visitor' | 'agent' | 'bot';
+    agent_id: number | null;
+    message: string;
+    created_at: string;
+}
+
 export default function SessionShow({ session }: Props) {
     const [assignAgentId, setAssignAgentId] = useState('');
+    const [liveMessages, setLiveMessages] = useState<Message[]>(
+        session.messages
+    );
+    const bottomRef = useRef<HTMLDivElement>(null);
 
     const { data, setData, post, processing, reset } = useForm({ message: '' });
 
-    const unreadCount = session.messages.filter(
-        (m) => !m.is_read && m.sender_type === 'visitor'
+    useEchoPrivateChannel(
+        `chat-session.${session.id}`,
+        '.NewChatMessage',
+        payload => {
+            const msg = payload as BroadcastMessage;
+            setLiveMessages(prev => [
+                ...prev,
+                {
+                    id: msg.id,
+                    sender_type: msg.sender_type,
+                    agent: null,
+                    message: msg.message,
+                    is_read: false,
+                    created_at: msg.created_at,
+                },
+            ]);
+        }
+    );
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [liveMessages]);
+
+    const unreadCount = liveMessages.filter(
+        m => !m.is_read && m.sender_type === 'visitor'
     ).length;
 
     function sendMessage(e: React.FormEvent) {
@@ -95,44 +135,69 @@ export default function SessionShow({ session }: Props) {
     function assignAgent(e: React.FormEvent) {
         e.preventDefault();
         if (!assignAgentId) return;
-        router.post(`/live-chat/sessions/${session.id}/assign`, { agent_id: assignAgentId });
+        router.post(`/live-chat/sessions/${session.id}/assign`, {
+            agent_id: assignAgentId,
+        });
     }
 
     return (
         <AppLayout>
             <Head title={`Session #${session.id}`} />
             <div className="flex h-[calc(100vh-120px)] gap-4">
-
                 {/* Left panel: Session info */}
                 <div className="w-72 shrink-0 flex flex-col gap-4 overflow-y-auto">
                     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                        <h2 className="mb-3 text-sm font-semibold text-slate-700 uppercase tracking-wide">Session Info</h2>
+                        <h2 className="mb-3 text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                            Session Info
+                        </h2>
 
                         <dl className="space-y-2 text-sm">
                             <div>
-                                <dt className="text-xs text-slate-500">Visitor</dt>
-                                <dd className="font-medium text-slate-900">{session.visitor_name ?? 'Anonymous'}</dd>
+                                <dt className="text-xs text-slate-500">
+                                    Visitor
+                                </dt>
+                                <dd className="font-medium text-slate-900">
+                                    {session.visitor_name ?? 'Anonymous'}
+                                </dd>
                             </div>
                             {session.visitor_email && (
                                 <div>
-                                    <dt className="text-xs text-slate-500">Email</dt>
-                                    <dd className="text-slate-700">{session.visitor_email}</dd>
+                                    <dt className="text-xs text-slate-500">
+                                        Email
+                                    </dt>
+                                    <dd className="text-slate-700">
+                                        {session.visitor_email}
+                                    </dd>
                                 </div>
                             )}
                             {session.source_url && (
                                 <div>
-                                    <dt className="text-xs text-slate-500">Source URL</dt>
-                                    <dd className="text-slate-700 break-all text-xs">{session.source_url}</dd>
+                                    <dt className="text-xs text-slate-500">
+                                        Source URL
+                                    </dt>
+                                    <dd className="text-slate-700 break-all text-xs">
+                                        {session.source_url}
+                                    </dd>
                                 </div>
                             )}
                             <div>
-                                <dt className="text-xs text-slate-500">Channel</dt>
-                                <dd className="text-slate-700">{session.channel?.name ?? '—'}</dd>
+                                <dt className="text-xs text-slate-500">
+                                    Channel
+                                </dt>
+                                <dd className="text-slate-700">
+                                    {session.channel?.name ?? '—'}
+                                </dd>
                             </div>
                             <div>
-                                <dt className="text-xs text-slate-500">Status</dt>
+                                <dt className="text-xs text-slate-500">
+                                    Status
+                                </dt>
                                 <dd>
-                                    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium capitalize ${statusColors[session.status] ?? ''}`}>
+                                    <span
+                                        className={`inline-block rounded px-2 py-0.5 text-xs font-medium capitalize ${
+                                            statusColors[session.status] ?? ''
+                                        }`}
+                                    >
                                         {session.status}
                                     </span>
                                     {unreadCount > 0 && (
@@ -143,23 +208,39 @@ export default function SessionShow({ session }: Props) {
                                 </dd>
                             </div>
                             <div>
-                                <dt className="text-xs text-slate-500">Assigned Agent</dt>
-                                <dd className="text-slate-700">{session.agent?.name ?? '—'}</dd>
+                                <dt className="text-xs text-slate-500">
+                                    Assigned Agent
+                                </dt>
+                                <dd className="text-slate-700">
+                                    {session.agent?.name ?? '—'}
+                                </dd>
                             </div>
                             <div>
-                                <dt className="text-xs text-slate-500">Rating</dt>
-                                <dd><StarDisplay rating={session.rating} /></dd>
+                                <dt className="text-xs text-slate-500">
+                                    Rating
+                                </dt>
+                                <dd>
+                                    <StarDisplay rating={session.rating} />
+                                </dd>
                             </div>
                             {session.started_at && (
                                 <div>
-                                    <dt className="text-xs text-slate-500">Started</dt>
-                                    <dd className="text-xs text-slate-700">{formatTime(session.started_at)}</dd>
+                                    <dt className="text-xs text-slate-500">
+                                        Started
+                                    </dt>
+                                    <dd className="text-xs text-slate-700">
+                                        {formatTime(session.started_at)}
+                                    </dd>
                                 </div>
                             )}
                             {session.ended_at && (
                                 <div>
-                                    <dt className="text-xs text-slate-500">Ended</dt>
-                                    <dd className="text-xs text-slate-700">{formatTime(session.ended_at)}</dd>
+                                    <dt className="text-xs text-slate-500">
+                                        Ended
+                                    </dt>
+                                    <dd className="text-xs text-slate-700">
+                                        {formatTime(session.ended_at)}
+                                    </dd>
                                 </div>
                             )}
                         </dl>
@@ -167,10 +248,14 @@ export default function SessionShow({ session }: Props) {
 
                     {/* Actions */}
                     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm space-y-3">
-                        <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Actions</h2>
+                        <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                            Actions
+                        </h2>
 
                         <form onSubmit={assignAgent} className="space-y-2">
-                            <label className="block text-xs font-medium text-slate-600">Assign to Agent</label>
+                            <label className="block text-xs font-medium text-slate-600">
+                                Assign to Agent
+                            </label>
                             <input
                                 type="number"
                                 placeholder="Agent ID"
@@ -200,17 +285,24 @@ export default function SessionShow({ session }: Props) {
                 {/* Right panel: Messages */}
                 <div className="flex flex-1 flex-col rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
                     <div className="border-b border-slate-200 px-4 py-3">
-                        <h2 className="text-sm font-semibold text-slate-700">Conversation</h2>
+                        <h2 className="text-sm font-semibold text-slate-700">
+                            Conversation
+                        </h2>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {session.messages.length === 0 && (
-                            <p className="text-center text-sm text-slate-400 py-8">No messages yet.</p>
+                        {liveMessages.length === 0 && (
+                            <p className="text-center text-sm text-slate-400 py-8">
+                                No messages yet.
+                            </p>
                         )}
-                        {session.messages.map((msg) => {
+                        {liveMessages.map(msg => {
                             if (msg.sender_type === 'bot') {
                                 return (
-                                    <div key={msg.id} className="flex justify-center">
+                                    <div
+                                        key={msg.id}
+                                        className="flex justify-center"
+                                    >
                                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">
                                             {msg.message}
                                         </span>
@@ -220,19 +312,41 @@ export default function SessionShow({ session }: Props) {
 
                             const isAgent = msg.sender_type === 'agent';
                             return (
-                                <div key={msg.id} className={`flex ${isAgent ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-xs rounded-lg px-3 py-2 text-sm ${isAgent ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800'}`}>
+                                <div
+                                    key={msg.id}
+                                    className={`flex ${
+                                        isAgent
+                                            ? 'justify-end'
+                                            : 'justify-start'
+                                    }`}
+                                >
+                                    <div
+                                        className={`max-w-xs rounded-lg px-3 py-2 text-sm ${
+                                            isAgent
+                                                ? 'bg-indigo-600 text-white'
+                                                : 'bg-slate-100 text-slate-800'
+                                        }`}
+                                    >
                                         {isAgent && msg.agent && (
-                                            <p className="mb-1 text-xs font-medium text-indigo-200">{msg.agent.name}</p>
+                                            <p className="mb-1 text-xs font-medium text-indigo-200">
+                                                {msg.agent.name}
+                                            </p>
                                         )}
                                         <p>{msg.message}</p>
-                                        <p className={`mt-1 text-xs ${isAgent ? 'text-indigo-200' : 'text-slate-400'}`}>
+                                        <p
+                                            className={`mt-1 text-xs ${
+                                                isAgent
+                                                    ? 'text-indigo-200'
+                                                    : 'text-slate-400'
+                                            }`}
+                                        >
                                             {formatTime(msg.created_at)}
                                         </p>
                                     </div>
                                 </div>
                             );
                         })}
+                        <div ref={bottomRef} />
                     </div>
 
                     {/* Send message form */}
@@ -241,7 +355,9 @@ export default function SessionShow({ session }: Props) {
                             <input
                                 type="text"
                                 value={data.message}
-                                onChange={e => setData('message', e.target.value)}
+                                onChange={e =>
+                                    setData('message', e.target.value)
+                                }
                                 placeholder="Type a message..."
                                 className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                             />

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Discuss\Http\Controllers;
 
+use App\Events\Discuss\NewDiscussMessage;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Discuss\Models\DiscussChannel;
@@ -122,6 +123,8 @@ class DiscussController extends Controller
         ]);
 
         $message->load('user');
+
+        broadcast(new NewDiscussMessage($message))->toOthers();
 
         return response()->json([
             'id'         => $message->id,

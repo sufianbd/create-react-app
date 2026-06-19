@@ -2,6 +2,7 @@
 
 namespace App\Modules\LiveChat\Http\Controllers;
 
+use App\Events\LiveChat\NewChatMessage;
 use App\Http\Controllers\Controller;
 use App\Modules\LiveChat\Models\ChatChannel;
 use App\Modules\LiveChat\Models\ChatMessage;
@@ -107,7 +108,7 @@ class LiveChatController extends Controller
             'message' => 'required|string',
         ]);
 
-        ChatMessage::create([
+        $msg = ChatMessage::create([
             'tenant_id'   => $session->tenant_id,
             'session_id'  => $session->id,
             'sender_type' => 'agent',
@@ -116,6 +117,8 @@ class LiveChatController extends Controller
         ]);
 
         $session->update(['last_message_at' => now()]);
+
+        broadcast(new NewChatMessage($msg))->toOthers();
 
         return redirect()->back()->with('success', 'Message sent.');
     }
