@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useAuth } from '@/Hooks/useAuth';
 import { useEchoPrivateChannel } from '@/Hooks/useEchoChannel';
 
-interface ErpNotification {
+interface Notification {
     id: number;
     type: string;
     title: string;
@@ -12,55 +11,29 @@ interface ErpNotification {
     created_at: string;
 }
 
-export function NotificationBell() {
-    const { user } = useAuth();
-    const [notifications, setNotifications] = useState<ErpNotification[]>([]);
+interface Props {
+    tenantId: number;
+}
+
+export default function NotificationBell({ tenantId }: Props) {
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unread, setUnread] = useState(0);
     const [open, setOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
 
-    // Fetch unread count on mount
     useEffect(() => {
-        axios
-            .get('/api/v1/notifications/unread-count')
-            .then(res => {
-                setUnread(res.data.data.count ?? 0);
-            })
-            .catch(() => {});
-    }, []);
-
-    // Fetch notifications when panel opens
-    useEffect(() => {
+        axios.get('/api/v1/notifications/unread-count').then(res => {
+            setUnread(res.data.data.count);
+        });
         if (open) {
-            axios
-                .get('/api/v1/notifications')
-                .then(res => {
-                    setNotifications(res.data.data ?? []);
-                })
-                .catch(() => {});
+            axios.get('/api/v1/notifications').then(res => {
+                setNotifications(res.data.data ?? []);
+            });
         }
     }, [open]);
 
-    // Close on outside click
-    useEffect(() => {
-        function handleClickOutside(e: MouseEvent) {
-            if (ref.current && !ref.current.contains(e.target as Node)) {
-                setOpen(false);
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside);
-        return () =>
-            document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    // Real-time push via WebSocket
-    useEchoPrivateChannel(
-        user?.tenant_id ? `tenant.${user.tenant_id}` : null,
-        '.ErpNotification',
-        () => {
-            setUnread(prev => prev + 1);
-        }
-    );
+    useEchoPrivateChannel(`tenant.${tenantId}`, '.ErpNotification', () => {
+        setUnread(prev => prev + 1);
+    });
 
     async function markAllRead() {
         await axios.post('/api/v1/notifications/mark-all-read');
@@ -81,11 +54,10 @@ export function NotificationBell() {
     }
 
     return (
-        <div ref={ref} className="relative">
+        <div className="relative">
             <button
-                onClick={() => setOpen(o => !o)}
-                aria-label="Notifications"
-                className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                onClick={() => setOpen(!open)}
+                className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700"
             >
                 <svg
                     className="h-5 w-5"
@@ -147,7 +119,7 @@ export function NotificationBell() {
                                     <p className="text-sm font-medium text-slate-800">
                                         {n.title}
                                     </p>
-                                    <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
+                                    <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">
                                         {n.message}
                                     </p>
                                 </div>
@@ -159,5 +131,3 @@ export function NotificationBell() {
         </div>
     );
 }
-
-export default NotificationBell;
