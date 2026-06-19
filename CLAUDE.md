@@ -137,24 +137,35 @@ beforeEach(function () {
 
 ## Development Phases Completed
 
-| Phase | Description                                                | Status |
-| ----- | ---------------------------------------------------------- | ------ |
-| 1–8   | Core modules, models, migrations, seeders, Inertia pages   | ✅     |
-| 9     | REST API — 200+ endpoints across 40 modules                | ✅     |
-| 10    | Demo data seeders for all 35 modules                       | ✅     |
-| 11    | WebSockets — Laravel Reverb + Echo                         | ✅     |
-| 12    | Queue jobs — invoice, low stock, payroll, bulk import      | ✅     |
-| 13    | Mail notifications — invoice, low stock, payroll, approval | ✅     |
-| 14    | PDF generation — invoices, purchase orders, payslips       | ✅     |
-| 15    | Import/Export — CSV/XLSX for products, contacts, invoices  | ✅     |
-| 16    | Dashboard analytics — module stats + activity feed         | ✅     |
-| 17    | Tenant isolation tests — 22 cross-tenant security tests    | ✅     |
-| 18    | API rate limiting (60/min) + security headers              | ✅     |
-| 19    | Global search — 7 modules, frontend component              | ✅     |
-| 20    | Audit log — migration, trait, observer, API endpoint       | ✅     |
-| 21    | GitHub Actions CI/CD — PHP tests + TS check + ESLint       | ✅     |
-| 22    | Reports API — financial/inventory/HR + CLAUDE.md           | ✅     |
-| 23    | In-app notifications — DB model, API, frontend bell        | ✅     |
+| Phase | Description                                                   | Status |
+| ----- | ------------------------------------------------------------- | ------ |
+| 1–8   | Core modules, models, migrations, seeders, Inertia pages      | ✅     |
+| 9     | REST API — 200+ endpoints across 40 modules                   | ✅     |
+| 10    | Demo data seeders for all 35 modules                          | ✅     |
+| 11    | WebSockets — Laravel Reverb + Echo                            | ✅     |
+| 12    | Queue jobs — invoice, low stock, payroll, bulk import         | ✅     |
+| 13    | Mail notifications — invoice, low stock, payroll, approval    | ✅     |
+| 14    | PDF generation — invoices, purchase orders, payslips          | ✅     |
+| 15    | Import/Export — CSV/XLSX for products, contacts, invoices     | ✅     |
+| 16    | Dashboard analytics — module stats + activity feed            | ✅     |
+| 17    | Tenant isolation tests — 22 cross-tenant security tests       | ✅     |
+| 18    | API rate limiting (60/min) + security headers                 | ✅     |
+| 19    | Global search — 7 modules, frontend component                 | ✅     |
+| 20    | Audit log — migration, trait, observer, API endpoint          | ✅     |
+| 21    | GitHub Actions CI/CD — PHP tests + TS check + ESLint          | ✅     |
+| 22    | Reports API — financial/inventory/HR + CLAUDE.md              | ✅     |
+| 23    | In-app notifications — DB model, API, frontend bell           | ✅     |
+| 24    | Scheduled Report Delivery — ReportSchedule model + job + mail | ✅     |
+| 25    | Health Checks & Metrics — /api/v1/health + /api/v1/metrics    | ✅     |
+| 26    | Dashboard Widgets — per-user customizable widget layout       | ✅     |
+| 27    | Email Template Management — CRUD + variable preview           | ✅     |
+| 28    | Tenant Feature Flags — per-tenant feature toggle system       | ✅     |
+| 29    | User Preferences — timezone, locale, UI density, etc.         | ✅     |
+| 30    | Activity Feed API — filterable event stream from audit logs   | ✅     |
+| 31    | Unified Calendar API — tasks, leaves, events, invoices        | ✅     |
+| 32    | Financial Forecasting — revenue + cash-flow projections       | ✅     |
+| 33    | Smart Alert Rules — threshold monitoring + notifications      | ✅     |
+| 34    | Budget Management REST API — CRUD + activate + variance       | ✅     |
 
 ## File Locations Reference
 
