@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use App\Modules\Finance\Models\Invoice;
 use App\Modules\Finance\Models\Bill;
 use App\Modules\Inventory\Models\Product;
@@ -18,30 +19,34 @@ class ReportsController extends ApiController
         $tenantId = app()->has('tenant') ? app('tenant')->id : $request->user()->tenant_id;
         $year = $request->integer('year', now()->year);
 
-        $invoiceTotals = Invoice::where('tenant_id', $tenantId)
+        $invoiceSummary = Invoice::where('tenant_id', $tenantId)
             ->whereYear('created_at', $year)
-            ->selectRaw('status, COUNT(*) as count, SUM(total) as total')
+            ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->get();
 
-        $monthlyRevenue = Invoice::where('tenant_id', $tenantId)
-            ->where('status', 'paid')
-            ->whereYear('created_at', $year)
-            ->selectRaw("strftime('%m', created_at) as month, SUM(total) as revenue")
+        $monthlyRevenue = DB::table('invoices')
+            ->join('invoice_items', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->where('invoices.tenant_id', $tenantId)
+            ->where('invoices.status', 'paid')
+            ->whereYear('invoices.created_at', $year)
+            ->selectRaw("strftime('%m', invoices.created_at) as month, SUM(invoice_items.quantity * invoice_items.unit_price) as revenue")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
 
-        $billTotals = Bill::where('tenant_id', $tenantId)
-            ->whereYear('created_at', $year)
-            ->selectRaw('SUM(total) as total_expenses')
-            ->first();
+        $totalExpenses = DB::table('bills')
+            ->join('bill_items', 'bills.id', '=', 'bill_items.bill_id')
+            ->where('bills.tenant_id', $tenantId)
+            ->whereYear('bills.created_at', $year)
+            ->whereNull('bills.deleted_at')
+            ->sum(DB::raw('bill_items.quantity * bill_items.unit_price'));
 
         return $this->success([
             'year'            => $year,
-            'invoice_summary' => $invoiceTotals,
+            'invoice_summary' => $invoiceSummary,
             'monthly_revenue' => $monthlyRevenue,
-            'total_expenses'  => $billTotals?->total_expenses ?? 0,
+            'total_expenses'  => $totalExpenses ?? 0,
         ]);
     }
 
@@ -49,12 +54,12 @@ class ReportsController extends ApiController
     {
         $tenantId = app()->has('tenant') ? app('tenant')->id : $request->user()->tenant_id;
 
-        $stockValue = Product::where('tenant_id', $tenantId)
-            ->selectRaw('COUNT(*) as total_products, SUM(quantity_on_hand * cost_price) as stock_value')
+        $stockStats = Product::where('tenant_id', $tenantId)
+            ->selectRaw('COUNT(*) as total_products, SUM(stock_quantity * cost_price) as stock_value')
             ->first();
 
         $lowStock = Product::where('tenant_id', $tenantId)
-            ->whereColumn('quantity_on_hand', '<=', 'reorder_point')
+            ->whereColumn('stock_quantity', '<=', 'reorder_point')
             ->where('reorder_point', '>', 0)
             ->count();
 
@@ -65,8 +70,8 @@ class ReportsController extends ApiController
             ->get(['id', 'product_id', 'type', 'quantity', 'created_at']);
 
         return $this->success([
-            'total_products'   => $stockValue?->total_products ?? 0,
-            'stock_value'      => $stockValue?->stock_value ?? 0,
+            'total_products'   => $stockStats?->total_products ?? 0,
+            'stock_value'      => $stockStats?->stock_value ?? 0,
             'low_stock_count'  => $lowStock,
             'recent_movements' => $recentMovements,
         ]);
@@ -77,8 +82,8 @@ class ReportsController extends ApiController
         $tenantId = app()->has('tenant') ? app('tenant')->id : $request->user()->tenant_id;
 
         $headcount = Employee::where('tenant_id', $tenantId)
-            ->selectRaw('employment_status, COUNT(*) as count')
-            ->groupBy('employment_status')
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
             ->get();
 
         $payrollSummary = PayrollRun::where('tenant_id', $tenantId)
