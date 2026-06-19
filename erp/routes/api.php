@@ -322,5 +322,8 @@ Route::prefix('v1')->group(function () {
 
         // Global Search
         Route::get('/search', [\App\Http\Controllers\Api\V1\SearchController::class, 'search']);
+
+        // Audit Logs
+        Route::get('/audit-logs', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'index']);
     });
 });
