@@ -329,6 +329,9 @@ Route::prefix('v1')->group(function () {
         // Audit Logs
         Route::get('/audit-logs', [\App\Http\Controllers\Api\V1\AuditLogController::class, 'index']);
 
+        // Unified Calendar
+        Route::get('/calendar', [\App\Http\Controllers\Api\V1\CalendarController::class, 'index']);
+
         // Activity Feed
         Route::prefix('activity')->group(function () {
             Route::get('/',      [\App\Http\Controllers\Api\V1\ActivityFeedController::class, 'index']);
