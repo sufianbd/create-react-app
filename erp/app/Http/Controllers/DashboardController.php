@@ -114,6 +114,31 @@ class DashboardController extends Controller
             ->where('due_date', '<', now()->startOfDay())
             ->count();
 
+        // Module stats — counts per module scoped to tenant
+        $moduleStats = [
+            'open_invoices'     => Invoice::where('tenant_id', $tenantId)->whereNotIn('status', ['paid', 'cancelled'])->count(),
+            'open_bills'        => Bill::where('tenant_id', $tenantId)->whereNotIn('status', ['paid', 'cancelled'])->count(),
+            'pending_pos'       => \App\Modules\Purchase\Models\Po::where('tenant_id', $tenantId)->where('status', 'draft')->count(),
+            'active_projects'   => \App\Modules\PM\Models\Project::where('tenant_id', $tenantId)->where('status', 'active')->count(),
+            'open_tickets'      => \App\Modules\Helpdesk\Models\HelpdeskTicket::where('tenant_id', $tenantId)->where('status', '!=', 'closed')->count(),
+            'pending_approvals' => \App\Modules\Approvals\Models\ApprovalRequest::where('tenant_id', $tenantId)->where('status', 'pending')->count(),
+            'active_employees'  => \App\Modules\HR\Models\Employee::where('tenant_id', $tenantId)->where('status', 'active')->count(),
+            'total_products'    => \App\Modules\Inventory\Models\Product::where('tenant_id', $tenantId)->count(),
+        ];
+
+        // Activity feed — last 10 records across key models
+        $feed = collect();
+        $feed = $feed->concat(
+            Invoice::where('tenant_id', $tenantId)->latest()->limit(3)->get()->map(fn ($i) => ['type' => 'invoice', 'label' => 'Invoice ' . $i->number, 'status' => $i->status, 'at' => $i->created_at])
+        );
+        $feed = $feed->concat(
+            \App\Modules\Purchase\Models\Po::where('tenant_id', $tenantId)->latest()->limit(3)->get()->map(fn ($p) => ['type' => 'po', 'label' => 'PO ' . $p->po_number, 'status' => $p->status, 'at' => $p->created_at])
+        );
+        $feed = $feed->concat(
+            \App\Modules\HR\Models\PayrollRun::where('tenant_id', $tenantId)->latest()->limit(2)->get()->map(fn ($r) => ['type' => 'payroll', 'label' => 'Payroll ' . $r->period_label, 'status' => $r->status, 'at' => $r->created_at])
+        );
+        $activityFeed = $feed->sortByDesc('at')->take(10)->values();
+
         return Inertia::render('Dashboard', [
             'breadcrumbs' => [
                 ['label' => 'Dashboard', 'href' => route('dashboard')],
@@ -125,9 +150,11 @@ class DashboardController extends Controller
                 'outstanding_ap'      => round($outstandingAp, 2),
                 'overdue_count'       => $overdueCount,
             ],
-            'monthly_chart'  => $months->values(),
-            'recent_invoices'=> $recentInvoices->values(),
-            'low_stock'      => $lowStock,
+            'monthly_chart'   => $months->values(),
+            'recent_invoices' => $recentInvoices->values(),
+            'low_stock'       => $lowStock,
+            'module_stats'    => $moduleStats,
+            'activity_feed'   => $activityFeed,
         ]);
     }
 }
