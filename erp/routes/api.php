@@ -45,11 +45,13 @@ use App\Http\Controllers\Api\V1\WebsiteApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    // Auth (public)
-    Route::post('auth/login', [AuthController::class, 'login']);
+    // Auth (public) — stricter rate limit
+    Route::middleware('throttle:auth')->group(function () {
+        Route::post('auth/login', [AuthController::class, 'login']);
+    });
 
     // Protected
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me',     [AuthController::class, 'me']);
 
