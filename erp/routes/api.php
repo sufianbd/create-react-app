@@ -627,6 +627,19 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Credit Notes
+        Route::prefix('credit-notes')->group(function () {
+            Route::get('/',                         [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'index']);
+            Route::post('/',                        [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'store']);
+            Route::get('/{creditNote}',             [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'show']);
+            Route::put('/{creditNote}',             [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'update']);
+            Route::delete('/{creditNote}',          [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'destroy']);
+            Route::post('/{creditNote}/issue',      [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'issue']);
+            Route::post('/{creditNote}/apply',      [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'apply']);
+            Route::post('/{creditNote}/void',       [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'void']);
+            Route::post('/{creditNote}/items',      [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'addItem']);
+        });
+
         // Tax Configuration
         Route::prefix('tax')->group(function () {
             Route::get('/rates',                    [\App\Http\Controllers\Api\V1\TaxApiController::class, 'indexRates']);
