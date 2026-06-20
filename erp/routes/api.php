@@ -456,6 +456,22 @@ Route::prefix('v1')->group(function () {
             Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
         });
 
+        // Payment Terms & Schedules
+        Route::prefix('payment-terms')->group(function () {
+            Route::get('/',                    [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'indexTerms']);
+            Route::post('/',                   [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'storeTerm']);
+            Route::put('/{paymentTerm}',       [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'updateTerm']);
+            Route::delete('/{paymentTerm}',    [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'destroyTerm']);
+        });
+        Route::prefix('payment-schedules')->group(function () {
+            Route::get('/',                    [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'indexSchedules']);
+            Route::post('/',                   [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'storeSchedule']);
+            Route::get('/{paymentSchedule}',   [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'showSchedule']);
+            Route::post('/{paymentSchedule}/pause',   [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'pauseSchedule']);
+            Route::post('/{paymentSchedule}/cancel',  [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'cancelSchedule']);
+            Route::post('/{paymentSchedule}/items/{itemId}/pay', [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'markInstallmentPaid']);
+        });
+
         // Inventory Valuation
         Route::prefix('inventory-valuation')->group(function () {
             Route::get('/summary',    [\App\Http\Controllers\Api\V1\InventoryValuationController::class, 'summary']);
