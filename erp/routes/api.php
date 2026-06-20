@@ -279,10 +279,18 @@ Route::prefix('v1')->group(function () {
         Route::post('social-marketing/posts/{id}/publish',[SocialMarketingApiController::class, 'publishPost']);
 
         // Survey
-        Route::get('surveys',              [SurveyApiController::class, 'surveys']);
-        Route::get('surveys/{id}',         [SurveyApiController::class, 'showSurvey']);
-        Route::post('surveys',             [SurveyApiController::class, 'storeSurvey']);
-        Route::post('surveys/{id}/respond',[SurveyApiController::class, 'submitResponse']);
+        Route::get('surveys',                                   [SurveyApiController::class, 'surveys']);
+        Route::post('surveys',                                  [SurveyApiController::class, 'storeSurvey']);
+        Route::get('surveys/{id}',                              [SurveyApiController::class, 'showSurvey']);
+        Route::put('surveys/{id}',                              [SurveyApiController::class, 'updateSurvey']);
+        Route::delete('surveys/{id}',                           [SurveyApiController::class, 'destroySurvey']);
+        Route::post('surveys/{id}/publish',                     [SurveyApiController::class, 'publishSurvey']);
+        Route::post('surveys/{id}/close',                       [SurveyApiController::class, 'closeSurvey']);
+        Route::post('surveys/{id}/questions',                   [SurveyApiController::class, 'addQuestion']);
+        Route::put('surveys/{id}/questions/{questionId}',       [SurveyApiController::class, 'updateQuestion']);
+        Route::delete('surveys/{id}/questions/{questionId}',    [SurveyApiController::class, 'deleteQuestion']);
+        Route::post('surveys/{id}/respond',                     [SurveyApiController::class, 'submitResponse']);
+        Route::get('surveys/{id}/results',                      [SurveyApiController::class, 'surveyResults']);
 
         // Website / CMS
         Route::get('website/pages',          [WebsiteApiController::class, 'pages']);
