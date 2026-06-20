@@ -456,6 +456,18 @@ Route::prefix('v1')->group(function () {
             Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
         });
 
+        // Sales Commission Tracking
+        Route::prefix('commissions')->group(function () {
+            Route::get('/rules',                     [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'indexRules']);
+            Route::post('/rules',                    [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'storeRule']);
+            Route::put('/rules/{commissionRule}',    [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'updateRule']);
+            Route::get('/summary',                   [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'summary']);
+            Route::get('/',                          [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'index']);
+            Route::post('/calculate',                [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'calculate']);
+            Route::post('/{commission}/approve',     [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'approve']);
+            Route::post('/{commission}/mark-paid',   [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'markPaid']);
+        });
+
         // Multi-Warehouse Stock
         Route::prefix('warehouses')->group(function () {
             Route::get('/',                          [\App\Http\Controllers\Api\V1\WarehouseStockController::class, 'indexWarehouses']);
