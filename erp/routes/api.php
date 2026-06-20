@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\V1\SubcontractingApiController;
 use App\Http\Controllers\Api\V1\SubscriptionsApiController;
 use App\Http\Controllers\Api\V1\SurveyApiController;
 use App\Http\Controllers\Api\V1\ShiftOvertimeApiController;
+use App\Http\Controllers\Api\V1\SuccessionMentorApiController;
 use App\Http\Controllers\Api\V1\TimesheetApiController;
 use App\Http\Controllers\Api\V1\WebsiteApiController;
 use Illuminate\Support\Facades\Route;
@@ -293,6 +294,23 @@ Route::prefix('v1')->group(function () {
         Route::delete('surveys/{id}/questions/{questionId}',    [SurveyApiController::class, 'deleteQuestion']);
         Route::post('surveys/{id}/respond',                     [SurveyApiController::class, 'submitResponse']);
         Route::get('surveys/{id}/results',                      [SurveyApiController::class, 'surveyResults']);
+
+        // Succession Planning & Mentorship
+        Route::get('succession-plans',                                          [SuccessionMentorApiController::class, 'indexPlans']);
+        Route::post('succession-plans',                                         [SuccessionMentorApiController::class, 'storePlan']);
+        Route::get('succession-plans/{successionPlan}',                         [SuccessionMentorApiController::class, 'showPlan']);
+        Route::put('succession-plans/{successionPlan}',                         [SuccessionMentorApiController::class, 'updatePlan']);
+        Route::post('succession-plans/{successionPlan}/complete',               [SuccessionMentorApiController::class, 'completePlan']);
+        Route::post('succession-plans/{successionPlan}/deactivate',             [SuccessionMentorApiController::class, 'deactivatePlan']);
+        Route::post('succession-plans/{successionPlan}/candidates',             [SuccessionMentorApiController::class, 'addCandidate']);
+        Route::delete('succession-plans/{successionPlan}/candidates/{candidate}',[SuccessionMentorApiController::class, 'removeCandidate']);
+        Route::get('mentorship-programs',                                       [SuccessionMentorApiController::class, 'indexMentorship']);
+        Route::post('mentorship-programs',                                      [SuccessionMentorApiController::class, 'storeMentorship']);
+        Route::get('mentorship-programs/{mentorshipProgram}',                   [SuccessionMentorApiController::class, 'showMentorship']);
+        Route::post('mentorship-programs/{mentorshipProgram}/log-session',      [SuccessionMentorApiController::class, 'logSession']);
+        Route::post('mentorship-programs/{mentorshipProgram}/complete',         [SuccessionMentorApiController::class, 'completeMentorship']);
+        Route::post('mentorship-programs/{mentorshipProgram}/pause',            [SuccessionMentorApiController::class, 'pauseMentorship']);
+        Route::post('mentorship-programs/{mentorshipProgram}/cancel',           [SuccessionMentorApiController::class, 'cancelMentorship']);
 
         // Shift Scheduling & Overtime
         Route::get('shift-templates',                                   [ShiftOvertimeApiController::class, 'indexTemplates']);
