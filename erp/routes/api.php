@@ -627,6 +627,15 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Batch Payments
+        Route::prefix('batch-payments')->group(function () {
+            Route::get('/summary',           [\App\Http\Controllers\Api\V1\BatchPaymentApiController::class, 'summary']);
+            Route::get('/',                  [\App\Http\Controllers\Api\V1\BatchPaymentApiController::class, 'index']);
+            Route::post('/',                 [\App\Http\Controllers\Api\V1\BatchPaymentApiController::class, 'store']);
+            Route::get('/{batchPayment}',    [\App\Http\Controllers\Api\V1\BatchPaymentApiController::class, 'show']);
+            Route::delete('/{batchPayment}', [\App\Http\Controllers\Api\V1\BatchPaymentApiController::class, 'destroy']);
+        });
+
         // Quotations / Proposals
         Route::prefix('quotes')->group(function () {
             Route::get('/',                                  [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'index']);
