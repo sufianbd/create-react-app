@@ -456,6 +456,30 @@ Route::prefix('v1')->group(function () {
             Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
         });
 
+        // Contract Management
+        Route::prefix('contracts')->group(function () {
+            Route::get('/expiring-soon',            [\App\Http\Controllers\Api\V1\ContractApiController::class, 'expiringSoon']);
+            Route::get('/',                         [\App\Http\Controllers\Api\V1\ContractApiController::class, 'index']);
+            Route::post('/',                        [\App\Http\Controllers\Api\V1\ContractApiController::class, 'store']);
+            Route::get('/{contract}',               [\App\Http\Controllers\Api\V1\ContractApiController::class, 'show']);
+            Route::put('/{contract}',               [\App\Http\Controllers\Api\V1\ContractApiController::class, 'update']);
+            Route::delete('/{contract}',            [\App\Http\Controllers\Api\V1\ContractApiController::class, 'destroy']);
+            Route::post('/{contract}/activate',     [\App\Http\Controllers\Api\V1\ContractApiController::class, 'activate']);
+            Route::post('/{contract}/terminate',    [\App\Http\Controllers\Api\V1\ContractApiController::class, 'terminate']);
+            Route::post('/{contract}/renew',        [\App\Http\Controllers\Api\V1\ContractApiController::class, 'renew']);
+        });
+
+        // Employee Self-Service
+        Route::prefix('me')->group(function () {
+            Route::get('/',                 [\App\Http\Controllers\Api\V1\SelfServiceController::class, 'profile']);
+            Route::put('/',                 [\App\Http\Controllers\Api\V1\SelfServiceController::class, 'updateProfile']);
+            Route::get('/summary',          [\App\Http\Controllers\Api\V1\SelfServiceController::class, 'summary']);
+            Route::get('/payslips',         [\App\Http\Controllers\Api\V1\SelfServiceController::class, 'payslips']);
+            Route::get('/leave-requests',   [\App\Http\Controllers\Api\V1\SelfServiceController::class, 'leaveRequests']);
+            Route::post('/leave-requests',  [\App\Http\Controllers\Api\V1\SelfServiceController::class, 'applyLeave']);
+            Route::get('/expense-claims',   [\App\Http\Controllers\Api\V1\SelfServiceController::class, 'expenseClaims']);
+        });
+
         // Tenant Settings API
         Route::prefix('settings')->group(function () {
             Route::get('/',          [\App\Http\Controllers\Api\V1\TenantSettingsController::class, 'index']);
