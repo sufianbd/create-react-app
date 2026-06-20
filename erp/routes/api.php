@@ -627,6 +627,18 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Product Bundles
+        Route::prefix('product-bundles')->group(function () {
+            Route::get('/',                                      [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'index']);
+            Route::post('/',                                     [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'store']);
+            Route::get('/{productBundle}',                       [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'show']);
+            Route::put('/{productBundle}',                       [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'update']);
+            Route::delete('/{productBundle}',                    [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'destroy']);
+            Route::get('/{productBundle}/price',                 [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'price']);
+            Route::post('/{productBundle}/items',                [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'addItem']);
+            Route::delete('/{productBundle}/items/{item}',       [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'removeItem']);
+        });
+
         // Recurring Invoices
         Route::prefix('recurring-invoices')->group(function () {
             Route::get('/due',                           [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'due']);
