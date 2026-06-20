@@ -456,6 +456,17 @@ Route::prefix('v1')->group(function () {
             Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
         });
 
+        // Multi-Warehouse Stock
+        Route::prefix('warehouses')->group(function () {
+            Route::get('/',                          [\App\Http\Controllers\Api\V1\WarehouseStockController::class, 'indexWarehouses']);
+            Route::post('/',                         [\App\Http\Controllers\Api\V1\WarehouseStockController::class, 'storeWarehouse']);
+            Route::get('/{warehouse}',               [\App\Http\Controllers\Api\V1\WarehouseStockController::class, 'showWarehouse']);
+            Route::put('/{warehouse}',               [\App\Http\Controllers\Api\V1\WarehouseStockController::class, 'updateWarehouse']);
+            Route::put('/{warehouse}/stock/{productId}', [\App\Http\Controllers\Api\V1\WarehouseStockController::class, 'setStockLevel']);
+        });
+        Route::get('products/{productId}/stock-by-warehouse', [\App\Http\Controllers\Api\V1\WarehouseStockController::class, 'stockByProduct']);
+        Route::post('warehouses/transfer',           [\App\Http\Controllers\Api\V1\WarehouseStockController::class, 'transfer']);
+
         // SLA Policies & Tracking
         Route::prefix('sla')->group(function () {
             Route::get('/policies',              [\App\Http\Controllers\Api\V1\SlaApiController::class, 'indexPolicies']);
