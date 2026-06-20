@@ -627,6 +627,18 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Sales Orders
+        Route::prefix('sales-orders')->group(function () {
+            Route::get('/',                                    [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'index']);
+            Route::post('/',                                   [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'store']);
+            Route::get('/{salesOrder}',                        [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'show']);
+            Route::put('/{salesOrder}',                        [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'update']);
+            Route::delete('/{salesOrder}',                     [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'destroy']);
+            Route::post('/{salesOrder}/confirm',               [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'confirm']);
+            Route::post('/{salesOrder}/cancel',                [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'cancel']);
+            Route::post('/{salesOrder}/convert-to-invoice',    [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'convertToInvoice']);
+        });
+
         // Fixed Assets & Depreciation
         Route::prefix('fixed-assets')->group(function () {
             Route::get('/summary',                  [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'summary']);
