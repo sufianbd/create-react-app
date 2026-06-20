@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\V1\SubcontractingApiController;
 use App\Http\Controllers\Api\V1\SubscriptionsApiController;
 use App\Http\Controllers\Api\V1\SurveyApiController;
 use App\Http\Controllers\Api\V1\EmployeeLifecycleApiController;
+use App\Http\Controllers\Api\V1\EmployeeLoanBenefitApiController;
 use App\Http\Controllers\Api\V1\ShiftOvertimeApiController;
 use App\Http\Controllers\Api\V1\SuccessionMentorApiController;
 use App\Http\Controllers\Api\V1\TimesheetApiController;
@@ -295,6 +296,18 @@ Route::prefix('v1')->group(function () {
         Route::delete('surveys/{id}/questions/{questionId}',    [SurveyApiController::class, 'deleteQuestion']);
         Route::post('surveys/{id}/respond',                     [SurveyApiController::class, 'submitResponse']);
         Route::get('surveys/{id}/results',                      [SurveyApiController::class, 'surveyResults']);
+
+        // Employee Loans & Benefits
+        Route::get('employee-loans',                                            [EmployeeLoanBenefitApiController::class, 'indexLoans']);
+        Route::post('employee-loans',                                           [EmployeeLoanBenefitApiController::class, 'storeLoan']);
+        Route::get('employee-loans/{employeeLoan}',                             [EmployeeLoanBenefitApiController::class, 'showLoan']);
+        Route::post('employee-loans/{employeeLoan}/approve',                    [EmployeeLoanBenefitApiController::class, 'approveLoan']);
+        Route::post('employee-loans/{employeeLoan}/cancel',                     [EmployeeLoanBenefitApiController::class, 'cancelLoan']);
+        Route::post('employee-loans/{employeeLoan}/repayments',                 [EmployeeLoanBenefitApiController::class, 'recordRepayment']);
+        Route::get('benefit-plans',                                             [EmployeeLoanBenefitApiController::class, 'indexBenefitPlans']);
+        Route::post('benefit-plans',                                            [EmployeeLoanBenefitApiController::class, 'storeBenefitPlan']);
+        Route::post('benefit-plans/{benefitPlan}/enroll',                       [EmployeeLoanBenefitApiController::class, 'enrollEmployee']);
+        Route::post('benefit-plans/{benefitPlan}/enrollments/{employeeBenefit}/end', [EmployeeLoanBenefitApiController::class, 'endEnrollment']);
 
         // Employee Lifecycle (Onboarding, Position Changes, Exits)
         Route::get('onboarding-checklists',                                         [EmployeeLifecycleApiController::class, 'indexChecklists']);
