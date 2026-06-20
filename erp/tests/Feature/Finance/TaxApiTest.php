@@ -16,7 +16,7 @@ beforeEach(function () {
     app()->instance('tenant', $this->tenant);
 });
 
-function makeTaxRate(float $rate = 10.0, string $type = 'both'): TaxRate
+function createTaxRate(float $rate = 10.0, string $type = 'both'): TaxRate
 {
     return TaxRate::create([
         'tenant_id' => test()->tenant->id,
@@ -40,8 +40,8 @@ test('can create a tax rate', function () {
 });
 
 test('can list tax rates', function () {
-    makeTaxRate(5.0, 'sales');
-    makeTaxRate(15.0, 'purchase');
+    createTaxRate(5.0, 'sales');
+    createTaxRate(15.0, 'purchase');
 
     $response = $this->withToken($this->token)
         ->getJson('/api/v1/tax/rates')
@@ -51,9 +51,9 @@ test('can list tax rates', function () {
 });
 
 test('can filter tax rates by type', function () {
-    makeTaxRate(5.0, 'sales');
-    makeTaxRate(10.0, 'purchase');
-    makeTaxRate(15.0, 'both');
+    createTaxRate(5.0, 'sales');
+    createTaxRate(10.0, 'purchase');
+    createTaxRate(15.0, 'both');
 
     $response = $this->withToken($this->token)
         ->getJson('/api/v1/tax/rates?type=sales')
@@ -65,7 +65,7 @@ test('can filter tax rates by type', function () {
 });
 
 test('can update a tax rate', function () {
-    $rate = makeTaxRate(10.0);
+    $rate = createTaxRate(10.0);
 
     $this->withToken($this->token)
         ->putJson("/api/v1/tax/rates/{$rate->id}", ['rate' => 12.5, 'is_active' => false])
@@ -76,8 +76,8 @@ test('can update a tax rate', function () {
 });
 
 test('can create a tax group with rates', function () {
-    $r1 = makeTaxRate(5.0);
-    $r2 = makeTaxRate(10.0);
+    $r1 = createTaxRate(5.0);
+    $r2 = createTaxRate(10.0);
 
     $this->withToken($this->token)
         ->postJson('/api/v1/tax/groups', [
@@ -90,8 +90,8 @@ test('can create a tax group with rates', function () {
 });
 
 test('can view a tax group with total rate', function () {
-    $r1    = makeTaxRate(8.0);
-    $r2    = makeTaxRate(2.0);
+    $r1    = createTaxRate(8.0);
+    $r2    = createTaxRate(2.0);
     $group = TaxGroup::create(['tenant_id' => $this->tenant->id, 'name' => 'Test Group', 'is_active' => true]);
     TaxGroupItem::create(['tenant_id' => $this->tenant->id, 'tax_group_id' => $group->id, 'tax_rate_id' => $r1->id]);
     TaxGroupItem::create(['tenant_id' => $this->tenant->id, 'tax_group_id' => $group->id, 'tax_rate_id' => $r2->id]);
@@ -105,7 +105,7 @@ test('can view a tax group with total rate', function () {
 
 test('can add a rate to a tax group', function () {
     $group = TaxGroup::create(['tenant_id' => $this->tenant->id, 'name' => 'Growing Group', 'is_active' => true]);
-    $rate  = makeTaxRate(7.5);
+    $rate  = createTaxRate(7.5);
 
     $this->withToken($this->token)
         ->postJson("/api/v1/tax/groups/{$group->id}/rates", ['tax_rate_id' => $rate->id])
@@ -115,7 +115,7 @@ test('can add a rate to a tax group', function () {
 });
 
 test('can calculate tax with a tax rate', function () {
-    $rate = makeTaxRate(10.0);
+    $rate = createTaxRate(10.0);
 
     $response = $this->withToken($this->token)
         ->postJson('/api/v1/tax/calculate', [
@@ -129,8 +129,8 @@ test('can calculate tax with a tax rate', function () {
 });
 
 test('can calculate tax with a tax group', function () {
-    $r1    = makeTaxRate(5.0);
-    $r2    = makeTaxRate(3.0);
+    $r1    = createTaxRate(5.0);
+    $r2    = createTaxRate(3.0);
     $group = TaxGroup::create(['tenant_id' => $this->tenant->id, 'name' => 'Calc Group', 'is_active' => true]);
     TaxGroupItem::create(['tenant_id' => $this->tenant->id, 'tax_group_id' => $group->id, 'tax_rate_id' => $r1->id]);
     TaxGroupItem::create(['tenant_id' => $this->tenant->id, 'tax_group_id' => $group->id, 'tax_rate_id' => $r2->id]);
@@ -147,7 +147,7 @@ test('can calculate tax with a tax group', function () {
 });
 
 test('can delete a tax rate', function () {
-    $rate = makeTaxRate();
+    $rate = createTaxRate();
 
     $this->withToken($this->token)
         ->deleteJson("/api/v1/tax/rates/{$rate->id}")

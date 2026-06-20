@@ -26,7 +26,7 @@ function makeSoContact(): Contact
     ]);
 }
 
-function makeSoProduct(): Product
+function createSoProduct(): Product
 {
     return Product::create([
         'tenant_id'  => test()->tenant->id,
@@ -38,7 +38,7 @@ function makeSoProduct(): Product
     ]);
 }
 
-function makeSalesOrder(string $status = 'draft', ?Contact $contact = null): SalesOrder
+function createSalesOrder(string $status = 'draft', ?Contact $contact = null): SalesOrder
 {
     $contact ??= makeSoContact();
     $order = SalesOrder::create([
@@ -79,8 +79,8 @@ test('can create a sales order', function () {
 });
 
 test('can list sales orders', function () {
-    makeSalesOrder('draft');
-    makeSalesOrder('confirmed');
+    createSalesOrder('draft');
+    createSalesOrder('confirmed');
 
     $response = $this->withToken($this->token)
         ->getJson('/api/v1/sales-orders')
@@ -90,8 +90,8 @@ test('can list sales orders', function () {
 });
 
 test('can filter by status', function () {
-    makeSalesOrder('draft');
-    makeSalesOrder('confirmed');
+    createSalesOrder('draft');
+    createSalesOrder('confirmed');
 
     $response = $this->withToken($this->token)
         ->getJson('/api/v1/sales-orders?status=confirmed')
@@ -103,7 +103,7 @@ test('can filter by status', function () {
 });
 
 test('can view a sales order', function () {
-    $order = makeSalesOrder();
+    $order = createSalesOrder();
 
     $this->withToken($this->token)
         ->getJson("/api/v1/sales-orders/{$order->id}")
@@ -112,7 +112,7 @@ test('can view a sales order', function () {
 });
 
 test('can confirm a draft sales order', function () {
-    $order = makeSalesOrder('draft');
+    $order = createSalesOrder('draft');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/sales-orders/{$order->id}/confirm")
@@ -121,7 +121,7 @@ test('can confirm a draft sales order', function () {
 });
 
 test('cannot confirm a non-draft sales order', function () {
-    $order = makeSalesOrder('confirmed');
+    $order = createSalesOrder('confirmed');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/sales-orders/{$order->id}/confirm")
@@ -129,7 +129,7 @@ test('cannot confirm a non-draft sales order', function () {
 });
 
 test('can cancel a sales order', function () {
-    $order = makeSalesOrder('draft');
+    $order = createSalesOrder('draft');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/sales-orders/{$order->id}/cancel")
@@ -138,7 +138,7 @@ test('can cancel a sales order', function () {
 });
 
 test('can convert a confirmed order to invoice', function () {
-    $order = makeSalesOrder('confirmed');
+    $order = createSalesOrder('confirmed');
 
     $response = $this->withToken($this->token)
         ->postJson("/api/v1/sales-orders/{$order->id}/convert-to-invoice")
@@ -150,7 +150,7 @@ test('can convert a confirmed order to invoice', function () {
 });
 
 test('cannot convert draft order to invoice', function () {
-    $order = makeSalesOrder('draft');
+    $order = createSalesOrder('draft');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/sales-orders/{$order->id}/convert-to-invoice")
@@ -158,7 +158,7 @@ test('cannot convert draft order to invoice', function () {
 });
 
 test('can delete a draft order', function () {
-    $order = makeSalesOrder('draft');
+    $order = createSalesOrder('draft');
 
     $this->withToken($this->token)
         ->deleteJson("/api/v1/sales-orders/{$order->id}")

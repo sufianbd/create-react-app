@@ -25,7 +25,7 @@ function makeDebitVendor(): Contact
     ]);
 }
 
-function makeDebitNote(?Contact $vendor = null, string $status = 'draft'): DebitNote
+function makeDebitNoteRecord(?Contact $vendor = null, string $status = 'draft'): DebitNote
 {
     $vendor ??= makeDebitVendor();
     $dn = DebitNote::create([
@@ -69,8 +69,8 @@ test('can create a debit note', function () {
 });
 
 test('can list debit notes', function () {
-    makeDebitNote();
-    makeDebitNote();
+    makeDebitNoteRecord();
+    makeDebitNoteRecord();
 
     $response = $this->withToken($this->token)
         ->getJson('/api/v1/debit-notes')
@@ -80,8 +80,8 @@ test('can list debit notes', function () {
 });
 
 test('can filter debit notes by status', function () {
-    makeDebitNote(null, 'draft');
-    makeDebitNote(null, 'issued');
+    makeDebitNoteRecord(null, 'draft');
+    makeDebitNoteRecord(null, 'issued');
 
     $response = $this->withToken($this->token)
         ->getJson('/api/v1/debit-notes?status=issued')
@@ -93,7 +93,7 @@ test('can filter debit notes by status', function () {
 });
 
 test('can view a debit note', function () {
-    $dn = makeDebitNote();
+    $dn = makeDebitNoteRecord();
 
     $this->withToken($this->token)
         ->getJson("/api/v1/debit-notes/{$dn->id}")
@@ -102,7 +102,7 @@ test('can view a debit note', function () {
 });
 
 test('can issue a draft debit note', function () {
-    $dn = makeDebitNote(null, 'draft');
+    $dn = makeDebitNoteRecord(null, 'draft');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/debit-notes/{$dn->id}/issue")
@@ -111,7 +111,7 @@ test('can issue a draft debit note', function () {
 });
 
 test('can apply an issued debit note', function () {
-    $dn = makeDebitNote(null, 'issued');
+    $dn = makeDebitNoteRecord(null, 'issued');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/debit-notes/{$dn->id}/apply")
@@ -120,7 +120,7 @@ test('can apply an issued debit note', function () {
 });
 
 test('can void a draft debit note', function () {
-    $dn = makeDebitNote(null, 'draft');
+    $dn = makeDebitNoteRecord(null, 'draft');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/debit-notes/{$dn->id}/void")
@@ -129,7 +129,7 @@ test('can void a draft debit note', function () {
 });
 
 test('cannot void an applied debit note', function () {
-    $dn = makeDebitNote(null, 'applied');
+    $dn = makeDebitNoteRecord(null, 'applied');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/debit-notes/{$dn->id}/void")
@@ -137,7 +137,7 @@ test('cannot void an applied debit note', function () {
 });
 
 test('can delete a draft debit note', function () {
-    $dn = makeDebitNote(null, 'draft');
+    $dn = makeDebitNoteRecord(null, 'draft');
 
     $this->withToken($this->token)
         ->deleteJson("/api/v1/debit-notes/{$dn->id}")

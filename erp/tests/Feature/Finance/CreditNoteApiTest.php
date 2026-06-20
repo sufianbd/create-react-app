@@ -25,7 +25,7 @@ function makeCreditContact(): Contact
     ]);
 }
 
-function makeCreditNote(?Contact $contact = null, string $status = 'draft'): CreditNote
+function makeCreditNoteRecord(?Contact $contact = null, string $status = 'draft'): CreditNote
 {
     $contact ??= makeCreditContact();
     $ref = CreditNote::generateCreditNoteNumber();
@@ -70,8 +70,8 @@ test('can create a credit note', function () {
 });
 
 test('can list credit notes', function () {
-    makeCreditNote();
-    makeCreditNote();
+    makeCreditNoteRecord();
+    makeCreditNoteRecord();
 
     $response = $this->withToken($this->token)
         ->getJson('/api/v1/credit-notes')
@@ -81,8 +81,8 @@ test('can list credit notes', function () {
 });
 
 test('can filter credit notes by status', function () {
-    makeCreditNote(null, 'draft');
-    makeCreditNote(null, 'issued');
+    makeCreditNoteRecord(null, 'draft');
+    makeCreditNoteRecord(null, 'issued');
 
     $response = $this->withToken($this->token)
         ->getJson('/api/v1/credit-notes?status=issued')
@@ -94,7 +94,7 @@ test('can filter credit notes by status', function () {
 });
 
 test('can view a credit note', function () {
-    $cn = makeCreditNote();
+    $cn = makeCreditNoteRecord();
 
     $this->withToken($this->token)
         ->getJson("/api/v1/credit-notes/{$cn->id}")
@@ -103,7 +103,7 @@ test('can view a credit note', function () {
 });
 
 test('can issue a credit note', function () {
-    $cn = makeCreditNote(null, 'draft');
+    $cn = makeCreditNoteRecord(null, 'draft');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/credit-notes/{$cn->id}/issue")
@@ -112,7 +112,7 @@ test('can issue a credit note', function () {
 });
 
 test('can apply a credit note', function () {
-    $cn = makeCreditNote(null, 'issued');
+    $cn = makeCreditNoteRecord(null, 'issued');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/credit-notes/{$cn->id}/apply")
@@ -121,7 +121,7 @@ test('can apply a credit note', function () {
 });
 
 test('can void a credit note', function () {
-    $cn = makeCreditNote(null, 'issued');
+    $cn = makeCreditNoteRecord(null, 'issued');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/credit-notes/{$cn->id}/void")
@@ -130,7 +130,7 @@ test('can void a credit note', function () {
 });
 
 test('cannot void an applied credit note', function () {
-    $cn = makeCreditNote(null, 'applied');
+    $cn = makeCreditNoteRecord(null, 'applied');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/credit-notes/{$cn->id}/void")
@@ -138,7 +138,7 @@ test('cannot void an applied credit note', function () {
 });
 
 test('can add an item to a draft credit note', function () {
-    $cn = makeCreditNote(null, 'draft');
+    $cn = makeCreditNoteRecord(null, 'draft');
 
     $this->withToken($this->token)
         ->postJson("/api/v1/credit-notes/{$cn->id}/items", [
@@ -152,7 +152,7 @@ test('can add an item to a draft credit note', function () {
 });
 
 test('can delete a draft credit note', function () {
-    $cn = makeCreditNote(null, 'draft');
+    $cn = makeCreditNoteRecord(null, 'draft');
 
     $this->withToken($this->token)
         ->deleteJson("/api/v1/credit-notes/{$cn->id}")
