@@ -21,7 +21,7 @@ beforeEach(function () {
     ]);
 });
 
-function makeContract(array $attrs = []): Contract
+function makeContractRecord(array $attrs = []): Contract
 {
     return Contract::create([
         'tenant_id'       => test()->tenant->id,
@@ -56,7 +56,7 @@ test('can create a contract', function () {
 });
 
 test('can list contracts', function () {
-    makeContract();
+    makeContractRecord();
 
     $this->withToken($this->token)
         ->getJson('/api/v1/contracts')
@@ -65,8 +65,8 @@ test('can list contracts', function () {
 });
 
 test('can filter contracts by status', function () {
-    makeContract(['status' => 'active']);
-    makeContract(['status' => 'draft', 'contract_number' => 'CNT-DRAFT']);
+    makeContractRecord(['status' => 'active']);
+    makeContractRecord(['status' => 'draft', 'contract_number' => 'CNT-DRAFT']);
 
     $data = $this->withToken($this->token)
         ->getJson('/api/v1/contracts?status=active')
@@ -77,7 +77,7 @@ test('can filter contracts by status', function () {
 });
 
 test('can view a single contract', function () {
-    $contract = makeContract();
+    $contract = makeContractRecord();
 
     $this->withToken($this->token)
         ->getJson("/api/v1/contracts/{$contract->id}")
@@ -87,7 +87,7 @@ test('can view a single contract', function () {
 });
 
 test('can activate a draft contract', function () {
-    $contract = makeContract();
+    $contract = makeContractRecord();
 
     $this->withToken($this->token)
         ->postJson("/api/v1/contracts/{$contract->id}/activate")
@@ -98,7 +98,7 @@ test('can activate a draft contract', function () {
 });
 
 test('can terminate an active contract', function () {
-    $contract = makeContract(['status' => 'active']);
+    $contract = makeContractRecord(['status' => 'active']);
 
     $this->withToken($this->token)
         ->postJson("/api/v1/contracts/{$contract->id}/terminate", [
@@ -109,7 +109,7 @@ test('can terminate an active contract', function () {
 });
 
 test('can renew a contract', function () {
-    $contract  = makeContract(['status' => 'active']);
+    $contract  = makeContractRecord(['status' => 'active']);
     $newEndDate = now()->addYears(2)->toDateString();
 
     $response = $this->withToken($this->token)
@@ -124,7 +124,7 @@ test('can renew a contract', function () {
 });
 
 test('can list expiring soon contracts', function () {
-    makeContract([
+    makeContractRecord([
         'status'   => 'active',
         'end_date' => now()->addDays(15)->toDateString(),
     ]);
@@ -138,7 +138,7 @@ test('can list expiring soon contracts', function () {
 });
 
 test('can soft delete a contract', function () {
-    $contract = makeContract();
+    $contract = makeContractRecord();
 
     $this->withToken($this->token)
         ->deleteJson("/api/v1/contracts/{$contract->id}")
