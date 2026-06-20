@@ -627,6 +627,19 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Recurring Invoices
+        Route::prefix('recurring-invoices')->group(function () {
+            Route::get('/due',                           [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'due']);
+            Route::get('/',                              [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'index']);
+            Route::post('/',                             [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'store']);
+            Route::get('/{recurringInvoice}',            [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'show']);
+            Route::put('/{recurringInvoice}',            [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'update']);
+            Route::delete('/{recurringInvoice}',         [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'destroy']);
+            Route::post('/{recurringInvoice}/pause',     [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'pause']);
+            Route::post('/{recurringInvoice}/resume',    [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'resume']);
+            Route::post('/{recurringInvoice}/generate',  [\App\Http\Controllers\Api\V1\RecurringInvoiceApiController::class, 'generate']);
+        });
+
         // Customer Loyalty Points
         Route::prefix('loyalty')->group(function () {
             Route::get('/programs',                   [\App\Http\Controllers\Api\V1\LoyaltyApiController::class, 'indexPrograms']);
