@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\V1\PdfController;
 use App\Http\Controllers\Api\V1\SubcontractingApiController;
 use App\Http\Controllers\Api\V1\SubscriptionsApiController;
 use App\Http\Controllers\Api\V1\SurveyApiController;
+use App\Http\Controllers\Api\V1\EmployeeLifecycleApiController;
 use App\Http\Controllers\Api\V1\ShiftOvertimeApiController;
 use App\Http\Controllers\Api\V1\SuccessionMentorApiController;
 use App\Http\Controllers\Api\V1\TimesheetApiController;
@@ -294,6 +295,19 @@ Route::prefix('v1')->group(function () {
         Route::delete('surveys/{id}/questions/{questionId}',    [SurveyApiController::class, 'deleteQuestion']);
         Route::post('surveys/{id}/respond',                     [SurveyApiController::class, 'submitResponse']);
         Route::get('surveys/{id}/results',                      [SurveyApiController::class, 'surveyResults']);
+
+        // Employee Lifecycle (Onboarding, Position Changes, Exits)
+        Route::get('onboarding-checklists',                                         [EmployeeLifecycleApiController::class, 'indexChecklists']);
+        Route::post('onboarding-checklists',                                        [EmployeeLifecycleApiController::class, 'storeChecklist']);
+        Route::get('onboarding-checklists/{onboardingChecklist}',                   [EmployeeLifecycleApiController::class, 'showChecklist']);
+        Route::delete('onboarding-checklists/{onboardingChecklist}',                [EmployeeLifecycleApiController::class, 'destroyChecklist']);
+        Route::get('position-changes',                                              [EmployeeLifecycleApiController::class, 'indexPositionChanges']);
+        Route::post('position-changes',                                             [EmployeeLifecycleApiController::class, 'storePositionChange']);
+        Route::post('position-changes/{employeePositionChange}/approve',            [EmployeeLifecycleApiController::class, 'approvePositionChange']);
+        Route::get('employee-exits',                                                [EmployeeLifecycleApiController::class, 'indexExits']);
+        Route::post('employee-exits',                                               [EmployeeLifecycleApiController::class, 'storeExit']);
+        Route::post('employee-exits/{employeeExit}/mark-in-progress',              [EmployeeLifecycleApiController::class, 'markExitInProgress']);
+        Route::post('employee-exits/{employeeExit}/complete',                       [EmployeeLifecycleApiController::class, 'completeExit']);
 
         // Succession Planning & Mentorship
         Route::get('succession-plans',                                          [SuccessionMentorApiController::class, 'indexPlans']);
