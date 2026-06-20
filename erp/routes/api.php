@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\V1\SubcontractingApiController;
 use App\Http\Controllers\Api\V1\SubscriptionsApiController;
 use App\Http\Controllers\Api\V1\SurveyApiController;
 use App\Http\Controllers\Api\V1\EmployeeLifecycleApiController;
+use App\Http\Controllers\Api\V1\ManufacturingExtApiController;
 use App\Http\Controllers\Api\V1\EmployeeLoanBenefitApiController;
 use App\Http\Controllers\Api\V1\ShiftOvertimeApiController;
 use App\Http\Controllers\Api\V1\SuccessionMentorApiController;
@@ -296,6 +297,21 @@ Route::prefix('v1')->group(function () {
         Route::delete('surveys/{id}/questions/{questionId}',    [SurveyApiController::class, 'deleteQuestion']);
         Route::post('surveys/{id}/respond',                     [SurveyApiController::class, 'submitResponse']);
         Route::get('surveys/{id}/results',                      [SurveyApiController::class, 'surveyResults']);
+
+        // Manufacturing BOM & Work Orders
+        Route::get('mfg/boms',                                                  [ManufacturingExtApiController::class, 'indexBoms']);
+        Route::post('mfg/boms',                                                 [ManufacturingExtApiController::class, 'storeBom']);
+        Route::get('mfg/boms/{billOfMaterials}',                                [ManufacturingExtApiController::class, 'showBom']);
+        Route::post('mfg/boms/{billOfMaterials}/lines',                         [ManufacturingExtApiController::class, 'addBomLine']);
+        Route::delete('mfg/boms/{billOfMaterials}/lines/{bomLine}',             [ManufacturingExtApiController::class, 'removeBomLine']);
+        Route::get('mfg/orders',                                                [ManufacturingExtApiController::class, 'indexOrders']);
+        Route::post('mfg/orders',                                               [ManufacturingExtApiController::class, 'storeOrder']);
+        Route::post('mfg/orders/{manufacturingOrder}/confirm',                  [ManufacturingExtApiController::class, 'confirmOrder']);
+        Route::post('mfg/orders/{manufacturingOrder}/start',                    [ManufacturingExtApiController::class, 'startOrder']);
+        Route::post('mfg/orders/{manufacturingOrder}/complete',                 [ManufacturingExtApiController::class, 'completeOrder']);
+        Route::post('mfg/orders/{manufacturingOrder}/cancel',                   [ManufacturingExtApiController::class, 'cancelOrder']);
+        Route::get('mfg/work-centers',                                          [ManufacturingExtApiController::class, 'indexWorkCenters']);
+        Route::post('mfg/work-centers',                                         [ManufacturingExtApiController::class, 'storeWorkCenter']);
 
         // Employee Loans & Benefits
         Route::get('employee-loans',                                            [EmployeeLoanBenefitApiController::class, 'indexLoans']);
