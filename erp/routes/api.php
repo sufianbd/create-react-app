@@ -627,6 +627,19 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Fixed Assets & Depreciation
+        Route::prefix('fixed-assets')->group(function () {
+            Route::get('/summary',                  [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'summary']);
+            Route::get('/',                         [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'index']);
+            Route::post('/',                        [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'store']);
+            Route::get('/{fixedAsset}',             [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'show']);
+            Route::put('/{fixedAsset}',             [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'update']);
+            Route::delete('/{fixedAsset}',          [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'destroy']);
+            Route::post('/{fixedAsset}/depreciate', [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'depreciate']);
+            Route::post('/{fixedAsset}/dispose',    [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'dispose']);
+            Route::get('/{fixedAsset}/schedule',    [\App\Http\Controllers\Api\V1\FixedAssetApiController::class, 'schedule']);
+        });
+
         // Purchase Requisitions
         Route::prefix('purchase-requisitions')->group(function () {
             Route::get('/',                                  [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'index']);
