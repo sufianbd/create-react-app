@@ -456,6 +456,18 @@ Route::prefix('v1')->group(function () {
             Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
         });
 
+        // Price List Management
+        Route::prefix('price-lists')->group(function () {
+            Route::get('/',                                   [\App\Http\Controllers\Api\V1\PriceListApiController::class, 'index']);
+            Route::post('/',                                  [\App\Http\Controllers\Api\V1\PriceListApiController::class, 'store']);
+            Route::post('/lookup',                            [\App\Http\Controllers\Api\V1\PriceListApiController::class, 'lookup']);
+            Route::get('/{priceList}',                        [\App\Http\Controllers\Api\V1\PriceListApiController::class, 'show']);
+            Route::put('/{priceList}',                        [\App\Http\Controllers\Api\V1\PriceListApiController::class, 'update']);
+            Route::delete('/{priceList}',                     [\App\Http\Controllers\Api\V1\PriceListApiController::class, 'destroy']);
+            Route::post('/{priceList}/items',                 [\App\Http\Controllers\Api\V1\PriceListApiController::class, 'addItem']);
+            Route::delete('/{priceList}/items/{item}',        [\App\Http\Controllers\Api\V1\PriceListApiController::class, 'removeItem']);
+        });
+
         // Sales Commission Tracking
         Route::prefix('commissions')->group(function () {
             Route::get('/rules',                     [\App\Http\Controllers\Api\V1\CommissionApiController::class, 'indexRules']);
