@@ -627,6 +627,18 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Debit Notes
+        Route::prefix('debit-notes')->group(function () {
+            Route::get('/',                        [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'index']);
+            Route::post('/',                       [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'store']);
+            Route::get('/{debitNote}',             [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'show']);
+            Route::put('/{debitNote}',             [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'update']);
+            Route::delete('/{debitNote}',          [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'destroy']);
+            Route::post('/{debitNote}/issue',      [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'issue']);
+            Route::post('/{debitNote}/apply',      [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'apply']);
+            Route::post('/{debitNote}/void',       [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'void']);
+        });
+
         // Batch Payments
         Route::prefix('batch-payments')->group(function () {
             Route::get('/summary',           [\App\Http\Controllers\Api\V1\BatchPaymentApiController::class, 'summary']);
