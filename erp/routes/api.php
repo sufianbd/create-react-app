@@ -456,6 +456,14 @@ Route::prefix('v1')->group(function () {
             Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
         });
 
+        // Inventory Valuation
+        Route::prefix('inventory-valuation')->group(function () {
+            Route::get('/summary',    [\App\Http\Controllers\Api\V1\InventoryValuationController::class, 'summary']);
+            Route::get('/breakdown',  [\App\Http\Controllers\Api\V1\InventoryValuationController::class, 'breakdown']);
+            Route::get('/movement',   [\App\Http\Controllers\Api\V1\InventoryValuationController::class, 'movement']);
+            Route::get('/low-value',  [\App\Http\Controllers\Api\V1\InventoryValuationController::class, 'lowValueStock']);
+        });
+
         // Contract Management
         Route::prefix('contracts')->group(function () {
             Route::get('/expiring-soon',            [\App\Http\Controllers\Api\V1\ContractApiController::class, 'expiringSoon']);
