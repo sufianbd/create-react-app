@@ -627,6 +627,24 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Quality Control
+        Route::prefix('qc')->group(function () {
+            Route::get('/checklists',                   [\App\Http\Controllers\Api\V1\QcApiController::class, 'indexChecklists']);
+            Route::post('/checklists',                  [\App\Http\Controllers\Api\V1\QcApiController::class, 'storeChecklist']);
+            Route::get('/checklists/{qcChecklist}',     [\App\Http\Controllers\Api\V1\QcApiController::class, 'showChecklist']);
+            Route::delete('/checklists/{qcChecklist}',  [\App\Http\Controllers\Api\V1\QcApiController::class, 'destroyChecklist']);
+            Route::get('/inspections',                  [\App\Http\Controllers\Api\V1\QcApiController::class, 'indexInspections']);
+            Route::post('/inspections',                 [\App\Http\Controllers\Api\V1\QcApiController::class, 'storeInspection']);
+            Route::get('/inspections/{qcInspection}',   [\App\Http\Controllers\Api\V1\QcApiController::class, 'showInspection']);
+            Route::post('/inspections/{qcInspection}/start',    [\App\Http\Controllers\Api\V1\QcApiController::class, 'startInspection']);
+            Route::post('/inspections/{qcInspection}/results',  [\App\Http\Controllers\Api\V1\QcApiController::class, 'recordResults']);
+            Route::post('/inspections/{qcInspection}/complete', [\App\Http\Controllers\Api\V1\QcApiController::class, 'completeInspection']);
+            Route::get('/ncr',                          [\App\Http\Controllers\Api\V1\QcApiController::class, 'indexNcr']);
+            Route::post('/ncr',                         [\App\Http\Controllers\Api\V1\QcApiController::class, 'storeNcr']);
+            Route::post('/ncr/{ncr}/resolve',           [\App\Http\Controllers\Api\V1\QcApiController::class, 'resolveNcr']);
+            Route::post('/ncr/{ncr}/close',             [\App\Http\Controllers\Api\V1\QcApiController::class, 'closeNcr']);
+        });
+
         // Debit Notes
         Route::prefix('debit-notes')->group(function () {
             Route::get('/',                        [\App\Http\Controllers\Api\V1\DebitNoteApiController::class, 'index']);
