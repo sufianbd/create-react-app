@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\V1\PdfController;
 use App\Http\Controllers\Api\V1\SubcontractingApiController;
 use App\Http\Controllers\Api\V1\SubscriptionsApiController;
 use App\Http\Controllers\Api\V1\SurveyApiController;
+use App\Http\Controllers\Api\V1\ShiftOvertimeApiController;
 use App\Http\Controllers\Api\V1\TimesheetApiController;
 use App\Http\Controllers\Api\V1\WebsiteApiController;
 use Illuminate\Support\Facades\Route;
@@ -292,6 +293,20 @@ Route::prefix('v1')->group(function () {
         Route::delete('surveys/{id}/questions/{questionId}',    [SurveyApiController::class, 'deleteQuestion']);
         Route::post('surveys/{id}/respond',                     [SurveyApiController::class, 'submitResponse']);
         Route::get('surveys/{id}/results',                      [SurveyApiController::class, 'surveyResults']);
+
+        // Shift Scheduling & Overtime
+        Route::get('shift-templates',                                   [ShiftOvertimeApiController::class, 'indexTemplates']);
+        Route::post('shift-templates',                                  [ShiftOvertimeApiController::class, 'storeTemplate']);
+        Route::put('shift-templates/{shiftTemplate}',                   [ShiftOvertimeApiController::class, 'updateTemplate']);
+        Route::delete('shift-templates/{shiftTemplate}',                [ShiftOvertimeApiController::class, 'destroyTemplate']);
+        Route::get('shift-assignments',                                 [ShiftOvertimeApiController::class, 'indexAssignments']);
+        Route::post('shift-assignments',                                [ShiftOvertimeApiController::class, 'storeAssignment']);
+        Route::delete('shift-assignments/{shiftAssignment}',            [ShiftOvertimeApiController::class, 'destroyAssignment']);
+        Route::get('overtime-requests',                                 [ShiftOvertimeApiController::class, 'indexOvertime']);
+        Route::post('overtime-requests',                                [ShiftOvertimeApiController::class, 'storeOvertime']);
+        Route::post('overtime-requests/{overtimeRequest}/approve',      [ShiftOvertimeApiController::class, 'approveOvertime']);
+        Route::post('overtime-requests/{overtimeRequest}/reject',       [ShiftOvertimeApiController::class, 'rejectOvertime']);
+        Route::post('overtime-requests/{overtimeRequest}/cancel',       [ShiftOvertimeApiController::class, 'cancelOvertime']);
 
         // Timesheets
         Route::get('timesheets',                                [TimesheetApiController::class, 'index']);
