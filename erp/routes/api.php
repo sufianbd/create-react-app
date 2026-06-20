@@ -627,6 +627,19 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Quotations / Proposals
+        Route::prefix('quotes')->group(function () {
+            Route::get('/',                                  [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'index']);
+            Route::post('/',                                 [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'store']);
+            Route::get('/{quote}',                           [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'show']);
+            Route::put('/{quote}',                           [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'update']);
+            Route::delete('/{quote}',                        [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'destroy']);
+            Route::post('/{quote}/send',                     [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'send']);
+            Route::post('/{quote}/accept',                   [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'accept']);
+            Route::post('/{quote}/decline',                  [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'decline']);
+            Route::post('/{quote}/convert-to-invoice',       [\App\Http\Controllers\Api\V1\QuoteApiController::class, 'convertToInvoice']);
+        });
+
         // Sales Orders
         Route::prefix('sales-orders')->group(function () {
             Route::get('/',                                    [\App\Http\Controllers\Api\V1\SalesOrderApiController::class, 'index']);
