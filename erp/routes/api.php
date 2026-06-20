@@ -627,6 +627,22 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Tax Configuration
+        Route::prefix('tax')->group(function () {
+            Route::get('/rates',                    [\App\Http\Controllers\Api\V1\TaxApiController::class, 'indexRates']);
+            Route::post('/rates',                   [\App\Http\Controllers\Api\V1\TaxApiController::class, 'storeRate']);
+            Route::put('/rates/{taxRate}',           [\App\Http\Controllers\Api\V1\TaxApiController::class, 'updateRate']);
+            Route::delete('/rates/{taxRate}',        [\App\Http\Controllers\Api\V1\TaxApiController::class, 'destroyRate']);
+            Route::get('/groups',                   [\App\Http\Controllers\Api\V1\TaxApiController::class, 'indexGroups']);
+            Route::post('/groups',                  [\App\Http\Controllers\Api\V1\TaxApiController::class, 'storeGroup']);
+            Route::get('/groups/{taxGroup}',         [\App\Http\Controllers\Api\V1\TaxApiController::class, 'showGroup']);
+            Route::put('/groups/{taxGroup}',         [\App\Http\Controllers\Api\V1\TaxApiController::class, 'updateGroup']);
+            Route::delete('/groups/{taxGroup}',      [\App\Http\Controllers\Api\V1\TaxApiController::class, 'destroyGroup']);
+            Route::post('/groups/{taxGroup}/rates',  [\App\Http\Controllers\Api\V1\TaxApiController::class, 'addRateToGroup']);
+            Route::delete('/groups/{taxGroup}/rates/{item}', [\App\Http\Controllers\Api\V1\TaxApiController::class, 'removeRateFromGroup']);
+            Route::post('/calculate',               [\App\Http\Controllers\Api\V1\TaxApiController::class, 'calculate']);
+        });
+
         // Product Bundles
         Route::prefix('product-bundles')->group(function () {
             Route::get('/',                                      [\App\Http\Controllers\Api\V1\ProductBundleApiController::class, 'index']);
