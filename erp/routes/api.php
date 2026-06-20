@@ -456,6 +456,16 @@ Route::prefix('v1')->group(function () {
             Route::post('/{contact}/evaluate',        [\App\Http\Controllers\Api\V1\VendorPerformanceController::class, 'evaluate']);
         });
 
+        // SLA Policies & Tracking
+        Route::prefix('sla')->group(function () {
+            Route::get('/policies',              [\App\Http\Controllers\Api\V1\SlaApiController::class, 'indexPolicies']);
+            Route::post('/policies',             [\App\Http\Controllers\Api\V1\SlaApiController::class, 'storePolicy']);
+            Route::put('/policies/{slaPolicy}',  [\App\Http\Controllers\Api\V1\SlaApiController::class, 'updatePolicy']);
+            Route::delete('/policies/{slaPolicy}', [\App\Http\Controllers\Api\V1\SlaApiController::class, 'destroyPolicy']);
+            Route::get('/dashboard',             [\App\Http\Controllers\Api\V1\SlaApiController::class, 'dashboard']);
+            Route::get('/at-risk',               [\App\Http\Controllers\Api\V1\SlaApiController::class, 'atRisk']);
+        });
+
         // Payment Terms & Schedules
         Route::prefix('payment-terms')->group(function () {
             Route::get('/',                    [\App\Http\Controllers\Api\V1\PaymentTermApiController::class, 'indexTerms']);
