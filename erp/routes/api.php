@@ -627,6 +627,18 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Purchase Requisitions
+        Route::prefix('purchase-requisitions')->group(function () {
+            Route::get('/',                                  [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'index']);
+            Route::post('/',                                 [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'store']);
+            Route::get('/{purchaseRequisition}',             [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'show']);
+            Route::put('/{purchaseRequisition}',             [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'update']);
+            Route::delete('/{purchaseRequisition}',          [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'destroy']);
+            Route::post('/{purchaseRequisition}/submit',     [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'submit']);
+            Route::post('/{purchaseRequisition}/approve',    [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'approve']);
+            Route::post('/{purchaseRequisition}/reject',     [\App\Http\Controllers\Api\V1\PurchaseRequisitionApiController::class, 'reject']);
+        });
+
         // Credit Notes
         Route::prefix('credit-notes')->group(function () {
             Route::get('/',                         [\App\Http\Controllers\Api\V1\CreditNoteApiController::class, 'index']);
