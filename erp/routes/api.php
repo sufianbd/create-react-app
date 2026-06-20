@@ -627,6 +627,17 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{tokenId}', [\App\Http\Controllers\Api\V1\ApiTokenController::class, 'destroy']);
         });
 
+        // Customer Loyalty Points
+        Route::prefix('loyalty')->group(function () {
+            Route::get('/programs',                   [\App\Http\Controllers\Api\V1\LoyaltyApiController::class, 'indexPrograms']);
+            Route::post('/programs',                  [\App\Http\Controllers\Api\V1\LoyaltyApiController::class, 'storeProgram']);
+            Route::put('/programs/{loyaltyProgram}',  [\App\Http\Controllers\Api\V1\LoyaltyApiController::class, 'updateProgram']);
+            Route::post('/enroll',                    [\App\Http\Controllers\Api\V1\LoyaltyApiController::class, 'enroll']);
+            Route::get('/contacts/{contactId}/balance', [\App\Http\Controllers\Api\V1\LoyaltyApiController::class, 'balance']);
+            Route::post('/earn',                      [\App\Http\Controllers\Api\V1\LoyaltyApiController::class, 'earnPoints']);
+            Route::post('/redeem',                    [\App\Http\Controllers\Api\V1\LoyaltyApiController::class, 'redeemPoints']);
+        });
+
         // Webhook Management
         Route::get('/webhooks/events', [\App\Http\Controllers\Api\V1\WebhookApiController::class, 'events']);
         Route::prefix('webhooks')->group(function () {
