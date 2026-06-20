@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\V1\PdfController;
 use App\Http\Controllers\Api\V1\SubcontractingApiController;
 use App\Http\Controllers\Api\V1\SubscriptionsApiController;
 use App\Http\Controllers\Api\V1\SurveyApiController;
+use App\Http\Controllers\Api\V1\TimesheetApiController;
 use App\Http\Controllers\Api\V1\WebsiteApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -291,6 +292,18 @@ Route::prefix('v1')->group(function () {
         Route::delete('surveys/{id}/questions/{questionId}',    [SurveyApiController::class, 'deleteQuestion']);
         Route::post('surveys/{id}/respond',                     [SurveyApiController::class, 'submitResponse']);
         Route::get('surveys/{id}/results',                      [SurveyApiController::class, 'surveyResults']);
+
+        // Timesheets
+        Route::get('timesheets',                                [TimesheetApiController::class, 'index']);
+        Route::post('timesheets',                               [TimesheetApiController::class, 'store']);
+        Route::get('timesheets/summary',                        [TimesheetApiController::class, 'summary']);
+        Route::get('timesheets/{timesheet}',                    [TimesheetApiController::class, 'show']);
+        Route::delete('timesheets/{timesheet}',                 [TimesheetApiController::class, 'destroy']);
+        Route::post('timesheets/{timesheet}/entries',           [TimesheetApiController::class, 'addEntry']);
+        Route::delete('timesheets/{timesheet}/entries/{entry}', [TimesheetApiController::class, 'removeEntry']);
+        Route::post('timesheets/{timesheet}/submit',            [TimesheetApiController::class, 'submit']);
+        Route::post('timesheets/{timesheet}/approve',           [TimesheetApiController::class, 'approve']);
+        Route::post('timesheets/{timesheet}/reject',            [TimesheetApiController::class, 'reject']);
 
         // Website / CMS
         Route::get('website/pages',          [WebsiteApiController::class, 'pages']);
